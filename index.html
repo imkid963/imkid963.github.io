@@ -81,6 +81,24 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #pop{position:fixed;left:50%;top:38%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;display:grid;place-items:center;
   background:var(--glass);border:6px solid var(--c);box-shadow:0 8px 0 var(--sand-deep),0 18px 40px var(--shadow);pointer-events:none;animation:popin 1.9s ease both}
 #pop svg{width:66%;height:66%}
+#datesPill svg{width:24px;height:24px}
+#catch{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);min-width:230px;padding:16px 26px 18px;border-radius:30px;background:var(--glass);
+  border:6px solid var(--c,#9cc9c9);box-shadow:0 8px 0 var(--sand-deep),0 18px 40px var(--shadow);text-align:center;direction:rtl;font-family:var(--display);pointer-events:none;animation:catchin 2.6s ease both}
+@keyframes catchin{0%{transform:translate(-50%,-50%) scale(0);opacity:0}15%{transform:translate(-50%,-50%) scale(1.1);opacity:1}25%{transform:translate(-50%,-50%) scale(1)}85%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-62%) scale(.9)}}
+@media (max-height:480px){#sprint{right:calc(max(18px,env(safe-area-inset-right,0px)) + 96px);bottom:calc(env(safe-area-inset-bottom,0px) + 146px)}}
+#catch svg{width:190px;height:96px;display:block;margin:0 auto}
+#catch .fn{font-weight:800;font-size:34px;line-height:1.2}
+#catch .nw{display:inline-block;margin-top:4px;padding:2px 12px;border-radius:12px;background:#e6bf5c;color:#5a3519;font-weight:800;font-size:16px}
+#album{position:fixed;inset:0;direction:rtl;display:grid;place-items:center;background:rgba(239,220,182,.45);padding:16px;font-family:var(--display)}
+#album .card{width:min(640px,100%);max-height:calc(100vh - 32px);overflow:auto;gap:12px;align-items:stretch}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.aitem{border-radius:20px;background:#fff8ec;padding:8px 6px 10px;text-align:center;box-shadow:0 3px 0 var(--sand-deep)}
+.aitem svg{width:100%;height:56px}
+.aitem b{display:block;font-size:18px}
+.aitem small{font-size:15px;opacity:.75;direction:ltr;display:block}
+.aitem.no b{opacity:.45}
+#act.hot{animation:hot .5s ease-in-out infinite alternate}
+@keyframes hot{to{transform:scale(1.16);box-shadow:0 0 0 8px rgba(230,191,92,.7),0 8px 18px var(--shadow)}}
 @keyframes popin{0%{transform:scale(0) rotate(-20deg);opacity:0}18%{transform:scale(1.12);opacity:1}30%{transform:scale(1)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.8) translateY(-30px)}}
 #select{position:fixed;inset:0;pointer-events:none}
 #title{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 6%);text-align:center;
@@ -111,9 +129,10 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
   <div class="grp">
     <button class="round small" id="home" aria-label="الرئيسية"><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5.5 9.5V20h13V9.5"/></svg></button>
     <button class="round small" id="gear" aria-label="الإعدادات"><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg></button>
+    <button class="round small" id="albBtn" aria-label="دفتر السمك"><svg viewBox="0 0 24 24"><path d="M3 12c3.2-4.4 8.4-5.6 12.8-2.6L20 6.5v11l-4.2-2.9C11.4 17.6 6.2 16.4 3 12z" fill="#7fb3c8" stroke="#5a3519" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7.2" cy="11.2" r="1.1" fill="#5a3519"/></svg></button>
     <button class="round small" id="snd" aria-label="الصوت"><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h4l5-4v13l-5-4H4z" fill="#5a3519"/><path id="sndw" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
   </div>
-  <div class="pill" aria-label="النجوم"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.2l-5.8 3.2 1.2-6.5L2.6 9.4l6.5-.8z" fill="#e6bf5c" stroke="#b98a2a" stroke-width="1.2" stroke-linejoin="round"/></svg><span id="stars">0/0</span></div>
+  <div class="grp"><div class="pill" id="datesPill" hidden aria-label="الرطب"><svg viewBox="0 0 24 24"><ellipse cx="9" cy="13" rx="4" ry="6" fill="#b5651d" stroke="#6b3a12" stroke-width="1.2"/><ellipse cx="15.5" cy="12" rx="3.6" ry="5.6" fill="#c97a2a" stroke="#6b3a12" stroke-width="1.2"/><path d="M12 3c0 2.5-1 4-3 5M12 3c0 2.5 1.2 3.6 3.5 4" stroke="#6b8a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg><span id="dates">0</span></div><div class="pill" aria-label="النجوم"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.2l-5.8 3.2 1.2-6.5L2.6 9.4l6.5-.8z" fill="#e6bf5c" stroke="#b98a2a" stroke-width="1.2" stroke-linejoin="round"/></svg><span id="stars">0/0</span></div></div>
 </div>
 <div class="pill" id="timer" hidden><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2.5h6"/></svg><span id="tleft">3:00</span></div>
 <div id="mis" hidden></div>
@@ -146,6 +165,14 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
     <div class="ltitle" id="wname">الملابس</div>
     <div class="wgrid" id="wgrid"></div>
     <div class="lrow"><button class="lbtn play" id="wardDone">تمام</button></div>
+  </div>
+</div>
+<div id="catch" hidden></div>
+<div id="album" hidden>
+  <div class="card">
+    <div class="ltitle">دفتر السمك</div>
+    <div class="agrid" id="agrid"></div>
+    <div class="lrow"><button class="lbtn play" id="albDone">تمام</button></div>
   </div>
 </div>
 <div id="settings" hidden>
@@ -235,6 +262,7 @@ const CAMP = [0, -4], OASIS = [-70, -35], RESERVE = [95, 15];
 const FLATS = [[CAMP[0], CAMP[1], 18, 0], [OASIS[0], OASIS[1], 18, 0], [RESERVE[0], RESERVE[1], 30, 0.2]];
 // big open world: the sea and a harbour village to the east, a high mountain (with a summit you can climb) to the north,
 // a pearl island out at sea; soft dunes ring the far edge on land
+const DUNES = [-125, 100, 62];   // العراقيب: tall sand dunes for driving over, like the desert festivals
 const WORLD_R = 640, SEA_X = 215, SUMMIT = [35, -255], ISLAND = [345, -40], HARBOUR = [SEA_X - 6, 30], WATER_Y = -0.3;
 const mountK = z => clamp((-z - 62)/48, 0, 1);
 const SEA = x => x > SEA_X - 10;   // water rules only apply by the coast (inland dips are dry sand)
@@ -249,6 +277,9 @@ function H(x, z){
   if (b > 0) h += b*(26 + 20*Math.sin(x*0.017 + 0.7)*Math.cos(z*0.02) + 8*Math.sin(x*0.07)*Math.sin(z*0.05));
   const ds = Math.hypot(x - SUMMIT[0], z - SUMMIT[1]); h += 38*Math.exp(-ds*ds/2900);
   for (const f of FLATS){ const k = 1 - smooth01(f[2]*0.55, f[2], Math.hypot(x - f[0], z - f[1])); h = lerp(h, f[3], k); }
+  // العراقيب: rows of tall dunes with sharp crests (cars fly off the tops)
+  const dn = Math.hypot(x - DUNES[0], z - DUNES[1]);
+  if (dn < DUNES[2]){ const k = 1 - smooth01(DUNES[2]*0.5, DUNES[2], dn), w = 0.5 + 0.5*Math.sin(x*0.11 + 1.2*Math.sin(z*0.045)); h += k*(8.5*w*w*w + 1.6*Math.sin(z*0.09 + x*0.03)); }
   // coast: beach then sea floor
   const c = smooth01(SEA_X - 30, SEA_X - 6, x);
   if (c > 0) h = lerp(h, Math.max(-7, 1.1 - (x - (SEA_X - 8))*0.12), c);
@@ -359,7 +390,7 @@ const SPOT = {
   trough: [OASIS[0] + 9, OASIS[1] + 3], falconTree: [-112, 12], perch: [-6, -13], calf: [138, -38],
   caracal: [42, -120], hyrax: [-30, -104], camelHome: [11, -12], carHome: [7, 3]
 };
-const reserved = [[CAMP[0], CAMP[1], 16], [OASIS[0], OASIS[1], 18], [RESERVE[0], RESERVE[1], 30], [RELEASE.x, RELEASE.z, 9]]
+const reserved = [[CAMP[0], CAMP[1], 16], [DUNES[0], DUNES[1], DUNES[2] + 6], [0, 13, 7], [OASIS[0], OASIS[1], 18], [RESERVE[0], RESERVE[1], 30], [RELEASE.x, RELEASE.z, 9]]
   .concat(HB_SPOTS.map(s => [s[0], s[1], 5])).concat(Object.values(SPOT).map(s => [s[0], s[1], 7]));
 function freeSpot(r, opt){
   opt = opt || {};
@@ -964,6 +995,10 @@ function pushOut(x, z){ for (const c of colliders){ const dx = x - c.x, dz = z -
     }
   });
   for (let n = 0; n < 8; n++){ const [x, z] = freeSpot(2, {flat: true}); stars.push({x, z, y: H(x, z) + 2.2, high: true, got: false}); }
+  // stars floating over the dune crests: catch them by flying the car off the top
+  for (let i = 0; i < 9; i++){ const bx = DUNES[0] - 30 + (i % 3)*24, bz = DUNES[1] - 26 + Math.floor(i/3)*24; let best = -1e9, bxx = bx;
+    for (let k = -12; k <= 12; k++){ const h = H(bx + k, bz); if (h > best){ best = h; bxx = bx + k; } }
+    stars.push({x: bxx, z: bz, y: best + 3.2, high: true, got: false}); }
 })();
 const starIM = new T.InstancedMesh(starGeo, new T.MeshToonMaterial({color: 0xffa800, emissive: 0x9a4a00, gradientMap: gradTex, toneMapped: false}), stars.length); starIM.castShadow = true; scene.add(starIM);
 const sparkleGeo = new T.SphereGeometry(0.09, 6, 5);
@@ -1234,6 +1269,13 @@ const SFX = {
   stroke(){ noise(.45, .2, 1500 + Math.random()*400, .9, 0, 'bandpass'); noise(.25, .1, 3200, 1, .16, 'bandpass'); },
   ignite(){ noise(.9, .22, 900, .5); noise(.5, .12, 2600, .8, .08, 'bandpass'); },
   douse(){ noise(1.1, .2, 3000, .5, 0, 'highpass'); },
+  cast(){ noise(.35, .12, 2400, .8, 0, 'highpass'); tone(700, .2, 'sine', .04, 0, .6); },
+  plop(){ tone(420, .12, 'sine', .1, 0, .5); noise(.18, .12, 1200, .8, .02); },
+  reel(){ for (let i = 0; i < 8; i++) tone(1500 + i*40, .03, 'square', .025, i*.06); noise(.5, .2, 2200, .6, .1); },
+  kick(){ noise(.08, .3, 500, 1.2); tone(140, .12, 'sine', .14, 0, .6); },
+  bounce(){ tone(180, .08, 'sine', .07, 0, .7); },
+  rustle(){ noise(.9, .2, 3200, .5, 0, 'highpass'); noise(.6, .12, 1800, .7, .25, 'bandpass'); },
+  munch(){ [0, .18, .36].forEach(w => noise(.07, .16, 900, 1, w)); tone(600, .15, 'sine', .05, .55, 1.4); },
   crackle(){ noise(.03, .12, 2500 + Math.random()*2500, 2, 0, 'bandpass'); if (Math.random() < .5) noise(.02, .08, 4000, 3, .05 + Math.random()*.1, 'bandpass'); }
 };
 
@@ -1263,6 +1305,7 @@ function resetWorld(){
   hyraxes.forEach((h, i) => { h.body.scale.set(1, 0.75, 1.1); h.follow = false; const a = i/4*2*PI; h.root.position.set(SPOT.hyrax[0] + Math.cos(a)*1.2, hyraxRock.top, SPOT.hyrax[1] + Math.sin(a)*1.2); h.root.rotation.y = a + PI/2; });
   Object.values(kids).forEach(k => { k.body.position.y = 0; k.sit = false; k.swim = false; k.speed = 0; k.root.visible = true; });
   S.hideKids = S.hideAnimals = false; calf.root.visible = caracal.root.visible = true; hyraxes.forEach(h => h.root.visible = true);
+  resetFun();
   choosing = null; updateHud();
 }
 function placeSelect(){ ORDER.forEach(k => { const kid = kids[k], x = SELECT_X[k]; kid.root.position.set(x, H(x, 0), 0); kid.root.rotation.y = 0; kid.speed = 0; kid.air = false; }); }
@@ -1275,6 +1318,7 @@ function startGame(type){
   S.followers.forEach(f => { const c = S.crumbs[S.crumbs.length - 1 - f.lag]; f.obj.position.copy(c); f.obj.position.x -= f.side; f.obj.rotation.y = 0; });
   $('select').hidden = true; $('end').hidden = true;
   ['hud', 'jump', 'mis', 'mini', 'sprint', 'joy'].forEach(id => $(id).hidden = false); placeJoy();
+  $('datesPill').hidden = !S.dates;
   S.gameMode = gameMode; S.timeLeft = gameMode === 'stars' ? 180 : 0; S.raceOver = false;
   $('mis').hidden = gameMode !== 'adv'; $('timer').hidden = gameMode !== 'stars'; $('tleft').textContent = '3:00';
   $('power').hidden = type === 'saif';
@@ -1284,7 +1328,7 @@ function startGame(type){
 }
 function goHome(){
   S.mode = 'select'; resetWorld(); placeSelect();
-  ['hud', 'jump', 'power', 'end', 'act', 'mis', 'mini', 'pop', 'sprint', 'timer'].forEach(id => $(id).hidden = true);
+  ['hud', 'jump', 'power', 'end', 'act', 'mis', 'mini', 'pop', 'sprint', 'timer', 'catch', 'album'].forEach(id => $(id).hidden = true);
   $('joy').hidden = true; $('select').hidden = false;
 }
 function updateHud(){
@@ -1389,9 +1433,12 @@ const ACT_ICON = {
   boat: '<path d="M3 15h18l-2.5 4.5h-13z" fill="#9a6f45" stroke="#5a3519" stroke-width="1.4" stroke-linejoin="round"/><path d="M11 14V3l7 10z" fill="#f3ecdc" stroke="#5a3519" stroke-width="1.4" stroke-linejoin="round"/>',
   fire: '<path d="M12 2.5c.6 3-2.2 4.6-3.6 7.4-1.6 3.1-.6 7.6 3.6 8.6-1.5-1.6-1.4-3.6 0-5.2.3 1.6 1.4 2.4 2.4 2.3-.6-2.4.4-4.2 1.8-5.4.7 4.8 3.4 6.4.4 10.8 4.5-1.4 5.6-6.6 3-11-1.7-2.9-4.4-4.6-7.6-7.5z" fill="#ff8a3a" stroke="#b5481a" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 21.5h12M8 19.5l8 2.5M16 19.5l-8 2.5" stroke="#6b4a2e" stroke-width="1.8" stroke-linecap="round"/>',
   fireOut: '<path d="M12 3c3 4.2 5.5 7.3 5.5 10.5a5.5 5.5 0 0 1-11 0C6.5 10.3 9 7.2 12 3z" fill="#8cc8e0" stroke="#3f7f9a" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.5 14a2.6 2.6 0 0 0 2.5 2.6" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>',
+  fish: '<path d="M5 21 17 3" stroke="#6b4a2e" stroke-width="2.2" stroke-linecap="round"/><path d="M17 3c2 4 2.5 8 1 12" stroke="#5a3519" stroke-width="1" fill="none"/><circle cx="18" cy="16.5" r="2" fill="#e05a3a" stroke="#5a3519" stroke-width="1"/><circle cx="7.5" cy="17" r="2" fill="none" stroke="#5a3519" stroke-width="1.6"/>',
+  reel: '<path d="M3 12c3.2-4.4 8.4-5.6 12.8-2.6L20 6.5v11l-4.2-2.9C11.4 17.6 6.2 16.4 3 12z" fill="#e6bf5c" stroke="#5a3519" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7.2" cy="11.2" r="1.2" fill="#5a3519"/><path d="M12 1.5v3M17 3l-1.5 2.5M7 3l1.5 2.5" stroke="#d2493a" stroke-width="1.8" stroke-linecap="round"/>',
+  palm: '<path d="M12 22c-.6-5 0-9 .4-12" stroke="#8b6a4a" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M12.4 10C10 6.5 6 6 3 7.5c3-.2 6 .8 9.4 2.5zM12.4 10c2.4-3.5 6.4-4 9.4-2.5-3-.2-6 .8-9.4 2.5zM12.4 10c-1-3.6.2-6.6 2.6-8-1.6 2.4-2 5-2.6 8zM12.4 10C11 6.5 8.6 4.6 6 4.2c2.2 1.4 4.6 3.4 6.4 5.8z" fill="#6e9a4a" stroke="#4a6a30" stroke-width=".8"/><circle cx="11" cy="12.5" r="1.1" fill="#b5651d"/><circle cx="13.6" cy="12.8" r="1.1" fill="#b5651d"/>',
   out: '<path d="M14 4h4.5c.8 0 1.5.7 1.5 1.5v13c0 .8-.7 1.5-1.5 1.5H14" fill="none" stroke="#5a3519" stroke-width="2.4" stroke-linecap="round"/><path d="M10 8l-4 4 4 4M6 12h9" fill="none" stroke="#5a3519" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'
 };
-let nearVehicle = null;
+let nearVehicle = null, nearPalm = null, curAct = null;
 function setFire(on, fromNet){
   const F = window.__fire; if (F.on === on) return; F.on = on;
   if (on){ SFX.ignite(); burst(F.x, F.g.position.y + 0.6, F.z, 0xffb060, 14); } else { SFX.douse(); burst(F.x, F.g.position.y + 0.5, F.z, 0xd8d2c8, 10); }
@@ -1399,12 +1446,15 @@ function setFire(on, fromNet){
 }
 function doAction(){
   if (S.mode !== 'play') return;
-  if (S.ride){ if (S.drinkT <= 0) exitRide(); return; }
+  if (S.fish){ fishPress(); return; }
+  if (S.ride){ if (S.ride === 'boat' && curAct === 'fish'){ startFish(); return; } if (S.drinkT <= 0) exitRide(); return; }
+  if (nearVehicle === 'fish'){ startFish(); return; }
+  if (nearVehicle === 'palm'){ shakePalm(nearPalm); return; }
   if (nearVehicle === 'car') enterCar(); else if (nearVehicle === 'camel') mountCamel(); else if (nearVehicle === 'boat') enterBoat(); else if (nearVehicle === 'fire') setFire(!window.__fire.on);
 }
 function setFollowersVisible(v){ S.hideKids = !v; S.followers.forEach(f => { if (f.kid) f.obj.visible = v; }); }
 function enterCar(){
-  S.ride = 'car'; S.carSpeed = 0; SFX.door(); S.player.root.visible = false; S.player.swim = false; setFollowersVisible(false);
+  S.ride = 'car'; S.carSpeed = 0; S.carAir = false; S.carVy = 0; SFX.door(); S.player.root.visible = false; S.player.swim = false; setFollowersVisible(false);
   S.pos.copy(car.root.position); S.heading = car.yaw; S.camYaw = car.yaw + PI; carCol.r = 0;
   ['jump', 'power'].forEach(id => $(id).hidden = true);
 }
@@ -1435,7 +1485,7 @@ function exitRide(){
   }
   const yaw = S.ride === 'car' ? car.yaw : camel.root.rotation.y;
   const side = new T.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)).multiplyScalar(S.ride === 'car' ? 2.4 : 1.6);
-  if (S.ride === 'car'){ carCol.x = car.root.position.x; carCol.z = car.root.position.z; carCol.r = 2.1; setFollowersVisible(true); S.player.root.visible = true; SFX.door(); }
+  if (S.ride === 'car'){ S.carAir = false; S.carVy = 0; carCol.x = car.root.position.x; carCol.z = car.root.position.z; carCol.r = 2.1; setFollowersVisible(true); S.player.root.visible = true; SFX.door(); }
   else { camelCol.x = camel.root.position.x; camelCol.z = camel.root.position.z; camelCol.r = 1.3; S.player.sit = false; }
   S.ride = null; S.pos.add(side); S.pos.y = groundAt(S.pos.x, S.pos.z, 99); S.vy = 0;
   S.crumbs.push(S.pos.clone());
@@ -1495,16 +1545,19 @@ function updatePlay(dt, t){
     car.yaw -= jx*1.8*dt*clamp(Math.abs(S.carSpeed)/7, 0, 1)*(S.carSpeed < 0 ? -1 : 1);
     const [nx, nz] = collide(S.pos.x + Math.sin(car.yaw)*S.carSpeed*dt, S.pos.z + Math.cos(car.yaw)*S.carSpeed*dt, 1.7, () => { S.carSpeed *= 0.6; });
     if (!SEA(nx) || H(nx, nz) > WATER_Y - 0.2){ S.pos.x = nx; S.pos.z = nz; } else S.carSpeed *= -0.3;
-    S.pos.y = H(S.pos.x, S.pos.z); S.heading = car.yaw;
+    carVertical(dt); S.heading = car.yaw;
     const fx = Math.sin(car.yaw)*1.6, fz = Math.cos(car.yaw)*1.6, rx = Math.cos(car.yaw)*0.9, rz = -Math.sin(car.yaw)*0.9;
     const pitch = Math.atan2(H(nx + fx, nz + fz) - H(nx - fx, nz - fz), 3.2), roll = Math.atan2(H(nx + rx, nz + rz) - H(nx - rx, nz - rz), 1.8);
     car.root.position.copy(S.pos); car.root.rotation.y = car.yaw;
-    car.body.rotation.x = lerp(car.body.rotation.x, -pitch, Math.min(1, dt*8)); car.body.rotation.z = lerp(car.body.rotation.z, roll, Math.min(1, dt*8));
+    if (!S.carAir){ car.body.rotation.x = lerp(car.body.rotation.x, -pitch, Math.min(1, dt*8)); car.body.rotation.z = lerp(car.body.rotation.z, roll, Math.min(1, dt*8)); }
+    else car.body.rotation.x = lerp(car.body.rotation.x, 0.12, Math.min(1, dt*1.5));   // nose dips a little while flying
+    if (!S.carAir && Math.abs(S.carSpeed) > 7) sandSpray(dt);
     car.body.position.y = Math.abs(S.carSpeed) > 3 ? Math.sin(t*20)*0.02 : 0;
     car.wheels.forEach((w, i) => { w.rotation.x += S.carSpeed*dt/0.45; if (i < 2) w.rotation.y = -jx*0.4; });
     if (dragId === null) S.camYaw += angDiff(S.camYaw, car.yaw + PI)*dt*3;
     moveSpeed = Math.abs(S.carSpeed);
   } else if (S.ride === 'boat'){
+    if (S.fish && (Math.abs(jy) > 0.3 || Math.abs(jx) > 0.5)) stopFish();
     if (Math.abs(jy) > 0.1) S.boatSpeed += -jy*(input.sprint ? 14 : 8)*dt; else S.boatSpeed *= (1 - 0.8*dt);
     S.boatSpeed = clamp(S.boatSpeed, -5, input.sprint ? 24 : 14);
     if (Math.abs(jy) > 0.1) S.moved = true;
@@ -1537,7 +1590,8 @@ function updatePlay(dt, t){
     if (S.gameMode === 'adv' && !misById.camel.done && S.drinkT <= 0 && Math.hypot(S.pos.x - SPOT.trough[0], S.pos.z - SPOT.trough[1]) < 4.2){ S.drinkT = 3.2; SFX.squeak(); }
   } else {
     const swim = SEA(S.pos.x) && groundAt(S.pos.x, S.pos.z, S.pos.y) < WATER_Y - 0.95;
-    moveSpeed = walkMove(dt, jx, jy, swim ? (input.sprint ? 6.5 : 4) : (input.sprint ? 10.5 : 5.5));
+    if (S.fish && Math.hypot(jx, jy) > 0.3) stopFish();
+    moveSpeed = S.fish ? 0 : walkMove(dt, jx, jy, swim ? (input.sprint ? 6.5 : 4) : (input.sprint ? 10.5 : 5.5));
     if (swim && !S.swimHint){ S.swimHint = true; const pop = $('pop'); pop.style.setProperty('--c', '#9cc9c9'); pop.innerHTML = '<svg viewBox="0 0 24 24">' + ACT_ICON.boat + '</svg>'; pop.hidden = true; void pop.offsetWidth; pop.hidden = false; S.popT = 2.6; }
     const jumpH = S.kidType === 'saif' ? 2.7 : 1.55;
     if (input.jump && S.onGround && !swim){ S.vy = Math.sqrt(2*GRAV*jumpH); S.onGround = false; SFX.jump(); input.jump = !!keys.Space; }
@@ -1552,7 +1606,7 @@ function updatePlay(dt, t){
     p.root.position.copy(S.pos); p.root.rotation.y = S.heading; p.speed = moveSpeed; p.air = !S.onGround;
     animateKid(p, dt, t);
   }
-  if (S.ride !== 'camel'){ camel.neck.rotation.x = Math.sin(t*1.1)*0.08; walkLegs(camel.legs, 0, 0); }
+  if (S.ride !== 'camel'){ camel.neck.rotation.x = S.feedT > 0 ? lerp(camel.neck.rotation.x, 1.0, Math.min(1, dt*4)) : Math.sin(t*1.1)*0.08; walkLegs(camel.legs, 0, 0); }
   // breadcrumbs & followers
   const last = S.crumbs[S.crumbs.length - 1];
   if (last.distanceTo(S.pos) > 0.3){ S.crumbs.push(S.pos.clone()); if (S.crumbs.length > 600) S.crumbs.shift(); }
@@ -1582,9 +1636,12 @@ function updatePlay(dt, t){
   });
   // vehicle prompt
   nearVehicle = null;
-  if (!S.ride){ if (car.root.position.distanceTo(S.pos) < 3.6) nearVehicle = 'car'; else if (camel.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'camel'; else if (Math.hypot(boat.root.position.x - S.pos.x, boat.root.position.z - S.pos.z) < 4.8) nearVehicle = 'boat'; else if (Math.hypot(window.__fire.x - S.pos.x, window.__fire.z - S.pos.z) < 2.4) nearVehicle = 'fire'; }
-  const actKey = S.ride === 'boat' ? ((miniTick & 7) === 0 ? (S.canLand = !!landSpot()) : S.canLand) && 'out' : S.ride ? 'out' : (nearVehicle === 'fire' && window.__fire.on ? 'fireOut' : nearVehicle), actEl = $('act');
+  if (!S.ride && !S.fish){ if (car.root.position.distanceTo(S.pos) < 3.6) nearVehicle = 'car'; else if (camel.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'camel'; else if (Math.hypot(boat.root.position.x - S.pos.x, boat.root.position.z - S.pos.z) < 4.8) nearVehicle = 'boat'; else if (Math.hypot(window.__fire.x - S.pos.x, window.__fire.z - S.pos.z) < 2.4) nearVehicle = 'fire';
+    else if ((nearPalm = palmNear()) ) nearVehicle = 'palm'; else if (fishSpot()) nearVehicle = 'fish'; }
+  let actKey = S.fish ? (S.fish.st === 'bite' ? 'reel' : 'fish') : S.ride === 'boat' ? (((miniTick & 7) === 0 ? (S.canLand = !!landSpot()) : S.canLand) ? 'out' : (Math.abs(S.boatSpeed) < 1.2 ? 'fish' : null)) : S.ride ? 'out' : (nearVehicle === 'fire' && window.__fire.on ? 'fireOut' : nearVehicle);
+  curAct = actKey; const actEl = $('act');
   if (actKey){ if (actEl.dataset.k !== actKey){ $('acticon').innerHTML = ACT_ICON[actKey]; actEl.dataset.k = actKey; } actEl.hidden = false; } else actEl.hidden = true;
+  actEl.classList.toggle('hot', actKey === 'reel');
   // powers
   S.powerCD = Math.max(0, S.powerCD - dt); S.powerT = Math.max(0, S.powerT - dt);
   if (input.power && S.powerCD <= 0 && S.kidType !== 'saif' && !S.ride){
@@ -1594,6 +1651,7 @@ function updatePlay(dt, t){
   $('power').querySelector('.cd').style.setProperty('--p', (S.powerCD/7*100) + '%');
   if (p.book) p.book.rotation.x = S.powerT > 0 ? -1.1 : -0.25;
   updateMissions(dt, t);
+  updateFun(dt, t);
   // camera
   const portrait = innerWidth < innerHeight;
   const camD = S.ride === 'car' ? (portrait ? 14 : 12) : S.ride === 'boat' ? (portrait ? 17 : 14) : S.ride === 'camel' ? (portrait ? 10 : 8.5) : (portrait ? 8.2 : 7);
@@ -1826,6 +1884,259 @@ function updateWorld(dt, t){
     if (F.on && S.mode === 'play' && Math.hypot(S.pos.x - F.x, S.pos.z - F.z) < 14){ F.crackle -= dt; if (F.crackle <= 0){ SFX.crackle(); F.crackle = 0.12 + Math.random()*0.5; } } }
 }
 
+/* ================= fun things: fishing, football, dates from the palms, dune jumps ================= */
+// local fish (names as Emiratis call them); w = how often they bite at [pier, shore, boat]
+const FISH = [
+  {id: 'hamour', n: 'هامور', c: '#8a6646', b: '#c8a27a', f: '#6e4e34', L: 1.0, h: 0.46, pat: 'spots', w: [2, 1, 3]},
+  {id: 'shaari', n: 'شعري', c: '#b9bec6', b: '#eef0f2', f: '#e08a7a', L: 1.0, h: 0.4, pat: 'dots', w: [3, 3, 2]},
+  {id: 'safi', n: 'صافي', c: '#8f946a', b: '#d8d6a8', f: '#a3a070', L: 0.95, h: 0.46, pat: 'none', w: [4, 3, 1]},
+  {id: 'kanaad', n: 'كنعد', c: '#5f86a8', b: '#dde6ee', f: '#4b6d8c', L: 1.6, h: 0.26, pat: 'bars', w: [0, 0, 3]},
+  {id: 'qabab', n: 'قباب', c: '#2f4f7a', b: '#d9e0e8', f: '#2a456a', L: 1.3, h: 0.36, pat: 'none', w: [0, 0, 3]},
+  {id: 'sadda', n: 'صدّة', c: '#33557f', b: '#e3e8ee', f: '#2c4a70', L: 1.2, h: 0.38, pat: 'stripes', w: [0, 0, 2]},
+  {id: 'zubaidi', n: 'زبيدي', c: '#c9ced4', b: '#f1f3f5', f: '#9aa3ad', L: 0.8, h: 0.62, pat: 'none', w: [3, 2, 1]},
+  {id: 'hamra', n: 'حمرا', c: '#d2493a', b: '#f0a08e', f: '#3a2a2a', L: 1.0, h: 0.42, pat: 'none', w: [2, 0, 3]},
+  {id: 'khabbat', n: 'خبّاط', c: '#8fa9c2', b: '#e8eef3', f: '#6f8aa6', L: 1.5, h: 0.24, pat: 'dots', w: [2, 3, 0]},
+  {id: 'nagroor', n: 'نقرور', c: '#c9a24a', b: '#efdca4', f: '#e6c13a', L: 1.0, h: 0.42, pat: 'none', w: [2, 3, 0]},
+  {id: 'sheim', n: 'شعم', c: '#b8bec4', b: '#eceff1', f: '#f0c43a', L: 1.0, h: 0.42, pat: 'none', w: [3, 3, 0]},
+  {id: 'basi', n: 'باسي', c: '#e07a86', b: '#f5c2c8', f: '#c95a68', L: 1.0, h: 0.4, pat: 'none', w: [0, 1, 2]}
+];
+const fishBook = (function(){ try { return JSON.parse(localStorage.getItem('saeedan_fish')) || {}; } catch(e){ return {}; } })();
+function fishSVG(F, dark){
+  const L = 70*F.L, Hh = 70*F.L*F.h, cx = 100, cy = 50, x0 = cx - L/2, x1 = cx + L/2;
+  const c = dark ? '#8a8378' : F.c, b = dark ? '#a39b8e' : F.b, f = dark ? '#7a7368' : F.f;
+  let pat = '';
+  if (!dark){
+    if (F.pat === 'spots') for (let i = 0; i < 9; i++) pat += '<circle cx="' + (x0 + L*(0.22 + (i % 3)*0.2 + (i > 5 ? 0.06 : 0))) + '" cy="' + (cy - Hh*0.22 + Math.floor(i/3)*Hh*0.2) + '" r="' + (Hh*0.07) + '" fill="#4e3626" opacity=".7"/>';
+    if (F.pat === 'dots') for (let i = 0; i < 10; i++) pat += '<circle cx="' + (x0 + L*(0.25 + (i % 5)*0.13)) + '" cy="' + (cy - Hh*0.12 + Math.floor(i/5)*Hh*0.22) + '" r="' + (Hh*0.05) + '" fill="#3f5a8a" opacity=".75"/>';
+    if (F.pat === 'bars') for (let i = 0; i < 6; i++) pat += '<path d="M' + (x0 + L*(0.3 + i*0.09)) + ' ' + (cy - Hh*0.45) + 'q' + (L*0.03) + ' ' + (Hh*0.3) + ' 0 ' + (Hh*0.55) + '" stroke="#2c4a66" stroke-width="2.4" fill="none" opacity=".6"/>';
+    if (F.pat === 'stripes') for (let i = 0; i < 3; i++) pat += '<path d="M' + (x0 + L*0.3) + ' ' + (cy + Hh*(0.08 + i*0.12)) + 'h' + (L*0.5) + '" stroke="#2c4a70" stroke-width="2.2" opacity=".55"/>';
+  }
+  return '<svg viewBox="0 0 200 100"><path d="M' + (x1 - 4) + ' ' + cy + 'l' + (Hh*0.9) + ' ' + (-Hh*0.75) + 'q' + (-Hh*0.3) + ' ' + (Hh*0.75) + ' 0 ' + (Hh*1.5) + 'z" fill="' + f + '"/>' +
+    '<path d="M' + (cx - L*0.1) + ' ' + (cy - Hh*0.46) + 'q' + (L*0.18) + ' ' + (-Hh*0.5) + ' ' + (L*0.34) + ' ' + (Hh*0.08) + 'z" fill="' + f + '"/>' +
+    '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (L/2) + '" ry="' + (Hh/2) + '" fill="' + c + '" stroke="#5a3519" stroke-width="2"/>' +
+    '<path d="M' + (x0 + L*0.12) + ' ' + (cy + Hh*0.12) + 'Q' + cx + ' ' + (cy + Hh*0.62) + ' ' + (x1 - L*0.08) + ' ' + (cy + Hh*0.1) + '" fill="' + b + '" opacity=".85"/>' + pat +
+    '<circle cx="' + (x0 + L*0.14) + '" cy="' + (cy - Hh*0.1) + '" r="' + Math.max(3, Hh*0.11) + '" fill="#fff" stroke="#5a3519" stroke-width="1.4"/><circle cx="' + (x0 + L*0.13) + '" cy="' + (cy - Hh*0.1) + '" r="' + Math.max(1.6, Hh*0.055) + '" fill="#1d120a"/>' +
+    '<path d="M' + (x0 + L*0.27) + ' ' + (cy - Hh*0.3) + 'q' + (L*0.04) + ' ' + (Hh*0.3) + ' 0 ' + (Hh*0.6) + '" stroke="#5a3519" stroke-width="1.6" fill="none" opacity=".6"/></svg>';
+}
+function fishMesh(F){
+  const g = new T.Group(), body = new T.Mesh(SPH, new T.MeshToonMaterial({color: new T.Color(F.c), gradientMap: gradTex}));
+  body.scale.set(0.28*F.L, 0.28*F.L*F.h, 0.11); g.add(body);
+  const tail = new T.Mesh(new T.ConeGeometry(0.12*F.L*F.h + 0.04, 0.16, 4), new T.MeshToonMaterial({color: new T.Color(F.f), gradientMap: gradTex}));
+  tail.rotation.z = PI/2; tail.scale.z = 0.3; tail.position.x = 0.3*F.L; g.add(tail);
+  const eye = new T.Mesh(SPH_LO, M(0x1d120a)); eye.scale.setScalar(0.022); eye.position.set(-0.2*F.L, 0.03, 0.09); g.add(eye);
+  return g;
+}
+const fishRig = (function(){
+  const rod = new T.Group();
+  const pole = new T.Mesh(new T.CylinderGeometry(0.012, 0.025, 1.9, 6), M(0x6b4a2e)); pole.position.y = 0.95; rod.add(pole);
+  const reel = new T.Mesh(new T.CylinderGeometry(0.06, 0.06, 0.05, 10), M(0x3a3a3a)); reel.rotation.z = PI/2; reel.position.set(0.05, 0.35, 0); rod.add(reel);
+  rod.rotation.x = 0.85; rod.visible = false; scene.add(rod);
+  const tip = new T.Object3D(); tip.position.y = 1.9; rod.add(tip);
+  const bob = new T.Group(); part(bob, SPH_LO, M(0xe05a3a), [0, 0.06, 0], [0.09, 0.09, 0.09]); part(bob, SPH_LO, M(0xffffff), [0, -0.02, 0], [0.085, 0.06, 0.085]); bob.visible = false; scene.add(bob);
+  const lineGeo = new T.BufferGeometry().setFromPoints([new T.Vector3(), new T.Vector3()]);
+  const line = new T.Line(lineGeo, new T.LineBasicMaterial({color: 0x3a3a3a})); line.frustumCulled = false; line.visible = false; scene.add(line);
+  const ring = new T.Mesh(new T.RingGeometry(0.25, 0.32, 24), new T.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0, side: T.DoubleSide, depthWrite: false})); ring.rotation.x = -PI/2; scene.add(ring);
+  return {rod, tip, bob, line, ring};
+})();
+function onPier(){ return S.pos.x > PIER.x0 - 0.5 && S.pos.x < PIER.x1 + 0.5 && Math.abs(S.pos.z - PIER.z) < 1.8 && S.pos.y > PIER.top - 0.3; }
+function fishSpot(){
+  if (S.ride || S.player.swim) return null;
+  if (onPier()) return 'pier';
+  if (!SEA(S.pos.x) || H(S.pos.x, S.pos.z) < WATER_Y) return null;
+  const ax = S.pos.x + Math.sin(S.heading)*4, az = S.pos.z + Math.cos(S.heading)*4;
+  return groundAt(ax, az, 0) < WATER_Y - 0.5 ? 'shore' : null;
+}
+function startFish(){
+  const where = S.ride === 'boat' ? 'boat' : fishSpot(); if (!where) return;
+  let bx, bz;
+  if (where === 'boat'){ const a = boat.yaw + PI/2; bx = S.pos.x + Math.sin(a)*4.5; bz = S.pos.z + Math.cos(a)*4.5; }
+  else { const d = where === 'pier' ? 6 : 5.5; bx = S.pos.x + Math.sin(S.heading)*d; bz = S.pos.z + Math.cos(S.heading)*d; if (where === 'pier' && Math.abs(bz - PIER.z) < 2.2) bz = PIER.z + (bz >= PIER.z ? 3 : -3); }
+  S.fish = {where, st: 'cast', t: 0, wait: 2.2 + Math.random()*3.5, bx, bz, fly: null};
+  fishRig.rod.visible = fishRig.bob.visible = fishRig.line.visible = true; SFX.cast();
+}
+function stopFish(){ S.fish = null; fishRig.rod.visible = fishRig.bob.visible = fishRig.line.visible = false; fishRig.ring.material.opacity = 0; }
+function fishPress(){
+  const F = S.fish; if (!F) return;
+  if (F.st === 'bite'){ catchFish(); return; }
+  if (F.st !== 'reeling') stopFish();   // pressed early: reel the line back in
+}
+function pickFish(where){
+  const k = where === 'pier' ? 0 : where === 'shore' ? 1 : 2, tot = FISH.reduce((a, f) => a + f.w[k], 0);
+  let r = Math.random()*tot; for (const f of FISH){ r -= f.w[k]; if (r <= 0) return f; } return FISH[0];
+}
+function catchFish(){
+  const F = S.fish, sp = pickFish(F.where), m = fishMesh(sp);
+  m.position.set(F.bx, WATER_Y + 0.1, F.bz); scene.add(m);
+  F.st = 'reeling'; F.t = 0; F.fly = {m, sp, from: m.position.clone()};
+  SFX.reel(); burst(F.bx, WATER_Y + 0.2, F.bz, 0xe8f4f8, 10);
+}
+function showCatch(sp){
+  const first = !fishBook[sp.id]; fishBook[sp.id] = (fishBook[sp.id] || 0) + 1;
+  try { localStorage.setItem('saeedan_fish', JSON.stringify(fishBook)); } catch(e){}
+  const el = $('catch'); el.style.setProperty('--c', sp.c);
+  el.innerHTML = fishSVG(sp) + '<div class="fn">' + sp.n + '</div>' + (first ? '<span class="nw">جديدة!</span>' : '');
+  el.hidden = true; void el.offsetWidth; el.hidden = false; S.catchT = 2.6; SFX.find();
+}
+function updateFishing(dt, t){
+  const F = S.fish, R = fishRig;
+  if (S.catchT > 0){ S.catchT -= dt; if (S.catchT <= 0) $('catch').hidden = true; }
+  if (!F) return;
+  const p = S.player.root; R.rod.position.copy(p.position).add(new T.Vector3(Math.sin(S.heading + 0.5)*0.32, 0.95, Math.cos(S.heading + 0.5)*0.32));
+  R.rod.rotation.set(0, 0, 0); R.rod.rotateY(Math.atan2(F.bx - p.position.x, F.bz - p.position.z)); R.rod.rotateX(F.st === 'bite' ? 0.55 + Math.sin(t*30)*0.05 : 0.85);
+  F.t += dt;
+  let by = WATER_Y + Math.sin(t*2.2)*0.03;
+  if (F.st === 'cast'){ const k = Math.min(1, F.t/0.7), tipW = R.tip.getWorldPosition(new T.Vector3());
+    R.bob.position.set(lerp(tipW.x, F.bx, k), lerp(tipW.y, by, k) + Math.sin(k*PI)*2, lerp(tipW.z, F.bz, k));
+    if (k >= 1){ F.st = 'wait'; F.t = 0; SFX.plop(); R.ring.material.opacity = 0.6; R.ring.scale.setScalar(0.5); } }
+  else if (F.st === 'wait'){ R.bob.position.set(F.bx, by, F.bz); if (F.t > F.wait){ F.st = 'bite'; F.t = 0; SFX.splash(); burst(F.bx, WATER_Y + 0.1, F.bz, 0xe8f4f8, 8); } }
+  else if (F.st === 'bite'){ R.bob.position.set(F.bx + Math.sin(t*40)*0.05, by - 0.22 - Math.abs(Math.sin(t*9))*0.12, F.bz); if ((S.ringT = (S.ringT || 0) - dt) <= 0){ S.ringT = 0.45; R.ring.material.opacity = 0.7; R.ring.scale.setScalar(0.4); }
+    if (F.t > 1.9){ F.st = 'wait'; F.t = 0; F.wait = 1.8 + Math.random()*3; } }   // too slow: the fish lets go, wait for the next one
+  else if (F.st === 'reeling'){ const k = Math.min(1, F.t/0.8), dst = p.position.clone().add(new T.Vector3(0, 1.6, 0)), m = F.fly.m;
+    m.position.lerpVectors(F.fly.from, dst, k); m.position.y += Math.sin(k*PI)*2.4; m.rotation.z = Math.sin(t*25)*0.5; m.rotation.y = t*3;
+    R.bob.position.copy(m.position);
+    if (k >= 1){ scene.remove(m); const sp = F.fly.sp; stopFish(); showCatch(sp); return; } }
+  if (R.ring.material.opacity > 0){ R.ring.position.set(F.bx, WATER_Y + 0.02, F.bz); R.ring.scale.multiplyScalar(1 + dt*2.2); R.ring.material.opacity = Math.max(0, R.ring.material.opacity - dt*0.9); }
+  const tipW = R.tip.getWorldPosition(new T.Vector3()), pos = R.line.geometry.attributes.position;
+  pos.setXYZ(0, tipW.x, tipW.y, tipW.z); pos.setXYZ(1, R.bob.position.x, R.bob.position.y + 0.08, R.bob.position.z); pos.needsUpdate = true;
+}
+function renderAlbum(){
+  const got = FISH.filter(f => fishBook[f.id]).length;
+  $('agrid').innerHTML = FISH.map(f => { const n = fishBook[f.id] || 0; return '<div class="aitem' + (n ? '' : ' no') + '">' + fishSVG(f, !n) + '<b>' + (n ? f.n : '؟') + '</b><small>' + (n ? '× ' + n : '') + '</small></div>'; }).join('');
+  document.querySelector('#album .ltitle').textContent = 'دفتر السمك  ' + got + '/' + FISH.length;
+}
+$('albBtn').onclick = () => { ensureAudio(); SFX.star(); renderAlbum(); $('album').hidden = false; };
+$('albDone').onclick = () => { $('album').hidden = true; };
+
+// football at the camp: run into the ball to kick it, score in the goal
+const GOAL = {x: 0, z: 13, w: 2.3, h: 2.0, d: 1.6};
+const ball = (function(){
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 128; const g = cv.getContext('2d');
+  g.fillStyle = '#fbfbf7'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#2a2a2a';
+  for (let i = 0; i < 12; i++){ const x = (i % 6)*44 + (i > 5 ? 22 : 0) + 10, y = i > 5 ? 92 : 36; g.beginPath(); for (let k = 0; k < 5; k++){ const a = k/5*2*PI - PI/2; g.lineTo(x + Math.cos(a)*12, y + Math.sin(a)*12); } g.fill(); }
+  const tx = new T.CanvasTexture(cv); tx.encoding = T.sRGBEncoding;
+  const m = new T.Mesh(new T.SphereGeometry(0.33, 20, 14), new T.MeshStandardMaterial({map: tx, roughness: 0.6})); m.castShadow = true; scene.add(m);
+  return {m, p: new T.Vector3(), v: new T.Vector3(), r: 0.33, cd: 0, goalT: 0};
+})();
+(function goal(){
+  const g = new T.Group(), y = H(GOAL.x, GOAL.z); g.position.set(GOAL.x, y, GOAL.z); scene.add(g);
+  const white = M(0xffffff), post = new T.CylinderGeometry(0.07, 0.07, GOAL.h, 8);
+  [-1, 1].forEach(sd => { part(g, post, white, [sd*GOAL.w, GOAL.h/2, 0]); part(g, new T.CylinderGeometry(0.05, 0.05, Math.hypot(GOAL.h, GOAL.d), 6), white, [sd*GOAL.w, GOAL.h/2, GOAL.d/2], null, [Math.atan2(GOAL.d, GOAL.h), 0, 0]); colliders.push({x: GOAL.x + sd*GOAL.w, z: GOAL.z, r: 0.15, top: null}); });
+  part(g, new T.CylinderGeometry(0.07, 0.07, GOAL.w*2, 8), white, [0, GOAL.h, 0], null, [0, 0, PI/2]);
+  for (let x = -GOAL.w; x <= GOAL.w + 0.01; x += 0.6) colliders.push({x: GOAL.x + x, z: GOAL.z + GOAL.d, r: 0.3, top: null, net: true});   // kids can't run through the net
+  for (let z = 0.5; z < GOAL.d; z += 0.5) [-1, 1].forEach(sd => colliders.push({x: GOAL.x + sd*GOAL.w, z: GOAL.z + z, r: 0.3, top: null, net: true}));
+  const net = new T.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.35, side: T.DoubleSide, depthWrite: false, wireframe: true});
+  part(g, new T.PlaneGeometry(GOAL.w*2, Math.hypot(GOAL.h, GOAL.d), 12, 8), net, [0, GOAL.h/2, GOAL.d/2], null, [-(PI/2 - Math.atan2(GOAL.h, GOAL.d)), 0, 0], true);
+  [-1, 1].forEach(sd => part(g, new T.PlaneGeometry(GOAL.d, GOAL.h, 6, 8), net, [sd*GOAL.w, GOAL.h/2, GOAL.d/2], null, [0, PI/2, 0], true));
+})();
+function resetBall(){ ball.last = null; ball.p.set(GOAL.x, H(GOAL.x, GOAL.z - 6) + ball.r, GOAL.z - 6); ball.v.set(0, 0, 0); ball.goalT = 0; ball.m.position.copy(ball.p); }
+function updateBall(dt, t){
+  const b = ball, P = b.p, V = b.v, prevZ = P.z, prevX = P.x;
+  if (b.goalT > 0){ b.goalT -= dt; if (b.goalT <= 0) resetBall(); }
+  b.cd -= dt;
+  // kick: run into it (harder when sprinting); the car shoves it too
+  // swept test (from last frame's spot to now) so a fast runner can't pass through the ball on a slow device
+  const A = b.last || S.pos, ax = S.pos.x - A.x, az = S.pos.z - A.z, al = ax*ax + az*az, q = al > 1e-6 ? clamp(((P.x - A.x)*ax + (P.z - A.z)*az)/al, 0, 1) : 1;
+  const cxp = A.x + ax*q, czp = A.z + az*q, kx = P.x - cxp, kz = P.z - czp, kd = Math.hypot(kx, kz);
+  b.last = (b.last || new T.Vector3()).copy(S.pos);
+  const reach = S.ride === 'car' ? 2.0 : S.ride ? 0 : 0.72;
+  if (reach && kd < reach && P.y < S.pos.y + 1.4 && b.cd <= 0){
+    const sp = S.ride === 'car' ? Math.abs(S.carSpeed) : (S.player.speed || 0), pw = S.ride === 'car' ? sp + 4 : 3.5 + sp*1.05;
+    // mostly the way the kid is running, a little off-centre like a real kick
+    const fx = Math.sin(S.heading)*(S.ride === 'car' && S.carSpeed < 0 ? -1 : 1), fz = Math.cos(S.heading)*(S.ride === 'car' && S.carSpeed < 0 ? -1 : 1), m = sp > 0.5 ? 0.75 : 0;
+    let dx = fx*m + kx/(kd || 1)*(1 - m), dz = fz*m + kz/(kd || 1)*(1 - m); const dl = Math.hypot(dx, dz) || 1; dx /= dl; dz /= dl;
+    V.set(dx*pw, 2.2 + sp*0.32, dz*pw); b.cd = 0.3; SFX.kick();
+    if (kd < b.r + 0.3){ P.x = cxp + dx*(b.r + 0.35); P.z = czp + dz*(b.r + 0.35); }
+  }
+  V.y -= 20*dt; P.addScaledVector(V, dt);
+  const g = H(P.x, P.z) + b.r;
+  if (P.y < g){ P.y = g; if (V.y < -2){ V.y *= -0.5; SFX.bounce(); } else V.y = 0; const f = Math.max(0, 1 - 1.5*dt); V.x *= f; V.z *= f; }
+  for (const c of colliders){ if (!c.r || c.top !== null || c.net) continue; const dx = P.x - c.x, dz = P.z - c.z, d = Math.hypot(dx, dz), Rr = c.r + b.r; if (d < Rr && d > 0){ P.x = c.x + dx/d*Rr; P.z = c.z + dz/d*Rr; const vn = (V.x*dx + V.z*dz)/d; if (vn < 0){ V.x -= 1.6*vn*dx/d; V.z -= 1.6*vn*dz/d; } } }
+  // goal: crossed the line between the posts and under the bar
+  const inMouth = Math.abs(P.x - GOAL.x) < GOAL.w - b.r && P.y - H(GOAL.x, GOAL.z) < GOAL.h;
+  if (b.goalT <= 0 && prevZ < GOAL.z && P.z >= GOAL.z && inMouth){ b.goalT = 2.4; SFX.win(); burst(GOAL.x, H(GOAL.x, GOAL.z) + 2.2, GOAL.z + 0.6, 0xf0d590, 26); burst(GOAL.x, H(GOAL.x, GOAL.z) + 1.5, GOAL.z + 0.6, 0xffffff, 14); popIcon('#f0d590', '<circle cx="12" cy="12" r="9" fill="#fbfbf7" stroke="#5a3519" stroke-width="1.6"/><path d="M12 7.5l4 3-1.5 4.6h-5L8 10.5z" fill="#2a2a2a"/>'); }
+  // the net keeps it in
+  if (prevZ >= GOAL.z - 0.05 && prevZ <= GOAL.z + GOAL.d && Math.abs(prevX - GOAL.x) < GOAL.w){   // it was inside the goal: the net holds it
+    const back = GOAL.z + GOAL.d - b.r, gy = H(GOAL.x, GOAL.z);
+    if (P.z > back){ P.z = back; V.z = -Math.abs(V.z)*0.2; V.x *= 0.5; }
+    if (Math.abs(P.x - GOAL.x) > GOAL.w - b.r){ P.x = GOAL.x + Math.sign(P.x - GOAL.x)*(GOAL.w - b.r); V.x *= -0.2; }
+    if (P.z > GOAL.z && P.y > gy + GOAL.h - b.r){ P.y = gy + GOAL.h - b.r; V.y = Math.min(0, V.y); }
+  }
+  if (Math.hypot(P.x - GOAL.x, P.z - GOAL.z) > 160) resetBall();
+  b.m.position.copy(P);
+  const hv = Math.hypot(V.x, V.z); if (hv > 0.05){ b.m.rotateOnWorldAxis(new T.Vector3(V.z/hv, 0, -V.x/hv), hv*dt/b.r); }
+}
+function popIcon(col, svg){ const pop = $('pop'); pop.style.setProperty('--c', col); pop.innerHTML = '<svg viewBox="0 0 24 24">' + svg + '</svg>'; pop.hidden = true; void pop.offsetWidth; pop.hidden = false; S.popT = 1.9; }
+
+// palms: shake one, ripe dates fall; pick them up; the camel loves them
+const dates = [], dateGeo = new T.SphereGeometry(1, 8, 6), dateMat = new T.MeshToonMaterial({color: 0xb5651d, gradientMap: gradTex});
+function palmNear(){ let best = null, bd = 2.3; for (const g of PALMS){ const d = Math.hypot(g.position.x - S.pos.x, g.position.z - S.pos.z); if (d < bd && (g.userData.cd || 0) <= 0){ bd = d; best = g; } } return best; }
+function shakePalm(g){
+  if (!g) return; g.userData.cd = 14; g.userData.shake = 1; SFX.rustle();
+  const top = g.position.y + 4.2*g.scale.y;
+  for (let i = 0; i < 5; i++){
+    let d = dates.find(x => !x.m.visible); if (!d){ if (dates.length > 40) continue; d = {m: new T.Mesh(dateGeo, dateMat), v: new T.Vector3()}; d.m.scale.set(0.07, 0.1, 0.07); d.m.castShadow = true; scene.add(d.m); dates.push(d); }
+    const a = Math.random()*2*PI; d.m.visible = true; d.m.position.set(g.position.x + Math.cos(a)*0.6, top, g.position.z + Math.sin(a)*0.6);
+    d.v.set(Math.cos(a)*(1 + Math.random()*1.5), 0, Math.sin(a)*(1 + Math.random()*1.5)); d.ground = false; d.t = 0;
+  }
+}
+function updatePalmsAndDates(dt, t){
+  for (const g of PALMS){ const u = g.userData; if (u.cd > 0) u.cd -= dt; if (u.shake > 0){ u.shake = Math.max(0, u.shake - dt*0.8); g.rotation.z = Math.sin(t*22)*0.06*u.shake; g.rotation.x = Math.cos(t*19)*0.04*u.shake; } }
+  for (const d of dates){
+    if (!d.m.visible) continue; const P = d.m.position;
+    if (!d.ground){ d.v.y -= 14*dt; P.addScaledVector(d.v, dt); const g = groundAt(P.x, P.z, P.y) + 0.07; if (P.y <= g){ P.y = g; d.ground = true; SFX.land(); } }
+    else { d.t += dt; if (d.t > 60){ d.m.visible = false; continue; } }
+    if (d.ground && !S.ride && Math.hypot(P.x - S.pos.x, P.z - S.pos.z) < 1.0){ d.m.visible = false; S.dates = (S.dates || 0) + 1; $('dates').textContent = S.dates; $('datesPill').hidden = false; SFX.star(); burst(P.x, P.y + 0.2, P.z, 0xd08a3a, 5); }
+  }
+  // feed the camel: walk up to it with dates and it eats one
+  if (S.feedT > 0) S.feedT -= dt;
+  if (S.dates > 0 && S.ride !== 'camel' && !(S.feedT > 0) && camel.root.position.distanceTo(S.pos) < 3.2){
+    S.dates--; $('dates').textContent = S.dates; if (!S.dates) $('datesPill').hidden = true;
+    S.feedT = 2.2; SFX.munch(); const c = camel.root.position; burst(c.x + Math.sin(camel.root.rotation.y)*1.6, c.y + 1.4, c.z + Math.cos(camel.root.rotation.y)*1.6, 0xee8fb0, 12);
+  }
+}
+
+// dune jumps: the car leaves the ground when the sand drops away faster than it would fall
+function carVertical(dt){
+  const g = H(S.pos.x, S.pos.z), y0 = S.pos.y;
+  if (S.carAir){
+    S.carVy -= 26*dt; S.pos.y += S.carVy*dt; S.airT += dt;
+    if (S.pos.y <= g){ S.pos.y = g; S.carAir = false;
+      if (S.carVy < -6){ SFX.land(); SFX.thud(); sandBurst(14); S.carSpeed *= 0.92; if (S.airT > 0.7){ SFX.star(); burst(S.pos.x, S.pos.y + 2.5, S.pos.z, 0xf0d590, 12); } }
+      S.carVy = (g - y0)/Math.max(dt, 1e-3); }
+    return;
+  }
+  const vg = (g - y0)/Math.max(dt, 1e-3);
+  if (S.carVy > 2.5 && vg < S.carVy - 26*dt*1.5 && Math.abs(S.carSpeed) > 9){ S.carAir = true; S.airT = 0; S.pos.y = y0 + S.carVy*dt; SFX.jump(); return; }
+  S.pos.y = g; S.carVy = clamp(vg, -30, 30);
+}
+const sandP = [];
+for (let i = 0; i < 48; i++){ const m = new T.Mesh(sparkleGeo, new T.MeshBasicMaterial({color: 0xe2c592, transparent: true, opacity: 0, depthWrite: false})); m.visible = false; scene.add(m); sandP.push({m, v: new T.Vector3(), life: 0}); }
+let sandI = 0, sandAcc = 0;
+function sandOne(x, y, z, vx, vy, vz){ const p = sandP[sandI++ % sandP.length]; p.m.position.set(x, y, z); p.v.set(vx, vy, vz); p.life = 0.7; p.m.visible = true; p.m.scale.setScalar(1.6 + Math.random()*1.4); }
+function sandSpray(dt){
+  sandAcc += dt*Math.min(40, Math.abs(S.carSpeed)*1.5);
+  const bx = -Math.sin(car.yaw)*Math.sign(S.carSpeed), bz = -Math.cos(car.yaw)*Math.sign(S.carSpeed);
+  while (sandAcc > 1){ sandAcc -= 1; const sd = Math.random() < 0.5 ? -0.9 : 0.9; sandOne(S.pos.x + bx*1.6 + Math.cos(car.yaw)*sd, S.pos.y + 0.2, S.pos.z + bz*1.6 - Math.sin(car.yaw)*sd, bx*3 + (Math.random() - .5)*2, 2 + Math.random()*2.5, bz*3 + (Math.random() - .5)*2); }
+}
+function sandBurst(n){ for (let i = 0; i < n; i++){ const a = Math.random()*2*PI; sandOne(S.pos.x + Math.cos(a)*1.2, S.pos.y + 0.2, S.pos.z + Math.sin(a)*1.2, Math.cos(a)*4, 2 + Math.random()*3, Math.sin(a)*4); } }
+function updateSand(dt){ for (const p of sandP){ if (p.life <= 0) continue; p.life -= dt; p.v.y -= 9*dt; p.m.position.addScaledVector(p.v, dt); p.m.material.opacity = Math.max(0, p.life/0.7)*0.8; if (p.life <= 0) p.m.visible = false; } }
+// a festival gate with flags at the dunes, and stars on the dune tops for the drivers
+(function duneFestival(){
+  const flag = (x, z) => { const y = H(x, z), g = new T.Group(); g.position.set(x, y, z); scene.add(g);
+    part(g, new T.CylinderGeometry(0.06, 0.07, 5, 8), M(0xdddddd), [0, 2.5, 0]);
+    part(g, new T.BoxGeometry(0.02, 1.0, 0.45), M(0xc8102e), [0, 4.5, 0.24], null, null, true);
+    [[0x00843d, 4.83], [0xffffff, 4.5], [0x111111, 4.17]].forEach(q => part(g, new T.BoxGeometry(0.02, 0.33, 1.05), M(q[0]), [0, q[1], 0.98], null, null, true));
+    colliders.push({x, z, r: 0.2, top: null}); };
+  const ex = DUNES[0] + 58, ez = DUNES[1] - 24; flag(ex, ez - 5); flag(ex, ez + 5);
+})();
+function resetFun(){
+  if (S.fish) stopFish(); S.catchT = 0; $('catch').hidden = true; $('album').hidden = true;
+  S.dates = 0; $('dates').textContent = '0'; $('datesPill').hidden = true; S.feedT = 0;
+  dates.forEach(d => d.m.visible = false); PALMS.forEach(g => { g.userData.cd = 0; g.userData.shake = 0; g.rotation.x = g.rotation.z = 0; });
+  S.carAir = false; S.carVy = 0; resetBall();
+}
+function updateFun(dt, t){ updateFishing(dt, t); updateBall(dt, t); updatePalmsAndDates(dt, t); updateSand(dt); }
+
 /* ================= loop ================= */
 let lastT = performance.now(), acc = 0, frames = 0, slow = 0, miniTick = 0;
 /* ================= play together: everyone who opens the game lands in the same world =================
@@ -1901,7 +2212,7 @@ function netDrop(id){
   // free the GPU memory of this remote's own model (its skinned body + textures) and name tag
   r.k.root.traverse(o => { if (o.isSprite){ if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
   if (r.k.g){ try { r.k.g.mixer.stopAllAction(); r.k.g.mixer.uncacheRoot(r.k.g.o); } catch(e){}
-    r.k.g.o.traverse(o => { if (o.isSkinnedMesh){ o.geometry.dispose(); if (o.material.map) o.material.map.dispose(); o.material.dispose(); if (o.skeleton) o.skeleton.dispose(); } }); }
+    r.k.g.o.traverse(o => { if (o.isSkinnedMesh){ o.geometry.dispose(); if (o.material.map) o.material.map.dispose(); if (o.material.normalMap) o.material.normalMap.dispose(); o.material.dispose(); if (o.skeleton) o.skeleton.dispose(); } }); }
 }
 const VEH_SRC = {car: () => car.root, camel: () => camel.root, boat: () => boat.root};
 function updateNet(dt, t){
@@ -1943,7 +2254,7 @@ function loop(now){
   requestAnimationFrame(loop);
   let dt = (now - lastT)/1000; lastT = now; if (dt > 0.1) dt = 0.1;
   const t = now/1000;
-  if (S.mode === 'select') updateSelect(dt, t); else if (S.mode === 'play'){ if ($('settings').hidden) updatePlay(dt, t); } else updateEnding(dt, t);
+  if (S.mode === 'select') updateSelect(dt, t); else if (S.mode === 'play'){ if ($('settings').hidden && $('album').hidden) updatePlay(dt, t); } else updateEnding(dt, t);
   updateWorld(dt, t); updateNet(dt, t);
   camera.position.copy(camPos); camera.lookAt(camLook);
   renderer.render(scene, camera);
