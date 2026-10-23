@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="ar"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>مغامرات عيال وليد</title>
@@ -49,10 +49,6 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #act svg{width:62%;height:62%}
 #power{position:fixed;width:64px;height:64px;right:calc(max(18px,env(safe-area-inset-right,0px)) + 100px);bottom:calc(env(safe-area-inset-bottom,0px) + 64px)}
 #sprint{position:fixed;width:66px;height:66px;right:calc(max(18px,env(safe-area-inset-right,0px)) + 14px);bottom:calc(env(safe-area-inset-bottom,0px) + 208px)}
-#pad{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:204px;height:204px}
-#pad .pb{position:absolute;width:68px;height:68px}
-#pad .pb svg{width:58%;height:58%}
-#pad [data-d=up]{left:68px;top:0}#pad [data-d=down]{left:68px;bottom:0}#pad [data-d=left]{left:0;top:68px}#pad [data-d=right]{right:0;top:68px}
 #timer{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 70px)}
 #gear2{position:absolute;left:max(14px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 12px);pointer-events:auto}
 #lobby,#ward{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:min(560px,calc(100% - 32px));
@@ -82,8 +78,6 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #joy{opacity:.32;transition:opacity .15s}
 #joy.act{opacity:1;border-color:#fff;background:radial-gradient(circle,rgba(255,250,240,.25) 0,rgba(255,250,240,.5) 100%)}
 #knob{position:absolute;left:50%;top:50%;width:66px;height:66px;margin:-33px 0 0 -33px;border-radius:50%;background:var(--glass);box-shadow:0 4px 0 var(--sand-deep),0 6px 14px var(--shadow);transition:transform .08s}
-#hand{position:fixed;left:18%;bottom:22%;width:64px;height:64px;pointer-events:none;animation:swipe 1.6s ease-in-out infinite}
-@keyframes swipe{0%,100%{transform:translate(0,0)}50%{transform:translate(28px,-34px)}}
 #pop{position:fixed;left:50%;top:38%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;display:grid;place-items:center;
   background:var(--glass);border:6px solid var(--c);box-shadow:0 8px 0 var(--sand-deep),0 18px 40px var(--shadow);pointer-events:none;animation:popin 1.9s ease both}
 #pop svg{width:66%;height:66%}
@@ -107,9 +101,10 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #endmis .mi{width:48px;height:48px}
 .row{display:flex;gap:18px}
 .big{width:74px;height:74px}
-@media (prefers-reduced-motion:reduce){#hand,.bigstar svg,#pop{animation:none}}
+@media (prefers-reduced-motion:reduce){.bigstar svg,#pop{animation:none}}
 </style>
 
+</head><body>
 <canvas id="c"></canvas>
 
 <div id="hud" hidden>
@@ -125,13 +120,6 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 <canvas id="mini" hidden width="236" height="236"></canvas>
 
 <div id="joy" hidden><div id="knob"></div></div>
-<svg id="hand" hidden viewBox="0 0 64 64"><circle cx="22" cy="22" r="14" fill="rgba(255,255,255,.55)"/><path d="M26 58c-6-2-12-9-14-15-1-3 2-5 4-3l4 5V18a3.5 3.5 0 0 1 7 0v14l13 2c4 1 6 4 5 8l-2 11c-1 3-3 5-6 5z" fill="#fff" stroke="#5a3519" stroke-width="2.4" stroke-linejoin="round"/></svg>
-<div id="pad" hidden>
-  <button class="round pb" data-d="up" aria-label="قدّام"><svg viewBox="0 0 24 24"><path d="M12 4 4 14h5v6h6v-6h5z" fill="#5a3519"/></svg></button>
-  <button class="round pb" data-d="down" aria-label="ورا"><svg viewBox="0 0 24 24"><path d="M12 20 4 10h5V4h6v6h5z" fill="#5a3519"/></svg></button>
-  <button class="round pb" data-d="left" aria-label="يسار"><svg viewBox="0 0 24 24"><path d="M4 12 14 4v5h6v6h-6v5z" fill="#5a3519"/></svg></button>
-  <button class="round pb" data-d="right" aria-label="يمين"><svg viewBox="0 0 24 24"><path d="M20 12 10 4v5H4v6h6v5z" fill="#5a3519"/></svg></button>
-</div>
 <button class="round" id="jump" hidden aria-label="قفز"><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 14l7-7 7 7"/><path d="M5 20l7-7 7 7" opacity=".45"/></svg></button>
 <button class="round" id="act" hidden aria-label="اركب"><svg id="acticon" viewBox="0 0 24 24"></svg></button>
 <button class="round" id="sprint" hidden aria-label="سرعة"><svg viewBox="0 0 24 24"><path d="M13.5 2.5 5 13.5h6l-1.5 8 8.5-11h-6z" fill="#e6bf5c" stroke="#5a3519" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
@@ -146,7 +134,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
   <div id="loading">لحظة… الشخصيات توصل</div>
   <button class="round small" id="gear2" aria-label="الإعدادات"><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg></button>
   <div id="lobby" hidden>
-    <div class="ltitle">الطور</div>
+    <div class="ltitle">شو تبا تلعب؟</div>
     <div class="modes">
       <button class="mode on" data-m="adv">مغامرة<small>ساعد الحيوانات</small></button>
       <button class="mode" data-m="free">استكشاف حر<small>بدون مهمات</small></button>
@@ -673,24 +661,21 @@ function animateModel(k, dt, t){
   if (st === 'jump' && g.state !== 'jump'){ g.a.jump.reset(); g.a.jump.play(); }
   if (st === 'idle'){
     g.idleT += dt;
-    if (g.idleT > 9 && g.gest <= 0){ g.idleI = (g.idleI + 1) % g.a.idle.length; g.idleT = 0; }
-  } else { g.idleT = 0; g.gest = 0; }
-  if (g.gest > 0) g.gest -= dt;
-  const gw = g.gest > 0 ? Math.min(1, Math.min(g.gest, 2.6 - g.gest)*2.2) : 0;   // gesture = the character's own pose (wave / thumbs-up / hands in pockets)
+    if (g.idleT > 9){ g.idleI = (g.idleI + 1) % g.a.idle.length; g.idleT = 0; }
+  } else g.idleT = 0;
   g.state = st;
   const target = {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}; if (g.a.swimF) target.swimF = 0; if (g.a.swimI) target.swimI = 0;
   if (st !== 'idle') target[st] = 1;
   const r = Math.min(1, dt*9);
   for (const key in target){ g.w[key] = (g.w[key] || 0) + (target[key] - (g.w[key] || 0))*r; g.a[key].setEffectiveWeight(g.w[key]); }
-  g.a.idle.forEach((ac, i) => { const tw = st === 'idle' && i === g.idleI ? 1 - gw : 0; g.wi[i] += (tw - g.wi[i])*r; ac.setEffectiveWeight(g.wi[i]); });
+  g.a.idle.forEach((ac, i) => { const tw = st === 'idle' && i === g.idleI ? 1 : 0; g.wi[i] += (tw - g.wi[i])*r; ac.setEffectiveWeight(g.wi[i]); });
   g.a.walk.setEffectiveTimeScale(clamp(sp/2.6, 0.6, 1.6));
   g.a.run.setEffectiveTimeScale(clamp(sp/5.5, 0.8, 1.3));
   g.a.sprint.setEffectiveTimeScale(clamp(sp/10, 0.85, 1.25));
   if (g.a.swimF) g.a.swimF.setEffectiveTimeScale(clamp(sp/4, 0.8, 1.4));
   g.mixer.update(dt);
-  for (const [b, q] of g.fix) b.quaternion.copy(q);
   if (g.thumb){
-    if (S.mode === 'select') for (const [b, q] of g.thumb.arm) b.quaternion.copy(q);   // thumbs-up pose, only when choosing
+    if (S.mode === 'select' && !k.remote) for (const [b, q] of g.thumb.arm) b.quaternion.copy(q);   // thumbs-up pose, only when choosing
     else { for (const [b, q] of g.thumb.rest) b.quaternion.copy(q); g.thumb.t1.quaternion.copy(g.thumb.fold); }   // thumb folded during play
   }
   k.body.position.y = (g.w.swimF || 0)*1.4 + (g.w.swimI || 0)*0.45;   // keep swimmers at the surface
@@ -701,7 +686,7 @@ function loadModels(kids, done){
   let left = 3;
   const fin = () => { if (--left === 0) done(); };
   const fallback = k => { k.prim.forEach(o => o.visible = true); fin(); };
-  if (!T.GLTFLoader){ Object.values(kids).forEach(fallback); return; }
+  if (!T.GLTFLoader){ setTimeout(() => Object.values(kids).forEach(fallback)); return; }
   Object.keys(GLB).forEach(key => loadKidModel(key, kids[key], fin, fallback));
 }
 function loadKidModel(key, k, fin, fallback){
@@ -713,7 +698,8 @@ function loadKidModel(key, k, fin, fallback){
       o.traverse(n => {
         if (n.isMesh){
           const tex = n.material.map; if (tex){ tex.encoding = T.sRGBEncoding; tex.anisotropy = 8; }
-          n.material = new T.MeshStandardMaterial({map: tex, roughness: 0.62, metalness: 0});
+          const nm = n.material.normalMap; if (nm) nm.anisotropy = 4;
+          n.material = new T.MeshStandardMaterial({map: tex, normalMap: nm || null, normalScale: nm ? n.material.normalScale.clone() : undefined, roughness: 0.62, metalness: 0});   // baked normal map keeps the faces smooth
           n.castShadow = true; n.frustumCulled = false;
         }
       });
@@ -728,7 +714,6 @@ function loadKidModel(key, k, fin, fallback){
       const pick = l => l.find(n => clip(n)); const sf = pick(CLIPS.swimF), si = pick(CLIPS.swimI); if (sf) a.swimF = mk(sf); if (si) a.swimI = mk(si);
       a.sit.time = clip(CLIPS.sit).duration*0.45; a.sit.timeScale = 0;
       a.jump.timeScale = 1.25;
-      const fix = [];
       // سيف (kandura boy): his model is sculpted giving a thumbs-up. Show it only on the character-select screen
       // (right arm held in the sculpted pose); in the game the arm animates normally and the thumb folds into the fist.
       let thumb = null;
@@ -746,7 +731,7 @@ function loadKidModel(key, k, fin, fallback){
           thumb = {arm: arm.map(b => [b, b.quaternion.clone()]), t1, fold, rest: [t1, t3, B.RightHandMiddle2].map(b => [b, b.quaternion.clone()])};
         }
       }
-      const g = {fix, thumb, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, gest: 0, nextGest: 3 + Math.random()*5, state: 'idle'};
+      const g = {thumb, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, state: 'idle'};
       g.wi[0] = 1; a.idle[0].setEffectiveWeight(1);
       k.body.add(o); k.g = g; try { setupHeadFrame(k); applyOutfit(k); } catch (e) { console.warn('outfit', e); } fin();
     }, undefined, () => fallback(k));
@@ -978,7 +963,7 @@ function pushOut(x, z){ for (const c of colliders){ const dx = x - c.x, dz = z -
       [x, z] = pushOut(x, z); const gy = H(x, z); stars.push({x, z, y: (gy < WATER_Y + 0.3 ? WATER_Y + 0.6 : gy) + 0.85, high: false, got: false});
     }
   });
-  for (let n = 0; n < 8; n++){ const [x, z] = freeSpot(2, {flat: true}); stars.push({x, z, y: H(x, z) + 2.95, high: true, got: false}); }
+  for (let n = 0; n < 8; n++){ const [x, z] = freeSpot(2, {flat: true}); stars.push({x, z, y: H(x, z) + 2.2, high: true, got: false}); }
 })();
 const starIM = new T.InstancedMesh(starGeo, new T.MeshToonMaterial({color: 0xffa800, emissive: 0x9a4a00, gradientMap: gradTex, toneMapped: false}), stars.length); starIM.castShadow = true; scene.add(starIM);
 const sparkleGeo = new T.SphereGeometry(0.09, 6, 5);
@@ -1034,6 +1019,10 @@ function swapIn(group, model, keep){
 }
 function centerY(w){ const c = w.children[0], b = new T.Box3().setFromObject(w); c.position.y -= (b.max.y + b.min.y)/2; return w; }   // pivot at the model's middle (for turning upright models flat)
 function isChildOf(o, p){ while (o){ if (o === p) return true; o = o.parent; } return false; }
+function buildPalms(){
+  if (!PROP.palm || !PROP.palmlo) return;
+  PALMS.forEach(g => { const r = Math.random()*6, hi = propClone('palm', 4.6, null, r), lo = propClone('palmlo', 4.6, null, r); if (!hi || !lo) return; const lod = new T.LOD(); lod.addLevel(hi, 0); lod.addLevel(lo, 40); swapIn(g, lod); });
+}
 function propClone(name, size, axis, rotY){
   const src = PROP[name]; if (!src) return null;
   const o = src.clone(true), w = new T.Group(); w.add(o);
@@ -1075,11 +1064,12 @@ function loadProps(){
     camel(){ const m = propClone('camel', 2.75); if (m){ swapIn(camel.body, m); camel.model = m; const L = rigLegs(m, 0.42); if (L) camel.legs = L; } },
     oryx(){ herd.concat([calf]).forEach(o => { const m = propClone('oryx', o === calf ? 1.15 : 1.75); if (m){ swapIn(o.body, m); o.model = m; const L = rigLegs(m, 0.4); if (L) o.legs = L; } }); },
     houbara(){ houbaras.concat([mother]).forEach(h => { const m = propClone('houbara', 1.05); if (m){ swapIn(h.pose, m, h.wings.concat([h.ring])); h.model = m; } }); },
-    falcon(){ const m = propClone('falcon', 0.42); if (m){ swapIn(falcon.body, m, falcon.wings); falcon.model = m; falcon.wings.forEach(w => w.visible = false); } },   // no box wings on the real model
+    falcon(){ const m = propClone('falcon', 0.42); if (m){ swapIn(falcon.body, m, falcon.wings.concat(falcon.fly ? [falcon.fly] : [])); falcon.model = m; falcon.wings.forEach(w => w.visible = false); } },   // no box wings on the real model
     caracal(){ const m = propClone('caracal', 0.9); if (m){ swapIn(caracal.body, m); } },
     hyrax(){ hyraxes.forEach(h => { const m = propClone('hyrax', 0.32); if (m){ swapIn(h.body, m); } }); },
-    palm(){ PALMS.forEach(g => { const m = propClone('palm', 4.6, null, Math.random()*6); if (m){ swapIn(g, m); } }); },
-    tent(){ const g = window.__tent; const m = propClone('tent', 7.2, 'len'); if (g && m){ swapIn(g, m); m.position.y = -H(g.position.x, g.position.z)*0; } },
+    // palms: detailed model up close, light model further away (17 palms)
+    palm(){ buildPalms(); }, palmlo(){ buildPalms(); },
+    tent(){ const g = window.__tent; const m = propClone('tent', 7.2, 'len'); if (g && m){ swapIn(g, m); } },
     dhow(){ const m = propClone('dhow', 7.6, 'len', PI/2); if (m){ m.position.y = -0.2; swapIn(boat.body, m); } },
     // cartoon safari car (Meshy) replaces the box car; its length lies on x in the file, so turn it to face +z
     car(){ const m = propClone('car', 4.7, 'len', CAR_ROT); if (m){ swapIn(car.body, m); car.model = m; } },
@@ -1173,7 +1163,7 @@ function drawMini(){
   mctx.fillStyle = '#78b6c4'; mctx.fillRect(0, 0, N, N);
   mctx.drawImage(miniBG, (P.x - VIEW + MAP_R)*bs, (P.z - VIEW + MAP_R)*bs, 2*VIEW*bs, 2*VIEW*bs, 0, 0, N, N);
   const pin = (x, z, col, r) => { let X = toX(x), Y = toY(z); const dx = X - N/2, dy = Y - N/2, d = Math.hypot(dx, dy), lim = N/2 - r - 3; if (d > lim){ X = N/2 + dx/d*lim; Y = N/2 + dy/d*lim; } mctx.fillStyle = col; mctx.strokeStyle = '#fff'; mctx.lineWidth = 4; mctx.beginPath(); mctx.arc(X, Y, r, 0, 2*PI); mctx.fill(); mctx.stroke(); };
-  if (!misById.houbara.done && S.found < 3){ mctx.fillStyle = 'rgba(227,194,122,.5)'; mctx.beginPath(); mctx.arc(toX(5), toY(37), 46*s, 0, 2*PI); mctx.fill(); }
+  if (S.gameMode === 'adv' && !misById.houbara.done && S.found < 3){ mctx.fillStyle = 'rgba(227,194,122,.5)'; mctx.beginPath(); mctx.arc(toX(5), toY(37), 46*s, 0, 2*PI); mctx.fill(); }
   if (S.gameMode === 'adv') MIS.forEach(m => { if (m.done) return; const tg = missionTarget(m); if (tg) pin(tg[0], tg[1], m.color, 10); });
   const box = (o, col, w) => { mctx.fillStyle = col; mctx.strokeStyle = '#5a3519'; mctx.lineWidth = 2; mctx.fillRect(toX(o.x) - w/2, toY(o.z) - w/2, w, w); mctx.strokeRect(toX(o.x) - w/2, toY(o.z) - w/2, w, w); };
   if (S.ride !== 'car') box(car.root.position, '#f3f1ea', 12);
@@ -1263,7 +1253,7 @@ function resetWorld(){
   boat.yaw = PI/2; boat.root.position.set(BOAT_HOME[0], WATER_Y, BOAT_HOME[1]); boat.root.rotation.y = boat.yaw; S.boatSpeed = 0;
   oyster.open = 0; oyster.lid.rotation.x = 0; oyster.pearl.visible = true;
   trough.water.position.y = 0.58;
-  if (window.__fire){ window.__fire.on = false; }
+  if (window.__fire && !(typeof NET !== 'undefined' && NET.remotes.size)) window.__fire.on = false;   // shared fire stays lit while others are playing
   falcon.mode = 'lost';
   const fx = SPOT.falconTree[0], fz = SPOT.falconTree[1]; falcon.g.position.set(fx, H(fx, fz) + 3.9, fz + 0.3); falcon.g.rotation.set(0, 0.5, 0); falcon.body.rotation.set(0, 0, 0);
   herd.forEach((o, i) => { const a = i/5*2*PI; o.root.position.set(RESERVE[0] + Math.cos(a)*8, H(RESERVE[0], RESERVE[1]), RESERVE[1] + Math.sin(a)*8); o.target.copy(o.root.position); o.wait = Math.random()*3; });
@@ -1271,7 +1261,8 @@ function resetWorld(){
   caracal.root.position.set(SPOT.caracal[0], caracalRock.top, SPOT.caracal[1]); caracal.root.rotation.y = PI*0.85; caracal.body.position.y = 0; caracal.body.rotation.x = 0;
   birds.forEach((b, i) => { b.visible = true; b.position.set(SPOT.caracal[0] + 2.2 + i*0.5, caracalRock.top - 0.6 + i*0.1, SPOT.caracal[1] + 1.5 - i*0.6); });
   hyraxes.forEach((h, i) => { h.body.scale.set(1, 0.75, 1.1); h.follow = false; const a = i/4*2*PI; h.root.position.set(SPOT.hyrax[0] + Math.cos(a)*1.2, hyraxRock.top, SPOT.hyrax[1] + Math.sin(a)*1.2); h.root.rotation.y = a + PI/2; });
-  Object.values(kids).forEach(k => { k.body.position.y = 0; k.sit = false; k.root.visible = true; });
+  Object.values(kids).forEach(k => { k.body.position.y = 0; k.sit = false; k.swim = false; k.speed = 0; k.root.visible = true; });
+  S.hideKids = S.hideAnimals = false; calf.root.visible = caracal.root.visible = true; hyraxes.forEach(h => h.root.visible = true);
   choosing = null; updateHud();
 }
 function placeSelect(){ ORDER.forEach(k => { const kid = kids[k], x = SELECT_X[k]; kid.root.position.set(x, H(x, 0), 0); kid.root.rotation.y = 0; kid.speed = 0; kid.air = false; }); }
@@ -1290,20 +1281,18 @@ function startGame(type){
   $('powicon').innerHTML = type === 'saeedan'
     ? '<path d="M3 5.5c3-1.3 6-1.3 9 .7 3-2 6-2 9-.7V19c-3-1.3-6-1.3-9 .7-3-2-6-2-9-.7z" fill="#4f78a8" stroke="#36577c" stroke-width="1.4" stroke-linejoin="round"/><path d="M12 6.2v13.5" stroke="#fffbe8" stroke-width="1.6"/>'
     : '<circle cx="7" cy="13" r="4.2" fill="none" stroke="#e07fa8" stroke-width="2.4"/><circle cx="17" cy="13" r="4.2" fill="none" stroke="#e07fa8" stroke-width="2.4"/><path d="M11 12.5h2" stroke="#e07fa8" stroke-width="2.4" stroke-linecap="round"/>';
-  $('hand').hidden = true;
 }
 function goHome(){
   S.mode = 'select'; resetWorld(); placeSelect();
-  ['hud', 'jump', 'power', 'hand', 'end', 'act', 'mis', 'mini', 'pop', 'sprint', 'pad', 'timer'].forEach(id => $(id).hidden = true);
+  ['hud', 'jump', 'power', 'end', 'act', 'mis', 'mini', 'pop', 'sprint', 'timer'].forEach(id => $(id).hidden = true);
   $('joy').hidden = true; $('select').hidden = false;
 }
 function updateHud(){
   $('stars').textContent = S.starsGot + '/' + stars.length;
   $('mis').innerHTML = MIS.map(m => misHTML(m, m.id === 'houbara' && !m.done ? '<span class="dots">' + houbaras.map(h => '<i' + (h.found ? ' class="on"' : '') + '></i>').join('') + '</span>' : '')).join('');
 }
-function missionDone(id, fromNet){
-  const m = misById[id]; if (m.done) return; m.done = true;
-  if (!fromNet) netSend({t: 'm', id});
+function missionDone(id){
+  const m = misById[id]; if (m.done || S.gameMode !== 'adv') return; m.done = true;
   SFX.find(); const p = S.pos; burst(p.x, p.y + 1.5, p.z, 0xf0d590, 18);
   const pop = $('pop'); pop.style.setProperty('--c', m.color); pop.innerHTML = '<svg viewBox="0 0 24 24">' + ICON[id] + '</svg>';
   pop.hidden = true; void pop.offsetWidth; pop.hidden = false; S.popT = 1.9;
@@ -1319,7 +1308,7 @@ function showFinal(){
 /* ================= input ================= */
 const joyEl = $('joy'), knob = $('knob');
 let joyId = null, joyO = {x: 0, y: 0}, dragId = null, dragX = 0, dragY = 0;
-// fixed round joystick (bottom-left, always visible while playing): push the ball any way to walk and turn
+// round joystick (bottom-left while playing; it jumps to wherever the left thumb touches): push the ball any way to walk and turn
 function joyCenter(){ return {x: 104, y: innerHeight - 124}; }
 function placeJoy(){ const c = joyCenter(); joyEl.style.left = c.x + 'px'; joyEl.style.top = c.y + 'px'; }
 addEventListener('resize', placeJoy);
@@ -1349,16 +1338,14 @@ function holdBtn(id, key){
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => el.addEventListener(ev, () => { input[key] = false; el.classList.remove('on'); }));
 }
 holdBtn('jump', 'jump'); holdBtn('power', 'power'); holdBtn('sprint', 'sprint');
-document.querySelectorAll('#pad .pb').forEach(el => { const k = el.dataset.d;
-  el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); ensureAudio(); input[k] = true; el.classList.add('on'); try { el.setPointerCapture(e.pointerId); } catch(_){} });
-  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => el.addEventListener(ev, () => { input[k] = false; el.classList.remove('on'); })); });
 $('act').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); ensureAudio(); doAction(); });
 const keys = {};
-addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') input.jump = true; if (e.code === 'KeyE') input.power = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.sprint = true; if (e.code === 'KeyF') doAction(); ensureAudio(); });
-addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'Space') input.jump = false; if (e.code === 'KeyE') input.power = false; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.sprint = false; });
+addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space'){ input.jump = true; e.preventDefault(); } if (e.code === 'KeyE') input.power = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.sprint = true; if (e.code === 'KeyF') doAction(); ensureAudio(); });
+addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'Space'){ input.jump = false; e.preventDefault(); } if (e.code === 'KeyE') input.power = false; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.sprint = false; });
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('button'); if (b) b.blur(); });   // no button keeps keyboard focus
 $('home').onclick = goHome; $('home2').onclick = goHome;
 $('again').onclick = () => { resetWorld(); startGame(S.kidType); };
-$('keep').onclick = () => { $('end').hidden = true; };
+$('keep').onclick = () => { $('end').hidden = true; if (S.raceOver) $('timer').hidden = true; };
 $('snd').onclick = () => { SET.snd = muted ? 'on' : 'off'; applySettings(); };
 document.querySelectorAll('.pick').forEach(b => b.addEventListener('click', () => chooseKid(b.dataset.k)));
 const ray = new T.Raycaster(), ndc = new T.Vector2();
@@ -1415,14 +1402,14 @@ function doAction(){
   if (S.ride){ if (S.drinkT <= 0) exitRide(); return; }
   if (nearVehicle === 'car') enterCar(); else if (nearVehicle === 'camel') mountCamel(); else if (nearVehicle === 'boat') enterBoat(); else if (nearVehicle === 'fire') setFire(!window.__fire.on);
 }
-function setFollowersVisible(v){ S.followers.forEach(f => { if (f.kid) f.obj.visible = v; }); }
+function setFollowersVisible(v){ S.hideKids = !v; S.followers.forEach(f => { if (f.kid) f.obj.visible = v; }); }
 function enterCar(){
-  S.ride = 'car'; S.carSpeed = 0; SFX.door(); S.player.root.visible = false; setFollowersVisible(false);
+  S.ride = 'car'; S.carSpeed = 0; SFX.door(); S.player.root.visible = false; S.player.swim = false; setFollowersVisible(false);
   S.pos.copy(car.root.position); S.heading = car.yaw; S.camYaw = car.yaw + PI; carCol.r = 0;
   ['jump', 'power'].forEach(id => $(id).hidden = true);
 }
 function enterBoat(){
-  S.ride = 'boat'; S.boatSpeed = 0; SFX.door(); setFollowersVisible(false);
+  S.ride = 'boat'; S.boatSpeed = 0; SFX.door(); S.player.swim = false; setFollowersVisible(false); S.hideAnimals = true;
   S.pos.set(boat.root.position.x, WATER_Y, boat.root.position.z); S.heading = boat.yaw; S.camYaw = boat.yaw + PI;
   ['jump', 'power'].forEach(id => $(id).hidden = true);
 }
@@ -1432,7 +1419,7 @@ function landSpot(){
   return null;
 }
 function mountCamel(){
-  S.ride = 'camel'; SFX.door(); S.player.sit = true; camelCol.r = 0;
+  S.ride = 'camel'; SFX.door(); S.player.sit = true; S.player.swim = false; camelCol.r = 0;
   S.pos.copy(camel.root.position); S.heading = camel.root.rotation.y;
   ['jump', 'power'].forEach(id => $(id).hidden = true);
 }
@@ -1441,7 +1428,8 @@ function exitRide(){
     const L = landSpot(); if (!L) return;
     S.ride = null; S.boatSpeed = 0; SFX.door(); setFollowersVisible(true);
     S.pos.set(L[0], groundAt(L[0], L[1], 99), L[1]); S.vy = 0; S.crumbs.push(S.pos.clone());
-    S.followers.forEach((f, i) => { if (f.kid){ f.obj.position.set(L[0] + (i ? -1 : 1)*0.9, 0, L[1] + 0.6); f.obj.position.y = groundAt(f.obj.position.x, f.obj.position.z, 99); } });
+    S.hideAnimals = false;
+    S.followers.forEach((f, i) => { f.obj.position.set(L[0] + (f.kid ? (i ? -1 : 1)*0.9 : Math.cos(i*1.3)*1.6), 0, L[1] + (f.kid ? 0.6 : 1.2 + Math.sin(i*1.3)*1.2)); f.obj.position.y = groundAt(f.obj.position.x, f.obj.position.z, 99); });
     $('jump').hidden = false; $('power').hidden = S.kidType === 'saif';
     return;
   }
@@ -1487,7 +1475,7 @@ function walkMove(dt, jx, jy, speed){
     move.normalize().multiplyScalar(speed*mag);
     S.heading += angDiff(S.heading, Math.atan2(move.x, move.z))*Math.min(1, dt*(S.ride ? 5 : 12));
     if (dragId === null && S.ride) S.camYaw += angDiff(S.camYaw, S.heading + PI)*dt*1.4*mag;
-    if (!S.moved){ S.moved = true; $('hand').hidden = true; }
+    S.moved = true;
   } else move.set(0, 0, 0);
   const [nx, nz] = collide(S.pos.x + move.x*dt, S.pos.z + move.z*dt, S.ride ? 1.0 : 0.32);
   if (!S.ride || !SEA(nx) || groundAt(nx, nz, S.pos.y + 0.3) > WATER_Y - 0.3){ S.pos.x = nx; S.pos.z = nz; }
@@ -1503,7 +1491,7 @@ function updatePlay(dt, t){
   if (S.ride === 'car'){
     if (Math.abs(jy) > 0.1) S.carSpeed += -jy*(input.sprint ? 22 : 14)*dt; else S.carSpeed *= (1 - 1.4*dt);
     S.carSpeed = clamp(S.carSpeed, -8, input.sprint ? 36 : 22);
-    if (!S.moved && Math.abs(jy) > 0.1){ S.moved = true; $('hand').hidden = true; }
+    if (Math.abs(jy) > 0.1) S.moved = true;
     car.yaw -= jx*1.8*dt*clamp(Math.abs(S.carSpeed)/7, 0, 1)*(S.carSpeed < 0 ? -1 : 1);
     const [nx, nz] = collide(S.pos.x + Math.sin(car.yaw)*S.carSpeed*dt, S.pos.z + Math.cos(car.yaw)*S.carSpeed*dt, 1.7, () => { S.carSpeed *= 0.6; });
     if (!SEA(nx) || H(nx, nz) > WATER_Y - 0.2){ S.pos.x = nx; S.pos.z = nz; } else S.carSpeed *= -0.3;
@@ -1519,7 +1507,7 @@ function updatePlay(dt, t){
   } else if (S.ride === 'boat'){
     if (Math.abs(jy) > 0.1) S.boatSpeed += -jy*(input.sprint ? 14 : 8)*dt; else S.boatSpeed *= (1 - 0.8*dt);
     S.boatSpeed = clamp(S.boatSpeed, -5, input.sprint ? 24 : 14);
-    if (!S.moved && Math.abs(jy) > 0.1){ S.moved = true; $('hand').hidden = true; }
+    if (Math.abs(jy) > 0.1) S.moved = true;
     boat.yaw -= jx*1.2*dt*clamp(Math.abs(S.boatSpeed)/5 + 0.3, 0, 1)*(S.boatSpeed < 0 ? -1 : 1);
     let nx = S.pos.x + Math.sin(boat.yaw)*S.boatSpeed*dt, nz = S.pos.z + Math.cos(boat.yaw)*S.boatSpeed*dt;
     [nx, nz] = collide(nx, nz, 0);
@@ -1546,7 +1534,7 @@ function updatePlay(dt, t){
     camel.body.position.y = Math.abs(Math.sin(camel.phase))*0.06*clamp(moveSpeed/5, 0, 1);
     const seat = new T.Vector3(0, 2.12 + camel.body.position.y, 0).applyAxisAngle(new T.Vector3(0, 1, 0), S.heading).add(S.pos);
     p.root.position.copy(seat); p.root.rotation.y = S.heading; p.speed = 0; animateKid(p, dt, t);
-    if (!misById.camel.done && S.drinkT <= 0 && Math.hypot(S.pos.x - SPOT.trough[0], S.pos.z - SPOT.trough[1]) < 4.2){ S.drinkT = 3.2; SFX.squeak(); }
+    if (S.gameMode === 'adv' && !misById.camel.done && S.drinkT <= 0 && Math.hypot(S.pos.x - SPOT.trough[0], S.pos.z - SPOT.trough[1]) < 4.2){ S.drinkT = 3.2; SFX.squeak(); }
   } else {
     const swim = SEA(S.pos.x) && groundAt(S.pos.x, S.pos.z, S.pos.y) < WATER_Y - 0.95;
     moveSpeed = walkMove(dt, jx, jy, swim ? (input.sprint ? 6.5 : 4) : (input.sprint ? 10.5 : 5.5));
@@ -1577,7 +1565,8 @@ function updatePlay(dt, t){
     f.obj.position.lerp(tgt, Math.min(1, dt*(S.ride === 'car' ? 9 : 6)));
     const mv = f.obj.position.clone().sub(before); mv.y = 0; const sp = mv.length()/Math.max(dt, 1e-4);
     if (sp > 0.4) f.obj.rotation.y += angDiff(f.obj.rotation.y, Math.atan2(mv.x, mv.z))*Math.min(1, dt*8);
-    if (f.kid && netHas(f.kid.type)){ f.kid.root.visible = false; return; } else if (f.kid) f.kid.root.visible = true;
+    if (f.kid && (S.hideKids || netHas(f.kid.type))){ f.kid.root.visible = false; return; } else if (f.kid) f.kid.root.visible = true;
+    if (!f.kid) f.obj.visible = !S.hideAnimals;
     if (f.kid){ f.kid.speed = Math.min(sp, 11); f.kid.air = false; f.kid.swim = SEA(f.obj.position.x) && groundAt(f.obj.position.x, f.obj.position.z, f.obj.position.y + 0.5) < WATER_Y - 0.95; animateKid(f.kid, dt, t); }
     else if (f.h){ f.h.pose.position.y = Math.abs(Math.sin(t*12))*0.04*Math.min(1, sp/3); f.h.neck.rotation.x = Math.sin(t*12)*0.15*Math.min(1, sp/3); }
     else if (f.hop){ f.hop.body.position.y = Math.abs(Math.sin(t*10 + f.lag))*0.12*Math.min(1, sp/3); }
@@ -1618,20 +1607,20 @@ function updatePlay(dt, t){
 }
 
 function updateMissions(dt, t){
-  const P = S.pos;
+  const P = S.pos, adv = S.gameMode === 'adv';   // missions only in Adventure; Free explore and Star race just show the animals
   // summit: climb the mountain to the flag
   summitFlag.flag.rotation.y = Math.sin(t*2.2)*0.25;
-  if (!misById.summit.done && Math.hypot(P.x - SUMMIT[0], P.z - SUMMIT[1]) < 7 && P.y > summitFlag.top - 3){ burst(SUMMIT[0], summitFlag.top + 5, SUMMIT[1], 0xf0d590, 30); missionDone('summit'); }
+  if (adv && !misById.summit.done && Math.hypot(P.x - SUMMIT[0], P.z - SUMMIT[1]) < 7 && P.y > summitFlag.top - 3){ burst(SUMMIT[0], summitFlag.top + 5, SUMMIT[1], 0xf0d590, 30); missionDone('summit'); }
   // pearl island: sail there, walk to the oyster, it opens
   oyster.pearl.position.y = 0.52 + Math.sin(t*3)*0.03;
-  if (!misById.pearl.done && oyster.open === 0 && Math.hypot(P.x - oyster.g.position.x, P.z - oyster.g.position.z) < 4) oyster.open = 0.001;
+  if (adv && !misById.pearl.done && oyster.open === 0 && Math.hypot(P.x - oyster.g.position.x, P.z - oyster.g.position.z) < 4) oyster.open = 0.001;
   if (oyster.open > 0 && oyster.open < 1){ oyster.open = Math.min(1, oyster.open + dt*0.7); oyster.lid.rotation.x = -1.15*smooth01(0, 1, oyster.open); if (oyster.open >= 1){ burst(oyster.g.position.x, oyster.g.position.y + 1, oyster.g.position.z, 0xffffff, 20); missionDone('pearl'); } }
   // falcon: lost on a far tree -> flies with you -> back to the falconer's perch
   const fFly = falcon.mode === 'follow' || (falcon.mode === 'home' && falcon.g.position.distanceTo(window.__perchTop) > 0.2);
   if (falcon.fly){ falcon.fly.visible = fFly; if (falcon.model) falcon.model.visible = !fFly; if (fFly){ falcon.fly.rotation.z = Math.sin(t*1.7)*0.12; falcon.fly.position.y = Math.sin(t*3.2)*0.06; } }
   if (falcon.mode === 'lost'){
     falcon.wings[0].rotation.z = 0.05; falcon.wings[1].rotation.z = -0.05;
-    if (Math.hypot(P.x - SPOT.falconTree[0], P.z - SPOT.falconTree[1]) < 6){ falcon.mode = 'follow'; SFX.find(); }
+    if (adv && Math.hypot(P.x - SPOT.falconTree[0], P.z - SPOT.falconTree[1]) < 6){ falcon.mode = 'follow'; SFX.find(); }
   } else if (falcon.mode === 'follow'){
     const tg = new T.Vector3(P.x + Math.cos(t*0.9)*3.5, P.y + 6, P.z + Math.sin(t*0.9)*3.5);
     const prev = falcon.g.position.clone(); falcon.g.position.lerp(tg, Math.min(1, dt*2));
@@ -1662,7 +1651,7 @@ function updateMissions(dt, t){
   // lost calf: follows you back to its herd
   if (calf.mode === 'lost'){
     calf.neck.rotation.y = Math.sin(t*0.8)*0.6;
-    if (calf.root.position.distanceTo(P) < 3.4){ calf.mode = 'follow'; SFX.squeak(); S.followers.push({obj: calf.root, oryx: calf, lag: 9, side: 0}); }
+    if (adv && calf.root.position.distanceTo(P) < 3.4){ calf.mode = 'follow'; SFX.squeak(); S.followers.push({obj: calf.root, oryx: calf, lag: 9, side: 0}); }
   } else if (calf.mode === 'follow'){
     calf.neck.rotation.y = 0;
     if (Math.hypot(calf.root.position.x - RESERVE[0], calf.root.position.z - RESERVE[1]) < 20){ calf.mode = 'home'; S.followers = S.followers.filter(f => f.oryx !== calf); missionDone('oryx'); }
@@ -1675,7 +1664,7 @@ function updateMissions(dt, t){
   // caracal: on its mountain rock, shows its famous high jump; the birds fly off safely
   if (S.caracalT < 0){
     caracal.head.rotation.y = Math.sin(t*0.7)*0.5;
-    if (Math.hypot(P.x - SPOT.caracal[0], P.z - SPOT.caracal[1]) < 10) S.caracalT = 0;
+    if (adv && Math.hypot(P.x - SPOT.caracal[0], P.z - SPOT.caracal[1]) < 10) S.caracalT = 0;
   } else if (S.caracalT < 2.2){
     S.caracalT += dt; const k = clamp(S.caracalT/1.4, 0, 1);
     caracal.body.position.y = Math.sin(k*PI)*4.2; caracal.body.rotation.x = -Math.sin(k*PI)*0.5;
@@ -1689,14 +1678,14 @@ function updateMissions(dt, t){
     h.body.position.y = awake ? Math.abs(Math.sin(t*3 + i))*0.03 : Math.sin(t*1.5 + i)*0.005;
     if (awake && !h.follow) h.root.rotation.y += angDiff(h.root.rotation.y, Math.atan2(P.x - h.root.position.x, P.z - h.root.position.z))*Math.min(1, dt*3);
   });
-  if (!misById.hyrax.done && Math.hypot(P.x - SPOT.hyrax[0], P.z - SPOT.hyrax[1]) < 8){ SFX.squeak(); missionDone('hyrax');
+  if (adv && !misById.hyrax.done && Math.hypot(P.x - SPOT.hyrax[0], P.z - SPOT.hyrax[1]) < 8){ SFX.squeak(); missionDone('hyrax');
     [0, 1].forEach(i => { const h = hyraxes[i]; h.follow = true; S.followers.push({obj: h.root, hop: h, lag: 7 + S.followers.length*4, side: i ? 0.9 : -0.9}); });   // found animals tag along
   }
   // houbara: hidden by colour, peeking now and then, revealed close up or by Khaddouya's glasses
   let near = null, nd = 1e9;
   houbaras.forEach(h => { if (h.found) return; const d = h.root.position.distanceTo(P); if (d < nd){ nd = d; near = h; } });
   trail.forEach((m, i) => {
-    if (S.kidType === 'saeedan' && S.powerT > 0 && near){
+    if (adv && S.kidType === 'saeedan' && S.powerT > 0 && near){
       const dir = near.root.position.clone().sub(P); dir.y = 0; const L = dir.length(); dir.normalize();
       const d = Math.min(L - 1, 1.2 + i*1.1), x = P.x + dir.x*d, z = P.z + dir.z*d;
       m.position.set(x, H(x, z) + 0.35 + Math.sin(t*6 + i)*0.1, z); m.material.opacity = Math.min(1, S.powerT)*(0.5 + 0.5*Math.sin(t*8 - i*0.7));
@@ -1711,14 +1700,14 @@ function updateMissions(dt, t){
     setCrouch(h, 1 - h.reveal);
     h.ring.material.opacity = glasses ? 0.55 + 0.35*Math.sin(t*6) : 0; h.ring.scale.setScalar(glasses ? 1 + 0.15*Math.sin(t*6) : 1);
     if (d < 7) h.root.rotation.y += angDiff(h.root.rotation.y, Math.atan2(P.x - h.root.position.x, P.z - h.root.position.z))*Math.min(1, dt*3);
-    if (d < 2.4){
+    if (adv && d < 2.4){
       h.found = true; S.found++; h.ring.material.opacity = 0; setCrouch(h, 0); SFX.find();
       burst(h.root.position.x, h.root.position.y + 1, h.root.position.z, 0xf0d590, 14);
       S.followers.push({obj: h.root, h, lag: 9 + S.found*5, side: 0}); updateHud();
     }
   });
   nests.forEach(n => n.wig = Math.max(0, n.wig - dt*1.2)); S.bumpCD -= dt;
-  const ready = S.found === 3 && !misById.houbara.done;
+  const ready = adv && S.found === 3 && !misById.houbara.done;
   relGroup.visible = ready; guide.visible = ready && !S.ride;
   if (ready){
     relRing.rotation.z += dt; relArrow.position.y = 4.6 + Math.sin(t*3)*0.4; relBeam.material.opacity = 0.14 + 0.06*Math.sin(t*3);
@@ -1739,7 +1728,7 @@ function updateMissions(dt, t){
 /* ================= houbara release story ================= */
 function startHoubaraEnding(){
   S.mode = 'ending'; S.endT = 0; SFX.win();
-  ['jump', 'power', 'hand', 'act'].forEach(id => $(id).hidden = true); joyEl.hidden = true; joyId = null; input.jx = input.jy = 0;
+  ['jump', 'power', 'act'].forEach(id => $(id).hidden = true); joyEl.hidden = true; joyId = null; input.jx = input.jy = 0;
   guide.visible = false;
   houbaras.forEach((h, i) => { h.flying = true; h.flyT = -i*0.35; const a = -0.4 + i*0.4; h.flyDir = new T.Vector3(Math.sin(a), 0, Math.cos(a)); });
   S.followers = S.followers.filter(f => !f.h);
@@ -1843,15 +1832,15 @@ let lastT = performance.now(), acc = 0, frames = 0, slow = 0, miniTick = 0;
    The first device to open takes a fixed meeting name on the free PeerJS service and relays; everyone else connects to it.
    Each device sends its own kid's state 10 times a second; if the relay leaves, another device takes over. */
 const NET = {peer: null, host: false, conns: [], remotes: new Map(), sendT: 0, retry: 0, id: Math.random().toString(36).slice(2, 10)};
-const WORLD = 'imkid963-world-1';
-function netHas(type){ for (const r of NET.remotes.values()) if (r.type === type && r.k.root.visible) return true; return false; }
+const FAM = (function(){ let f = null; try { f = new URLSearchParams(location.search).get('w'); if (f) localStorage.setItem('saeedan_fam', f); else f = localStorage.getItem('saeedan_fam'); } catch(e){} return f && /^[a-z0-9]{6,40}$/i.test(f) ? f.toLowerCase() : null; })();
+const WORLD = FAM ? 'imkid963-fam-' + FAM : null;   // no family link on this device = plays alone
+function netHas(type){ for (const r of NET.remotes.values()) if (r.type === type && r.pl) return true; return false; }
 function netSend(msg){ msg.from = msg.from || NET.id; const s = JSON.stringify(msg); NET.conns.forEach(c => { if (c.open) try { c.send(s); } catch(e){} }); }
 function netOnData(conn, raw){
   let m; try { m = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch(e){ return; }
   if (!m || m.from === NET.id) return;
   if (NET.host) NET.conns.forEach(c => { if (c !== conn && c.open) try { c.send(JSON.stringify(m)); } catch(e){} });   // relay to the others
   if (m.t === 's') netState(m);
-  else if (m.t === 'm' && misById[m.id] && S.gameMode === 'adv') missionDone(m.id, true);
   else if (m.t === 'bye') netDrop(m.from);
   else if (m.t === 'fire') setFire(!!m.on, true);
 }
@@ -1863,7 +1852,7 @@ function netConn(c){
 }
 function netRestart(){ try { NET.peer && NET.peer.destroy(); } catch(e){} NET.peer = null; NET.host = false; NET.conns = []; clearTimeout(NET.retry); NET.retry = setTimeout(netHost, 800 + Math.random()*2500); }
 function netHost(){
-  if (!window.Peer) return;
+  if (!window.Peer || !WORLD) return;
   let p; try { p = new Peer(WORLD, {debug: 0}); } catch(e){ return; }
   p.on('open', () => { NET.peer = p; NET.host = true; });
   p.on('connection', c => netConn(c));
@@ -1875,10 +1864,11 @@ function netHost(){
 }
 function netJoin(){
   let p; try { p = new Peer({debug: 0}); } catch(e){ return; }
-  p.on('open', () => { NET.peer = p; NET.host = false; const c = p.connect(WORLD, {serialization: 'json'}); c.on('open', () => netConn(c)); });
+  p.on('open', () => { NET.peer = p; NET.host = false; const c = p.connect(WORLD, {serialization: 'json'});
+    const to = setTimeout(() => { if (!c.open && NET.peer === p) netRestart(); }, 10000);
+    c.on('open', () => { clearTimeout(to); netConn(c); }); c.on('error', () => { clearTimeout(to); if (!c.open && NET.peer === p) netRestart(); }); });
   p.on('error', e => { if (NET.peer === p || !NET.peer){ netRestart(); } });
 }
-const nameTagCache = {};
 function nameTag(type){
   const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const g = cv.getContext('2d');
   g.fillStyle = 'rgba(255,250,240,.92)'; g.beginPath(); g.roundRect ? g.roundRect(8, 6, 240, 52, 26) : g.rect(8, 6, 240, 52); g.fill();
@@ -1890,6 +1880,7 @@ function netState(m){
   if (!GLB[m.k]) return;
   let r = NET.remotes.get(m.from);
   if (r && r.type !== m.k){ netDrop(m.from); r = null; }
+  if (!r && m.pl === 0) return;   // still choosing: nothing to load yet
   if (!r){
     const k = buildKid(m.k); k.remote = true; k.outfit = m.o || {}; scene.add(k.root);
     k.root.add(nameTag(m.k));
@@ -1898,11 +1889,21 @@ function netState(m){
     k.root.position.copy(r.tgt);
     if (window.__fire && window.__fire.on) netSend({t: 'fire', on: true});   // a newcomer sees the campfire already burning
   }
-  r.tgt.set(m.x, m.y, m.z); r.h = m.h || 0; r.sp = m.sp || 0; r.sw = !!m.sw; r.air = !!m.a; r.ride = m.r || 0; r.seen = performance.now();
-  r.k.root.visible = m.pl !== 0;
+  r.tgt.set(m.x, m.y, m.z); r.h = m.h || 0; r.sp = m.sp || 0; r.sw = !!m.sw; r.air = !!m.a; r.seen = performance.now();
+  r.ride = typeof m.r === 'string' && VEH_SRC[m.r] ? m.r : 0; r.pl = m.pl !== 0;
+  if (r.ride){ r.vt = r.vt || new T.Vector3(); r.vt.set(m.vx, m.vy, m.vz); r.vh = m.vh || 0; }
+  r.k.root.visible = r.pl && r.ride !== 'car';
   if (JSON.stringify(m.o || {}) !== JSON.stringify(r.k.outfit || {})){ r.k.outfit = m.o || {}; try { applyOutfit(r.k); } catch(e){} }
 }
-function netDrop(id){ const r = NET.remotes.get(id); if (!r) return; scene.remove(r.k.root); NET.remotes.delete(id); }
+function netDrop(id){
+  const r = NET.remotes.get(id); if (!r) return; scene.remove(r.k.root); NET.remotes.delete(id);
+  if (r.veh) Object.values(r.veh).forEach(v => scene.remove(v));
+  // free the GPU memory of this remote's own model (its skinned body + textures) and name tag
+  r.k.root.traverse(o => { if (o.isSprite){ if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
+  if (r.k.g){ try { r.k.g.mixer.stopAllAction(); r.k.g.mixer.uncacheRoot(r.k.g.o); } catch(e){}
+    r.k.g.o.traverse(o => { if (o.isSkinnedMesh){ o.geometry.dispose(); if (o.material.map) o.material.map.dispose(); o.material.dispose(); if (o.skeleton) o.skeleton.dispose(); } }); }
+}
+const VEH_SRC = {car: () => car.root, camel: () => camel.root, boat: () => boat.root};
 function updateNet(dt, t){
   if (!NET.peer) return;
   netAnimate(dt, t);
@@ -1911,7 +1912,11 @@ function netTick(){   // runs on a timer, so a device keeps announcing itself ev
   if (!NET.peer || !NET.conns.length) return;
   {
     const p = S.player && S.player.root.position;
-    if (S.mode === 'play' && p) netSend({t: 's', k: S.kidType, x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: +p.z.toFixed(2), h: +S.heading.toFixed(2), sp: +(S.player.speed || 0).toFixed(1), sw: S.player.swim ? 1 : 0, a: S.player.air ? 1 : 0, r: S.ride ? 1 : 0, o: outfits[S.kidType] || {}, pl: 1});
+    if ((S.mode === 'play' || S.mode === 'ending') && p){
+      const q = S.ride === 'car' ? S.pos : p, msg = {t: 's', k: S.kidType, x: +q.x.toFixed(2), y: +q.y.toFixed(2), z: +q.z.toFixed(2), h: +S.heading.toFixed(2), sp: +(S.player.speed || 0).toFixed(1), sw: S.player.swim ? 1 : 0, a: S.player.air ? 1 : 0, r: S.ride || 0, o: outfits[S.kidType] || {}, pl: 1};
+      if (S.ride){ const v = VEH_SRC[S.ride]().position; msg.vx = +v.x.toFixed(2); msg.vy = +v.y.toFixed(2); msg.vz = +v.z.toFixed(2); msg.vh = +(S.ride === 'car' ? car.yaw : S.ride === 'boat' ? boat.yaw : S.heading).toFixed(2); }
+      netSend(msg);
+    }
     else netSend({t: 's', k: selKid || 'saeedan', x: 0, y: -50, z: 0, h: 0, pl: 0});
   }
 }
@@ -1923,18 +1928,22 @@ function netAnimate(dt, t){
     const k = r.k, P = k.root.position;
     if (P.distanceTo(r.tgt) > 25) P.copy(r.tgt); else P.lerp(r.tgt, Math.min(1, dt*10));
     k.root.rotation.y += angDiff(k.root.rotation.y, r.h)*Math.min(1, dt*10);
-    k.speed = r.sp; k.swim = r.sw; k.air = r.air; k.sit = !!r.ride;
+    k.speed = r.ride ? 0 : r.sp; k.swim = !r.ride && r.sw; k.air = !r.ride && r.air; k.sit = r.ride === 'camel';
     animateKid(k, dt, t);
+    // their car / camel / boat (a look-alike copy, so everyone sees what they ride)
+    r.veh = r.veh || {};
+    for (const v in VEH_SRC){ const on = r.ride === v && r.pl; if (on && !r.veh[v]){ r.veh[v] = VEH_SRC[v]().clone(true); r.veh[v].visible = false; scene.add(r.veh[v]); }
+      if (r.veh[v]){ r.veh[v].visible = on; if (on){ const V = r.veh[v]; if (!V.userData.placed || V.position.distanceTo(r.vt) > 25){ V.position.copy(r.vt); V.userData.placed = true; } else V.position.lerp(r.vt, Math.min(1, dt*10)); V.rotation.y += angDiff(V.rotation.y, r.vh)*Math.min(1, dt*10); } } }
   });
 }
 addEventListener('pagehide', () => { netSend({t: 'bye'}); try { NET.peer && NET.peer.destroy(); } catch(e){} });
-setTimeout(netHost, 600);
+if (WORLD) setTimeout(netHost, 600);
 
 function loop(now){
   requestAnimationFrame(loop);
   let dt = (now - lastT)/1000; lastT = now; if (dt > 0.1) dt = 0.1;
   const t = now/1000;
-  if (S.mode === 'select') updateSelect(dt, t); else if (S.mode === 'play') updatePlay(dt, t); else updateEnding(dt, t);
+  if (S.mode === 'select') updateSelect(dt, t); else if (S.mode === 'play'){ if ($('settings').hidden) updatePlay(dt, t); } else updateEnding(dt, t);
   updateWorld(dt, t); updateNet(dt, t);
   camera.position.copy(camPos); camera.lookAt(camLook);
   renderer.render(scene, camera);
