@@ -1864,13 +1864,18 @@ function netState(m){
 function netDrop(id){ const r = NET.remotes.get(id); if (!r) return; scene.remove(r.k.root); NET.remotes.delete(id); }
 function updateNet(dt, t){
   if (!NET.peer) return;
-  NET.sendT -= dt;
-  if (NET.sendT <= 0 && NET.conns.length){
-    NET.sendT = 0.1;
+  netAnimate(dt, t);
+}
+function netTick(){   // runs on a timer, so a device keeps announcing itself even when its screen isn't redrawing
+  if (!NET.peer || !NET.conns.length) return;
+  {
     const p = S.player && S.player.root.position;
     if (S.mode === 'play' && p) netSend({t: 's', k: S.kidType, x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: +p.z.toFixed(2), h: +S.heading.toFixed(2), sp: +(S.player.speed || 0).toFixed(1), sw: S.player.swim ? 1 : 0, a: S.player.air ? 1 : 0, r: S.ride ? 1 : 0, o: outfits[S.kidType] || {}, pl: 1});
     else netSend({t: 's', k: selKid || 'saeedan', x: 0, y: -50, z: 0, h: 0, pl: 0});
   }
+}
+setInterval(netTick, 100);
+function netAnimate(dt, t){
   const now = performance.now();
   NET.remotes.forEach((r, id) => {
     if (now - r.seen > 6000){ netDrop(id); return; }

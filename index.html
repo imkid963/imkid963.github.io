@@ -78,7 +78,8 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #power .cd{position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(90,53,25,.32) var(--p,0%),transparent 0)}
 #joy{position:fixed;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;background:radial-gradient(circle,rgba(255,250,240,.18) 0,rgba(255,250,240,.38) 100%);
   border:4px solid rgba(255,250,240,.85);box-shadow:0 4px 14px var(--shadow);pointer-events:none}
-#joy.act{border-color:#fff;background:radial-gradient(circle,rgba(255,250,240,.25) 0,rgba(255,250,240,.5) 100%)}
+#joy{opacity:.32;transition:opacity .15s}
+#joy.act{opacity:1;border-color:#fff;background:radial-gradient(circle,rgba(255,250,240,.25) 0,rgba(255,250,240,.5) 100%)}
 #knob{position:absolute;left:50%;top:50%;width:66px;height:66px;margin:-33px 0 0 -33px;border-radius:50%;background:var(--glass);box-shadow:0 4px 0 var(--sand-deep),0 6px 14px var(--shadow);transition:transform .08s}
 #hand{position:fixed;left:18%;bottom:22%;width:64px;height:64px;pointer-events:none;animation:swipe 1.6s ease-in-out infinite}
 @keyframes swipe{0%,100%{transform:translate(0,0)}50%{transform:translate(28px,-34px)}}
@@ -182,6 +183,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
 <script src="gltf.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 (function(){
 'use strict';
@@ -687,9 +689,12 @@ function loadModels(kids, done){
   const fin = () => { if (--left === 0) done(); };
   const fallback = k => { k.prim.forEach(o => o.visible = true); fin(); };
   if (!T.GLTFLoader){ Object.values(kids).forEach(fallback); return; }
+  Object.keys(GLB).forEach(key => loadKidModel(key, kids[key], fin, fallback));
+}
+function loadKidModel(key, k, fin, fallback){
+  if (!T.GLTFLoader){ fallback(k); return; }
   const L = new T.GLTFLoader();
-  Object.keys(GLB).forEach(key => {
-    const k = kids[key];
+  {
     L.load(GLB[key], gl => {
       const o = gl.scene; o.scale.setScalar(GLB_H[key] / 1.7);
       o.traverse(n => {
@@ -732,7 +737,7 @@ function loadModels(kids, done){
       g.wi[0] = 1; a.idle[0].setEffectiveWeight(1);
       k.body.add(o); k.g = g; try { setupHeadFrame(k); applyOutfit(k); } catch (e) { console.warn('outfit', e); } fin();
     }, undefined, () => fallback(k));
-  });
+  }
 }
 
 /* ================= wardrobe: hats, ghutra, glasses... attached to the head bone ================= */
@@ -765,7 +770,7 @@ function applyOutfit(k){
   const g = k.g; if (!g || !g.headF) return;
   if (g.acc && g.acc.parent) g.acc.parent.remove(g.acc);
   const F = g.headF, grp = new T.Group(); grp.quaternion.copy(F.q); grp.scale.setScalar(1/F.ws);
-  const o = outfits[k.type] || {};
+  const o = k.outfit || outfits[k.type] || {};
   ['head', 'face', 'hair'].forEach(sl => { if (o[sl]) buildAcc(o[sl], grp, F.Hh, HEADFIT[k.type]); });
   F.head.add(grp); g.acc = grp;
 }
@@ -1056,7 +1061,7 @@ function loadProps(){
     camel(){ const m = propClone('camel', 2.75); if (m){ swapIn(camel.body, m); camel.model = m; const L = rigLegs(m, 0.42); if (L) camel.legs = L; } },
     oryx(){ herd.concat([calf]).forEach(o => { const m = propClone('oryx', o === calf ? 1.15 : 1.75); if (m){ swapIn(o.body, m); o.model = m; const L = rigLegs(m, 0.4); if (L) o.legs = L; } }); },
     houbara(){ houbaras.concat([mother]).forEach(h => { const m = propClone('houbara', 1.05); if (m){ swapIn(h.pose, m, h.wings.concat([h.ring])); h.model = m; } }); },
-    falcon(){ const m = propClone('falcon', 0.42); if (m){ swapIn(falcon.body, m, falcon.wings); falcon.model = m; } },
+    falcon(){ const m = propClone('falcon', 0.42); if (m){ swapIn(falcon.body, m, falcon.wings); falcon.model = m; falcon.wings.forEach(w => w.visible = false); } },   // no box wings on the real model
     caracal(){ const m = propClone('caracal', 0.9); if (m){ swapIn(caracal.body, m); } },
     hyrax(){ hyraxes.forEach(h => { const m = propClone('hyrax', 0.32); if (m){ swapIn(h.body, m); } }); },
     palm(){ PALMS.forEach(g => { const m = propClone('palm', 4.6, null, Math.random()*6); if (m){ swapIn(g, m); } }); },
@@ -1163,15 +1168,30 @@ function drawMini(){
 
 /* ================= audio ================= */
 let AC = null, muted = false;
-const music = new Audio('music.mp3'); music.loop = true; music.preload = 'auto'; music.crossOrigin = 'anonymous'; let musicG = null;
+// music: decoded into Web Audio (works the same inside the shared page and on iPhone/iPad, volume respected)
+let musicG = null, musicRaw = null, musicBuf = null, musicSrc = null, musicDecoding = false;
+fetch('music.mp3').then(r => r.ok ? r.arrayBuffer() : null).then(b => { musicRaw = b; prepMusic(); }).catch(() => {});
 try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
+function prepMusic(){
+  if (!AC || !musicRaw || musicBuf || musicDecoding) return;
+  musicDecoding = true;
+  const ok = buf => { musicBuf = buf; syncMusic(); }, bad = () => { musicDecoding = false; };
+  try { const pr = AC.decodeAudioData(musicRaw.slice(0), ok, bad); if (pr && pr.catch) pr.catch(bad); } catch(e){ bad(); }
+}
 function ensureAudio(){
   if (!AC){ try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ AC = null; }
-    if (AC){ try { const src = AC.createMediaElementSource(music); musicG = AC.createGain(); musicG.gain.value = 0.11; src.connect(musicG); musicG.connect(AC.destination); } catch(e){ music.volume = 0.11; } } }
-  if (AC && AC.state === 'suspended') AC.resume();
-  syncMusic();
+    if (AC){ musicG = AC.createGain(); musicG.gain.value = 0.12; musicG.connect(AC.destination);
+      // iOS: play one silent sample inside the tap so the audio stays unlocked
+      try { const b = AC.createBuffer(1, 1, 22050), s = AC.createBufferSource(); s.buffer = b; s.connect(AC.destination); s.start(0); } catch(e){} } }
+  if (AC && AC.state !== 'running') AC.resume();
+  prepMusic(); syncMusic();
 }
-function syncMusic(){ if (muted || !AC) music.pause(); else if (music.paused) music.play().catch(() => {}); }
+function syncMusic(){
+  if (!AC || !musicBuf) return;
+  if (muted){ if (musicSrc){ try { musicSrc.stop(); } catch(e){} musicSrc = null; } }
+  else if (!musicSrc){ musicSrc = AC.createBufferSource(); musicSrc.buffer = musicBuf; musicSrc.loop = true; musicSrc.connect(musicG); musicSrc.start(0); }
+}
+['touchend', 'click'].forEach(ev => document.addEventListener(ev, () => ensureAudio(), {passive: true}));
 let NB = null;
 function noise(d, vol, f, q, when, type){
   if (!AC || muted) return;
@@ -1198,11 +1218,11 @@ const SFX = {
   win(){ [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => tone(f, .32, 'triangle', .11, i*.13)); },
   door(){ tone(220, .1, 'square', .05); tone(160, .12, 'square', .05, .08); },
   squeak(){ tone(1800, .08, 'sine', .05, 0, 1.3); tone(2000, .08, 'sine', .05, .12, 1.3); },
-  step(){ noise(.08, .13, 700 + Math.random()*400, 1.2); noise(.05, .05, 2600, 1, .01, 'bandpass'); },
+  step(){ noise(.07, .2, 1700 + Math.random()*700, 1.1, 0, 'bandpass'); noise(.09, .14, 650, 1); },
   thud(){ noise(.14, .2, 380, 1); },
   land(){ noise(.16, .2, 600, 1); },
-  splash(){ noise(.7, .25, 1600, .6); noise(.4, .12, 3400, 1.2, .06, 'bandpass'); tone(500, .25, 'sine', .04, .05, .5); },
-  stroke(){ noise(.5, .11, 1000 + Math.random()*300, .9, 0, 'bandpass'); noise(.25, .05, 2800, 1, .18, 'bandpass'); }
+  splash(){ noise(.7, .38, 2200, .6); noise(.4, .12, 3400, 1.2, .06, 'bandpass'); tone(500, .25, 'sine', .04, .05, .5); },
+  stroke(){ noise(.45, .2, 1500 + Math.random()*400, .9, 0, 'bandpass'); noise(.25, .1, 3200, 1, .16, 'bandpass'); }
 };
 
 /* ================= game flow ================= */
@@ -1227,7 +1247,7 @@ function resetWorld(){
   calf.mode = 'lost'; calf.root.position.set(SPOT.calf[0], H(SPOT.calf[0], SPOT.calf[1]), SPOT.calf[1]); calf.root.rotation.y = 2;
   caracal.root.position.set(SPOT.caracal[0], caracalRock.top, SPOT.caracal[1]); caracal.root.rotation.y = PI*0.85; caracal.body.position.y = 0; caracal.body.rotation.x = 0;
   birds.forEach((b, i) => { b.visible = true; b.position.set(SPOT.caracal[0] + 2.2 + i*0.5, caracalRock.top - 0.6 + i*0.1, SPOT.caracal[1] + 1.5 - i*0.6); });
-  hyraxes.forEach(h => h.body.scale.set(1, 0.75, 1.1));
+  hyraxes.forEach((h, i) => { h.body.scale.set(1, 0.75, 1.1); h.follow = false; const a = i/4*2*PI; h.root.position.set(SPOT.hyrax[0] + Math.cos(a)*1.2, hyraxRock.top, SPOT.hyrax[1] + Math.sin(a)*1.2); h.root.rotation.y = a + PI/2; });
   Object.values(kids).forEach(k => { k.body.position.y = 0; k.sit = false; k.root.visible = true; });
   choosing = null; updateHud();
 }
@@ -1258,8 +1278,9 @@ function updateHud(){
   $('stars').textContent = S.starsGot + '/' + stars.length;
   $('mis').innerHTML = MIS.map(m => misHTML(m, m.id === 'houbara' && !m.done ? '<span class="dots">' + houbaras.map(h => '<i' + (h.found ? ' class="on"' : '') + '></i>').join('') + '</span>' : '')).join('');
 }
-function missionDone(id){
+function missionDone(id, fromNet){
   const m = misById[id]; if (m.done) return; m.done = true;
+  if (!fromNet) netSend({t: 'm', id});
   SFX.find(); const p = S.pos; burst(p.x, p.y + 1.5, p.z, 0xf0d590, 18);
   const pop = $('pop'); pop.style.setProperty('--c', m.color); pop.innerHTML = '<svg viewBox="0 0 24 24">' + ICON[id] + '</svg>';
   pop.hidden = true; void pop.offsetWidth; pop.hidden = false; S.popT = 1.9;
@@ -1526,14 +1547,18 @@ function updatePlay(dt, t){
     f.obj.position.lerp(tgt, Math.min(1, dt*(S.ride === 'car' ? 9 : 6)));
     const mv = f.obj.position.clone().sub(before); mv.y = 0; const sp = mv.length()/Math.max(dt, 1e-4);
     if (sp > 0.4) f.obj.rotation.y += angDiff(f.obj.rotation.y, Math.atan2(mv.x, mv.z))*Math.min(1, dt*8);
+    if (f.kid && netHas(f.kid.type)){ f.kid.root.visible = false; return; } else if (f.kid) f.kid.root.visible = true;
     if (f.kid){ f.kid.speed = Math.min(sp, 11); f.kid.air = false; f.kid.swim = SEA(f.obj.position.x) && groundAt(f.obj.position.x, f.obj.position.z, f.obj.position.y + 0.5) < WATER_Y - 0.95; animateKid(f.kid, dt, t); }
     else if (f.h){ f.h.pose.position.y = Math.abs(Math.sin(t*12))*0.04*Math.min(1, sp/3); f.h.neck.rotation.x = Math.sin(t*12)*0.15*Math.min(1, sp/3); }
+    else if (f.hop){ f.hop.body.position.y = Math.abs(Math.sin(t*10 + f.lag))*0.12*Math.min(1, sp/3); }
     else if (f.oryx){ f.oryx.phase += dt*sp*2.2; walkLegs(f.oryx.legs, f.oryx.phase, clamp(sp/3, 0, 1)); }
   });
   // stars
   const cy = S.pos.y + (S.ride === 'car' ? 1.2 : S.ride === 'camel' ? 2.6 : S.ride === 'boat' ? 1.4 : 0.7), reach = S.ride === 'car' ? 2.2 : S.ride === 'camel' ? 1.5 : S.ride === 'boat' ? 2.6 : 0.95;
+  const magnet = S.kidType === 'khad' && S.powerT > 0 && !S.ride;
   stars.forEach(s => {
     if (s.got) return;
+    if (magnet){ const dx = S.pos.x - s.x, dz = S.pos.z - s.z, dd = Math.hypot(dx, dz); if (dd < 16 && dd > 0.01){ const st = Math.min(dd, (10 + (16 - dd))*dt); s.x += dx/dd*st; s.z += dz/dd*st; s.y = lerp(s.y, S.pos.y + 0.7, Math.min(1, dt*5)); } }   // خدّوية's glasses pull nearby stars to her
     if (Math.hypot(S.pos.x - s.x, S.pos.z - s.z) < reach && Math.abs(cy - s.y) < (S.ride ? 1.6 : 0.7)){ s.got = true; S.starsGot++; SFX.star(); burst(s.x, s.y, s.z, 0xf0d590, 8); updateHud(); }
   });
   // vehicle prompt
@@ -1579,10 +1604,10 @@ function updateMissions(dt, t){
     const tg = new T.Vector3(P.x + Math.cos(t*0.9)*3.5, P.y + 6, P.z + Math.sin(t*0.9)*3.5);
     const prev = falcon.g.position.clone(); falcon.g.position.lerp(tg, Math.min(1, dt*2));
     const mv = falcon.g.position.clone().sub(prev); if (mv.lengthSq() > 1e-6) falcon.g.rotation.y = Math.atan2(mv.x, mv.z);
-    falcon.body.rotation.z = -0.3; const fl = Math.sin(t*12)*0.55; falcon.wings[0].rotation.z = fl; falcon.wings[1].rotation.z = -fl;
+    falcon.body.rotation.z = -0.3; if (falcon.model){ falcon.model.position.y = Math.sin(t*6)*0.05; falcon.model.rotation.x = 0.25 + Math.sin(t*6)*0.06; } const fl = Math.sin(t*12)*0.55; falcon.wings[0].rotation.z = fl; falcon.wings[1].rotation.z = -fl;
     if (Math.hypot(P.x - SPOT.perch[0], P.z - SPOT.perch[1]) < 4.5) falcon.mode = 'home';
   } else if (falcon.mode === 'home'){
-    falcon.g.position.lerp(window.__perchTop, Math.min(1, dt*3)); falcon.body.rotation.z = 0;
+    falcon.g.position.lerp(window.__perchTop, Math.min(1, dt*3)); falcon.body.rotation.z = 0; if (falcon.model){ falcon.model.rotation.x = 0; falcon.model.position.y = 0; }
     const far = falcon.g.position.distanceTo(window.__perchTop) > 0.2, fl = far ? Math.sin(t*14)*0.6 : 0.05;
     falcon.wings[0].rotation.z = fl; falcon.wings[1].rotation.z = -fl;
     if (!far && !misById.falcon.done) missionDone('falcon');
@@ -1623,16 +1648,18 @@ function updateMissions(dt, t){
     S.caracalT += dt; const k = clamp(S.caracalT/1.4, 0, 1);
     caracal.body.position.y = Math.sin(k*PI)*4.2; caracal.body.rotation.x = -Math.sin(k*PI)*0.5;
     birds.forEach((b, i) => { b.position.y += dt*(4 + i); b.position.x += dt*(3 - i*2); b.position.z += dt*2; });
-    if (S.caracalT >= 2.2){ caracal.body.position.y = 0; caracal.body.rotation.x = 0; birds.forEach(b => b.visible = false); missionDone('caracal'); }
-  } else caracal.head.rotation.y = clamp(angDiff(caracal.root.rotation.y, Math.atan2(P.x - caracal.root.position.x, P.z - caracal.root.position.z)), -0.9, 0.9);
+    if (S.caracalT >= 2.2){ caracal.body.position.y = 0; caracal.body.rotation.x = 0; birds.forEach(b => b.visible = false); missionDone('caracal'); S.followers.push({obj: caracal.root, hop: caracal, lag: 8 + S.followers.length*4, side: 1.2}); }
+  } else if (!S.followers.some(f => f.hop === caracal)) caracal.head.rotation.y = clamp(angDiff(caracal.root.rotation.y, Math.atan2(P.x - caracal.root.position.x, P.z - caracal.root.position.z)), -0.9, 0.9);
   // hyraxes sunbathing on the warm rock
   hyraxes.forEach((h, i) => {
     const awake = misById.hyrax.done;
     h.body.scale.y = lerp(h.body.scale.y, awake ? 1.05 : 0.75, Math.min(1, dt*4));
     h.body.position.y = awake ? Math.abs(Math.sin(t*3 + i))*0.03 : Math.sin(t*1.5 + i)*0.005;
-    if (awake) h.root.rotation.y += angDiff(h.root.rotation.y, Math.atan2(P.x - h.root.position.x, P.z - h.root.position.z))*Math.min(1, dt*3);
+    if (awake && !h.follow) h.root.rotation.y += angDiff(h.root.rotation.y, Math.atan2(P.x - h.root.position.x, P.z - h.root.position.z))*Math.min(1, dt*3);
   });
-  if (!misById.hyrax.done && Math.hypot(P.x - SPOT.hyrax[0], P.z - SPOT.hyrax[1]) < 8){ SFX.squeak(); missionDone('hyrax'); }
+  if (!misById.hyrax.done && Math.hypot(P.x - SPOT.hyrax[0], P.z - SPOT.hyrax[1]) < 8){ SFX.squeak(); missionDone('hyrax');
+    [0, 1].forEach(i => { const h = hyraxes[i]; h.follow = true; S.followers.push({obj: h.root, hop: h, lag: 7 + S.followers.length*4, side: i ? 0.9 : -0.9}); });   // found animals tag along
+  }
   // houbara: hidden by colour, peeking now and then, revealed close up or by Khaddouya's glasses
   let near = null, nd = 1e9;
   houbaras.forEach(h => { if (h.found) return; const d = h.root.position.distanceTo(P); if (d < nd){ nd = d; near = h; } });
@@ -1773,12 +1800,101 @@ function updateWorld(dt, t){
 
 /* ================= loop ================= */
 let lastT = performance.now(), acc = 0, frames = 0, slow = 0, miniTick = 0;
+/* ================= play together: everyone who opens the game lands in the same world =================
+   The first device to open takes a fixed meeting name on the free PeerJS service and relays; everyone else connects to it.
+   Each device sends its own kid's state 10 times a second; if the relay leaves, another device takes over. */
+const NET = {peer: null, host: false, conns: [], remotes: new Map(), sendT: 0, retry: 0, id: Math.random().toString(36).slice(2, 10)};
+const WORLD = 'imkid963-world-1';
+function netHas(type){ for (const r of NET.remotes.values()) if (r.type === type && r.k.root.visible) return true; return false; }
+function netSend(msg){ msg.from = msg.from || NET.id; const s = JSON.stringify(msg); NET.conns.forEach(c => { if (c.open) try { c.send(s); } catch(e){} }); }
+function netOnData(conn, raw){
+  let m; try { m = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch(e){ return; }
+  if (!m || m.from === NET.id) return;
+  if (NET.host) NET.conns.forEach(c => { if (c !== conn && c.open) try { c.send(JSON.stringify(m)); } catch(e){} });   // relay to the others
+  if (m.t === 's') netState(m);
+  else if (m.t === 'm' && misById[m.id] && S.gameMode === 'adv') missionDone(m.id, true);
+  else if (m.t === 'bye') netDrop(m.from);
+}
+function netConn(c){
+  NET.conns.push(c);
+  c.on('data', d => netOnData(c, d));
+  const gone = () => { NET.conns = NET.conns.filter(x => x !== c); if (!NET.host){ NET.remotes.forEach((r, id) => netDrop(id)); netRestart(); } };
+  c.on('close', gone); c.on('error', gone);
+}
+function netRestart(){ try { NET.peer && NET.peer.destroy(); } catch(e){} NET.peer = null; NET.host = false; NET.conns = []; clearTimeout(NET.retry); NET.retry = setTimeout(netHost, 800 + Math.random()*2500); }
+function netHost(){
+  if (!window.Peer) return;
+  let p; try { p = new Peer(WORLD, {debug: 0}); } catch(e){ return; }
+  p.on('open', () => { NET.peer = p; NET.host = true; });
+  p.on('connection', c => netConn(c));
+  p.on('error', e => {
+    if (e.type === 'unavailable-id'){ try { p.destroy(); } catch(_){} netJoin(); }
+    else if (!NET.peer || NET.peer === p){ try { p.destroy(); } catch(_){} NET.peer = null; clearTimeout(NET.retry); NET.retry = setTimeout(netHost, 6000 + Math.random()*4000); }
+  });
+  p.on('disconnected', () => { try { p.reconnect(); } catch(_){} });
+}
+function netJoin(){
+  let p; try { p = new Peer({debug: 0}); } catch(e){ return; }
+  p.on('open', () => { NET.peer = p; NET.host = false; const c = p.connect(WORLD, {serialization: 'json'}); c.on('open', () => netConn(c)); });
+  p.on('error', e => { if (NET.peer === p || !NET.peer){ netRestart(); } });
+}
+const nameTagCache = {};
+function nameTag(type){
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const g = cv.getContext('2d');
+  g.fillStyle = 'rgba(255,250,240,.92)'; g.beginPath(); g.roundRect ? g.roundRect(8, 6, 240, 52, 26) : g.rect(8, 6, 240, 52); g.fill();
+  g.fillStyle = '#5a3519'; g.font = '800 34px Tajawal, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.direction = 'rtl'; g.fillText(KNAME[type] || '', 128, 34);
+  const tx = new T.CanvasTexture(cv); tx.encoding = T.sRGBEncoding;
+  const sp = new T.Sprite(new T.SpriteMaterial({map: tx, depthTest: false, transparent: true})); sp.scale.set(1.2, 0.3, 1); sp.position.y = 2.05; sp.renderOrder = 5; return sp;
+}
+function netState(m){
+  if (!GLB[m.k]) return;
+  let r = NET.remotes.get(m.from);
+  if (r && r.type !== m.k){ netDrop(m.from); r = null; }
+  if (!r){
+    const k = buildKid(m.k); k.remote = true; k.outfit = m.o || {}; scene.add(k.root);
+    k.root.add(nameTag(m.k));
+    loadKidModel(m.k, k, () => {}, kk => kk.prim.forEach(o => o.visible = true));
+    r = {type: m.k, k, tgt: new T.Vector3(m.x, m.y, m.z), h: m.h || 0, seen: 0}; NET.remotes.set(m.from, r);
+    k.root.position.copy(r.tgt);
+  }
+  r.tgt.set(m.x, m.y, m.z); r.h = m.h || 0; r.sp = m.sp || 0; r.sw = !!m.sw; r.air = !!m.a; r.ride = m.r || 0; r.seen = performance.now();
+  r.k.root.visible = m.pl !== 0;
+  if (JSON.stringify(m.o || {}) !== JSON.stringify(r.k.outfit || {})){ r.k.outfit = m.o || {}; try { applyOutfit(r.k); } catch(e){} }
+}
+function netDrop(id){ const r = NET.remotes.get(id); if (!r) return; scene.remove(r.k.root); NET.remotes.delete(id); }
+function updateNet(dt, t){
+  if (!NET.peer) return;
+  netAnimate(dt, t);
+}
+function netTick(){   // runs on a timer, so a device keeps announcing itself even when its screen isn't redrawing
+  if (!NET.peer || !NET.conns.length) return;
+  {
+    const p = S.player && S.player.root.position;
+    if (S.mode === 'play' && p) netSend({t: 's', k: S.kidType, x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: +p.z.toFixed(2), h: +S.heading.toFixed(2), sp: +(S.player.speed || 0).toFixed(1), sw: S.player.swim ? 1 : 0, a: S.player.air ? 1 : 0, r: S.ride ? 1 : 0, o: outfits[S.kidType] || {}, pl: 1});
+    else netSend({t: 's', k: selKid || 'saeedan', x: 0, y: -50, z: 0, h: 0, pl: 0});
+  }
+}
+setInterval(netTick, 100);
+function netAnimate(dt, t){
+  const now = performance.now();
+  NET.remotes.forEach((r, id) => {
+    if (now - r.seen > 6000){ netDrop(id); return; }
+    const k = r.k, P = k.root.position;
+    if (P.distanceTo(r.tgt) > 25) P.copy(r.tgt); else P.lerp(r.tgt, Math.min(1, dt*10));
+    k.root.rotation.y += angDiff(k.root.rotation.y, r.h)*Math.min(1, dt*10);
+    k.speed = r.sp; k.swim = r.sw; k.air = r.air; k.sit = !!r.ride;
+    animateKid(k, dt, t);
+  });
+}
+addEventListener('pagehide', () => { netSend({t: 'bye'}); try { NET.peer && NET.peer.destroy(); } catch(e){} });
+setTimeout(netHost, 600);
+
 function loop(now){
   requestAnimationFrame(loop);
   let dt = (now - lastT)/1000; lastT = now; if (dt > 0.1) dt = 0.1;
   const t = now/1000;
   if (S.mode === 'select') updateSelect(dt, t); else if (S.mode === 'play') updatePlay(dt, t); else updateEnding(dt, t);
-  updateWorld(dt, t);
+  updateWorld(dt, t); updateNet(dt, t);
   camera.position.copy(camPos); camera.lookAt(camLook);
   renderer.render(scene, camera);
   if (S.mode !== 'select' && (miniTick++ & 1) === 0) drawMini();
