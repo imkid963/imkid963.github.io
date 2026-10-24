@@ -416,8 +416,9 @@ for (let i = 0; i < 16; i++){ const [x, z] = freeSpot(3, {mountain: true}); addR
 for (let i = 0; i < 30; i++){ const [x, z] = freeSpot(2, {flat: true, min: 150, max: 380}); addRock(x, z, 1 + rand()*0.8); }
 for (let i = 0; i < 40; i++){ const [x, z] = freeSpot(2, {flat: true, min: 380, max: 630}); addRock(x, z, 1 + rand()*1.2); }
 for (let i = 0; i < 24; i++){ const [x, z] = freeSpot(4, {mountain: true, min: 120, max: 380}); addRock(x, z, 2.2 + rand()*1.5); }
+const GHAFS = [], HOUSES = [];
 function ghaf(x, z, s){
-  const g = new T.Group(); g.position.set(x, H(x, z), z); g.rotation.y = rand()*PI*2; g.scale.setScalar(s || 1);
+  const g = new T.Group(); GHAFS.push(g); g.position.set(x, H(x, z), z); g.rotation.y = rand()*PI*2; g.scale.setScalar(s || 1);
   part(g, new T.CylinderGeometry(0.13, 0.24, 2.2, 8), M(0x7a5a3c), [0, 1.1, 0], null, [0.08, 0, 0.1]);
   part(g, SPH_LO, M(0x98a774), [0, 2.5, 0], [1.9, 0.75, 1.7]);
   part(g, SPH_LO, M(0x84966a), [0.7, 2.25, 0.4], [1.2, 0.6, 1.1]);
@@ -526,7 +527,7 @@ const PIER = {x0: SEA_X - 9, x1: SEA_X + 26, z: HARBOUR[1], top: 0.8};
     for (let j = 0; j < 5; j++) part(g, new T.BoxGeometry(0.5, 0.45, 0.25), M(0xd9cbb0), [-w/2 + 0.6 + j*(w - 1.2)/4, hgt + 0.45, 2.55]);
     part(g, new T.BoxGeometry(1.1, 2.0, 0.1), door, [0, 1.0, 2.52], null, null, true);
     [-1, 1].forEach(sd => part(g, new T.BoxGeometry(0.8, 0.8, 0.1), win, [sd*w*0.32, hgt*0.62, 2.52], null, null, true));
-    colliders.push({x, z, r: Math.max(w, 5)*0.55, top: null});
+    colliders.push({x, z, r: Math.max(w, 5)*0.55, top: null}); HOUSES.push({g, w, i});
   });
   // old watchtower by the shore
   const tx = SEA_X - 18, tz = -8, ty = H(tx, tz);
@@ -1054,9 +1055,26 @@ function swapIn(group, model, keep){
 }
 function centerY(w){ const c = w.children[0], b = new T.Box3().setFromObject(w); c.position.y -= (b.max.y + b.min.y)/2; return w; }   // pivot at the model's middle (for turning upright models flat)
 function isChildOf(o, p){ while (o){ if (o === p) return true; o = o.parent; } return false; }
+const HOUSE_ROT = 0;
+function buildGhafs(){
+  if (!PROP.ghaf || !PROP.ghaflo) return;
+  GHAFS.forEach(g => { const r = Math.random()*6, hi = propClone('ghaf', 3.9, null, r), lo = propClone('ghaflo', 3.9, null, r); if (!hi || !lo) return; const lod = new T.LOD(); lod.addLevel(hi, 0); lod.addLevel(lo, 45); swapIn(g, lod); });
+}
+function placeShrubs(){
+  const r = rng(77);
+  for (let n = 0, k = 0; n < 36 && k < 4000; k++){
+    const a = r()*2*PI, d = 12 + r()*420, x = Math.cos(a)*d, z = Math.sin(a)*d;
+    if (x > SEA_X - 34 || rockK(x, z) > 0.05 || Math.hypot(x - DUNES[0], z - DUNES[1]) < DUNES[2] + 4) continue;
+    if (!reserved.every(q => Math.hypot(x - q[0], z - q[1]) > q[2] + 1) || !colliders.every(c => !c.r || Math.hypot(x - c.x, z - c.z) > c.r + 1.5)) continue;
+    const m = propClone('shrub', 0.7 + r()*0.5, null, r()*6); if (!m) return;
+    m.traverse(o => { if (o.isMesh) o.castShadow = false; });
+    const lod = new T.LOD(); lod.addLevel(m, 0); lod.addLevel(new T.Object3D(), 70);   // small bushes only drawn when near
+    lod.position.set(x, H(x, z) - 0.05, z); lod.userData.shrub = true; scene.add(lod); n++;
+  }
+}
 function buildPalms(){
   if (!PROP.palm || !PROP.palmlo) return;
-  PALMS.forEach(g => { const r = Math.random()*6, hi = propClone('palm', 4.6, null, r), lo = propClone('palmlo', 4.6, null, r); if (!hi || !lo) return; const lod = new T.LOD(); lod.addLevel(hi, 0); lod.addLevel(lo, 40); swapIn(g, lod); });
+  PALMS.forEach(g => { const r = Math.random()*6, hi = propClone('palm', 4.6, null, r), lo = propClone('palmlo', 4.6, null, r); if (!hi || !lo) return; const lod = new T.LOD(); lod.addLevel(hi, 0); lod.addLevel(lo, 12); swapIn(g, lod); });
 }
 function propClone(name, size, axis, rotY){
   const src = PROP[name]; if (!src) return null;
@@ -1104,6 +1122,10 @@ function loadProps(){
     hyrax(){ hyraxes.forEach(h => { const m = propClone('hyrax', 0.32); if (m){ swapIn(h.body, m); } }); },
     // palms: detailed model up close, light model further away (17 palms)
     palm(){ buildPalms(); }, palmlo(){ buildPalms(); },
+    // ghaf trees (83 of them): detailed up close, light far away; old-style coral house with its little wind tower; desert shrubs
+    ghaf(){ buildGhafs(); }, ghaflo(){ buildGhafs(); },
+    house(){ HOUSES.forEach(h => { const m = propClone('house', h.w*1.05, 'len', HOUSE_ROT); if (m){ swapIn(h.g, m); } }); },
+    shrub(){ placeShrubs(); },
     tent(){ const g = window.__tent; const m = propClone('tent', 7.2, 'len'); if (g && m){ swapIn(g, m); } },
     dhow(){ const m = propClone('dhow', 7.6, 'len', PI/2); if (m){ m.position.y = -0.2; swapIn(boat.body, m); } },
     // cartoon safari car (Meshy) replaces the box car; its length lies on x in the file, so turn it to face +z
@@ -1113,7 +1135,7 @@ function loadProps(){
     houbarafly(){ houbaras.forEach(h => { const m = propClone('houbarafly', 1.9, 'len'); if (m){ centerY(m); const w = new T.Group(); m.rotation.x = PI/2 - 0.35; w.add(m); w.position.y = 0.55; w.visible = false; h.root.add(w); h.fly = w; } }); }
   };
   Object.keys(use).forEach(n => L.load(n + '.glb.wasm', gl => {
-    gl.scene.traverse(o => { if (o.isMesh){ const t = o.material.map; if (t){ t.encoding = T.sRGBEncoding; t.anisotropy = 4; } o.material = new T.MeshStandardMaterial({map: t, roughness: 0.75, metalness: 0}); o.castShadow = true; } });
+    gl.scene.traverse(o => { if (o.isMesh){ const t = o.material.map; if (t){ t.encoding = T.sRGBEncoding; t.anisotropy = 4; } o.material = new T.MeshStandardMaterial({map: t, vertexColors: !!o.geometry.attributes.color, roughness: 0.75, metalness: 0}); o.castShadow = true; } });
     PROP[n] = gl.scene; try { use[n](); } catch (e) { console.warn('prop', n, e); }
   }, undefined, () => {}));
 }
@@ -1297,7 +1319,7 @@ function resetWorld(){
   trough.water.position.y = 0.58;
   if (window.__fire && !(typeof NET !== 'undefined' && NET.remotes.size)) window.__fire.on = false;   // shared fire stays lit while others are playing
   falcon.mode = 'lost';
-  const fx = SPOT.falconTree[0], fz = SPOT.falconTree[1]; falcon.g.position.set(fx, H(fx, fz) + 3.9, fz + 0.3); falcon.g.rotation.set(0, 0.5, 0); falcon.body.rotation.set(0, 0, 0);
+  const fx = SPOT.falconTree[0], fz = SPOT.falconTree[1]; falcon.g.position.set(fx, H(fx, fz) + 4.9, fz + 0.3); falcon.g.rotation.set(0, 0.5, 0); falcon.body.rotation.set(0, 0, 0);
   herd.forEach((o, i) => { const a = i/5*2*PI; o.root.position.set(RESERVE[0] + Math.cos(a)*8, H(RESERVE[0], RESERVE[1]), RESERVE[1] + Math.sin(a)*8); o.target.copy(o.root.position); o.wait = Math.random()*3; });
   calf.mode = 'lost'; calf.root.position.set(SPOT.calf[0], H(SPOT.calf[0], SPOT.calf[1]), SPOT.calf[1]); calf.root.rotation.y = 2;
   caracal.root.position.set(SPOT.caracal[0], caracalRock.top, SPOT.caracal[1]); caracal.root.rotation.y = PI*0.85; caracal.body.position.y = 0; caracal.body.rotation.x = 0;
