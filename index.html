@@ -132,7 +132,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
     <button class="round small" id="albBtn" aria-label="دفتر السمك"><svg viewBox="0 0 24 24"><path d="M3 12c3.2-4.4 8.4-5.6 12.8-2.6L20 6.5v11l-4.2-2.9C11.4 17.6 6.2 16.4 3 12z" fill="#7fb3c8" stroke="#5a3519" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7.2" cy="11.2" r="1.1" fill="#5a3519"/></svg></button>
     <button class="round small" id="snd" aria-label="الصوت"><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h4l5-4v13l-5-4H4z" fill="#5a3519"/><path id="sndw" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
   </div>
-  <div class="grp"><div class="pill" id="datesPill" hidden aria-label="الرطب"><svg viewBox="0 0 24 24"><ellipse cx="9" cy="13" rx="4" ry="6" fill="#b5651d" stroke="#6b3a12" stroke-width="1.2"/><ellipse cx="15.5" cy="12" rx="3.6" ry="5.6" fill="#c97a2a" stroke="#6b3a12" stroke-width="1.2"/><path d="M12 3c0 2.5-1 4-3 5M12 3c0 2.5 1.2 3.6 3.5 4" stroke="#6b8a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg><span id="dates">0</span></div><div class="pill" aria-label="النجوم"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.2l-5.8 3.2 1.2-6.5L2.6 9.4l6.5-.8z" fill="#e6bf5c" stroke="#b98a2a" stroke-width="1.2" stroke-linejoin="round"/></svg><span id="stars">0/0</span></div></div>
+  <div class="grp"><div class="pill" id="racePill" hidden aria-label="السباق"><svg viewBox="0 0 24 24"><path d="M5 21V3" stroke="#5a3519" stroke-width="2" stroke-linecap="round"/><path d="M5 4h13l-3 4 3 4H5z" fill="#d2493a"/></svg><span id="raceTxt"></span></div><div class="pill" id="pearlPill" hidden aria-label="اللؤلؤ"><svg viewBox="0 0 24 24"><path d="M3 15c0-5 4-8.5 9-8.5s9 3.5 9 8.5c-2.5 1.5-5.6 2.3-9 2.3S5.5 16.5 3 15z" fill="#d9c7a8" stroke="#5a3519" stroke-width="1.3"/><circle cx="12" cy="13" r="2.8" fill="#fff" stroke="#5a3519" stroke-width="1.2"/></svg><span id="pearls">0</span></div><div class="pill" id="datesPill" hidden aria-label="الرطب"><svg viewBox="0 0 24 24"><ellipse cx="9" cy="13" rx="4" ry="6" fill="#b5651d" stroke="#6b3a12" stroke-width="1.2"/><ellipse cx="15.5" cy="12" rx="3.6" ry="5.6" fill="#c97a2a" stroke="#6b3a12" stroke-width="1.2"/><path d="M12 3c0 2.5-1 4-3 5M12 3c0 2.5 1.2 3.6 3.5 4" stroke="#6b8a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg><span id="dates">0</span></div><div class="pill" aria-label="النجوم"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.2l-5.8 3.2 1.2-6.5L2.6 9.4l6.5-.8z" fill="#e6bf5c" stroke="#b98a2a" stroke-width="1.2" stroke-linejoin="round"/></svg><span id="stars">0/0</span></div></div>
 </div>
 <div class="pill" id="timer" hidden><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2.5h6"/></svg><span id="tleft">3:00</span></div>
 <div id="mis" hidden></div>
@@ -259,7 +259,8 @@ function part(parent, geo, mat, pos, scl, rot, noShadow){
 // zones: camp (start) at the centre, desert all around, Hajar-style mountains to the north (-z),
 // oasis to the west, oryx reserve to the east, houbara grounds to the south (+z)
 const CAMP = [0, -4], OASIS = [-70, -35], RESERVE = [95, 15];
-const FLATS = [[CAMP[0], CAMP[1], 18, 0], [OASIS[0], OASIS[1], 18, 0], [RESERVE[0], RESERVE[1], 30, 0.2]];
+const TRACK = {x: 55, z: 150, a: 42, b: 24};   // سباق الهجن: oval camel race track south of the camp
+const FLATS = [[TRACK.x, TRACK.z, 58, 0.2], [CAMP[0], CAMP[1], 18, 0], [OASIS[0], OASIS[1], 18, 0], [RESERVE[0], RESERVE[1], 30, 0.2]];
 // big open world: the sea and a harbour village to the east, a high mountain (with a summit you can climb) to the north,
 // a pearl island out at sea; soft dunes ring the far edge on land
 const DUNES = [-125, 100, 62];   // العراقيب: tall sand dunes for driving over, like the desert festivals
@@ -390,7 +391,7 @@ const SPOT = {
   trough: [OASIS[0] + 9, OASIS[1] + 3], falconTree: [-112, 12], perch: [-6, -13], calf: [138, -38],
   caracal: [42, -120], hyrax: [-30, -104], camelHome: [11, -12], carHome: [7, 3]
 };
-const reserved = [[CAMP[0], CAMP[1], 16], [DUNES[0], DUNES[1], DUNES[2] + 6], [0, 13, 7], [OASIS[0], OASIS[1], 18], [RESERVE[0], RESERVE[1], 30], [RELEASE.x, RELEASE.z, 9]]
+const reserved = [[CAMP[0], CAMP[1], 16], [DUNES[0], DUNES[1], DUNES[2] + 6], [0, 13, 7], [TRACK.x, TRACK.z, 52], [-8, 6, 4], [16, -3, 4], [OASIS[0], OASIS[1], 18], [RESERVE[0], RESERVE[1], 30], [RELEASE.x, RELEASE.z, 9]]
   .concat(HB_SPOTS.map(s => [s[0], s[1], 5])).concat(Object.values(SPOT).map(s => [s[0], s[1], 7]));
 function freeSpot(r, opt){
   opt = opt || {};
@@ -1114,7 +1115,8 @@ function loadProps(){
   if (!T.GLTFLoader) return;
   const L = new T.GLTFLoader();
   const use = {
-    camel(){ const m = propClone('camel', 2.75); if (m){ swapIn(camel.body, m); camel.model = m; const L = rigLegs(m, 0.42); if (L) camel.legs = L; } },
+    camel(){ const m = propClone('camel', 2.75); if (m){ swapIn(camel.body, m); camel.model = m; const L = rigLegs(m, 0.42); if (L) camel.legs = L; }
+      racers.forEach(r => { const rm = propClone('camel', 2.75); if (rm){ swapIn(r.c.body, rm, [r.c.body.children[r.c.body.children.length - 1]]); const L = rigLegs(rm, 0.42); if (L) r.c.legs = L; } }); },
     oryx(){ herd.concat([calf]).forEach(o => { const m = propClone('oryx', o === calf ? 1.15 : 1.75); if (m){ swapIn(o.body, m); o.model = m; const L = rigLegs(m, 0.4); if (L) o.legs = L; } }); },
     houbara(){ houbaras.concat([mother]).forEach(h => { const m = propClone('houbara', 1.05); if (m){ swapIn(h.pose, m, h.wings.concat([h.ring])); h.model = m; } }); },
     falcon(){ const m = propClone('falcon', 0.42); if (m){ swapIn(falcon.body, m, falcon.wings.concat(falcon.fly ? [falcon.fly] : [])); falcon.model = m; falcon.wings.forEach(w => w.visible = false); } },   // no box wings on the real model
@@ -1126,6 +1128,10 @@ function loadProps(){
     ghaf(){ buildGhafs(); }, ghaflo(){ buildGhafs(); },
     house(){ HOUSES.forEach(h => { const m = propClone('house', h.w*1.05, 'len', HOUSE_ROT); if (m){ swapIn(h.g, m); } }); },
     shrub(){ placeShrubs(); },
+    horse(){ const m = propClone('horse', 2.0, null, HORSE_ROT); if (m){ swapIn(horse.body, m); horse.legs = rigLegs(m, 0.45) || horse.legs; horse.ready = true; horse.root.visible = true; } },
+    gazelle(){ buildGazelles(); },
+    dolphin(){ buildDolphins(); },
+    turtle(){ buildTurtles(); },
     tent(){ const g = window.__tent; const m = propClone('tent', 7.2, 'len'); if (g && m){ swapIn(g, m); } },
     dhow(){ const m = propClone('dhow', 7.6, 'len', PI/2); if (m){ m.position.y = -0.2; swapIn(boat.body, m); } },
     // cartoon safari car (Meshy) replaces the box car; its length lies on x in the file, so turn it to face +z
@@ -1225,6 +1231,7 @@ function drawMini(){
   const box = (o, col, w) => { mctx.fillStyle = col; mctx.strokeStyle = '#5a3519'; mctx.lineWidth = 2; mctx.fillRect(toX(o.x) - w/2, toY(o.z) - w/2, w, w); mctx.strokeRect(toX(o.x) - w/2, toY(o.z) - w/2, w, w); };
   if (S.ride !== 'car') box(car.root.position, '#f3f1ea', 12);
   if (S.ride !== 'camel') box(camel.root.position, '#c99a62', 10);
+  if (horse.ready && S.ride !== 'horse') box(horse.root.position, '#8a5a3a', 9);
   if (S.ride !== 'boat') box(boat.root.position, '#9a6f45', 11);
   mctx.translate(N/2, N/2); mctx.rotate(PI - S.heading);
   mctx.fillStyle = '#5a3519'; mctx.strokeStyle = '#fff'; mctx.lineWidth = 3;
@@ -1298,6 +1305,9 @@ const SFX = {
   bounce(){ tone(180, .08, 'sine', .07, 0, .7); },
   rustle(){ noise(.9, .2, 3200, .5, 0, 'highpass'); noise(.6, .12, 1800, .7, .25, 'bandpass'); },
   munch(){ [0, .18, .36].forEach(w => noise(.07, .16, 900, 1, w)); tone(600, .15, 'sine', .05, .55, 1.4); },
+  hoof(){ noise(.06, .22, 700, 1.4); noise(.05, .12, 1400, 1.2, .07); },
+  beep(){ tone(660, .18, 'square', .06); },
+  go(){ tone(990, .4, 'square', .07); tone(1320, .4, 'triangle', .05, .05); },
   crackle(){ noise(.03, .12, 2500 + Math.random()*2500, 2, 0, 'bandpass'); if (Math.random() < .5) noise(.02, .08, 4000, 3, .05 + Math.random()*.1, 'bandpass'); }
 };
 
@@ -1340,7 +1350,7 @@ function startGame(type){
   S.followers.forEach(f => { const c = S.crumbs[S.crumbs.length - 1 - f.lag]; f.obj.position.copy(c); f.obj.position.x -= f.side; f.obj.rotation.y = 0; });
   $('select').hidden = true; $('end').hidden = true;
   ['hud', 'jump', 'mis', 'mini', 'sprint', 'joy'].forEach(id => $(id).hidden = false); placeJoy();
-  $('datesPill').hidden = !S.dates;
+  $('datesPill').hidden = !S.dates; $('pearlPill').hidden = !S.pearls;
   S.gameMode = gameMode; S.timeLeft = gameMode === 'stars' ? 180 : 0; S.raceOver = false;
   $('mis').hidden = gameMode !== 'adv'; $('timer').hidden = gameMode !== 'stars'; $('tleft').textContent = '3:00';
   $('power').hidden = type === 'saif';
@@ -1350,7 +1360,7 @@ function startGame(type){
 }
 function goHome(){
   S.mode = 'select'; resetWorld(); placeSelect();
-  ['hud', 'jump', 'power', 'end', 'act', 'mis', 'mini', 'pop', 'sprint', 'timer', 'catch', 'album'].forEach(id => $(id).hidden = true);
+  ['hud', 'jump', 'power', 'end', 'act', 'mis', 'mini', 'pop', 'sprint', 'timer', 'catch', 'album', 'racePill'].forEach(id => $(id).hidden = true);
   $('joy').hidden = true; $('select').hidden = false;
 }
 function updateHud(){
@@ -1458,6 +1468,10 @@ const ACT_ICON = {
   fish: '<path d="M5 21 17 3" stroke="#6b4a2e" stroke-width="2.2" stroke-linecap="round"/><path d="M17 3c2 4 2.5 8 1 12" stroke="#5a3519" stroke-width="1" fill="none"/><circle cx="18" cy="16.5" r="2" fill="#e05a3a" stroke="#5a3519" stroke-width="1"/><circle cx="7.5" cy="17" r="2" fill="none" stroke="#5a3519" stroke-width="1.6"/>',
   reel: '<path d="M3 12c3.2-4.4 8.4-5.6 12.8-2.6L20 6.5v11l-4.2-2.9C11.4 17.6 6.2 16.4 3 12z" fill="#e6bf5c" stroke="#5a3519" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7.2" cy="11.2" r="1.2" fill="#5a3519"/><path d="M12 1.5v3M17 3l-1.5 2.5M7 3l1.5 2.5" stroke="#d2493a" stroke-width="1.8" stroke-linecap="round"/>',
   palm: '<path d="M12 22c-.6-5 0-9 .4-12" stroke="#8b6a4a" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M12.4 10C10 6.5 6 6 3 7.5c3-.2 6 .8 9.4 2.5zM12.4 10c2.4-3.5 6.4-4 9.4-2.5-3-.2-6 .8-9.4 2.5zM12.4 10c-1-3.6.2-6.6 2.6-8-1.6 2.4-2 5-2.6 8zM12.4 10C11 6.5 8.6 4.6 6 4.2c2.2 1.4 4.6 3.4 6.4 5.8z" fill="#6e9a4a" stroke="#4a6a30" stroke-width=".8"/><circle cx="11" cy="12.5" r="1.1" fill="#b5651d"/><circle cx="13.6" cy="12.8" r="1.1" fill="#b5651d"/>',
+  race: '<path d="M5 22V2.5" stroke="#5a3519" stroke-width="2" stroke-linecap="round"/><path d="M5 3h14v9H5z" fill="#fff" stroke="#5a3519" stroke-width="1.2"/><path d="M5 3h3.5v3H5zM12 3h3.5v3H12zM8.5 6H12v3H8.5zM15.5 6H19v3h-3.5zM5 9h3.5v3H5zM12 9h3.5v3H12z" fill="#2a2a2a"/>',
+  kite: '<path d="M12 2 19 9l-7 9-7-9z" fill="#e05a3a" stroke="#5a3519" stroke-width="1.3" stroke-linejoin="round"/><path d="M12 2v16M5 9h14" stroke="#fff" stroke-width="1"/><path d="M12 18c-1 2 1 2.5 0 4.5" stroke="#5a3519" stroke-width="1.3" fill="none"/>',
+  kiteOff: '<path d="M12 4 17 9l-5 6.5L7 9z" fill="#e8b0a0" stroke="#5a3519" stroke-width="1.2"/><path d="M4 20 20 4" stroke="#d2493a" stroke-width="2.4" stroke-linecap="round"/>',
+  horse: '<path d="M5 20l1-6c-1-2 0-4 2-5l3-1 2-4 2 1-1 2 3 1c1 .5 1 2 0 2l-2 .5-1 4 1 6h-2l-1-5h-3l-1 5z" fill="#8a5a3a" stroke="#4a2e1a" stroke-width="1" stroke-linejoin="round"/>',
   out: '<path d="M14 4h4.5c.8 0 1.5.7 1.5 1.5v13c0 .8-.7 1.5-1.5 1.5H14" fill="none" stroke="#5a3519" stroke-width="2.4" stroke-linecap="round"/><path d="M10 8l-4 4 4 4M6 12h9" fill="none" stroke="#5a3519" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'
 };
 let nearVehicle = null, nearPalm = null, curAct = null;
@@ -1469,19 +1483,22 @@ function setFire(on, fromNet){
 function doAction(){
   if (S.mode !== 'play') return;
   if (S.fish){ fishPress(); return; }
-  if (S.ride){ if (S.ride === 'boat' && curAct === 'fish'){ startFish(); return; } if (S.drinkT <= 0) exitRide(); return; }
+  if (S.ride){ if (S.ride === 'boat' && curAct === 'fish'){ startFish(); return; } if (S.ride === 'camel' && curAct === 'race'){ startRace(); return; } if (S.race) endRace(false); if (S.drinkT <= 0) exitRide(); return; }
   if (nearVehicle === 'fish'){ startFish(); return; }
   if (nearVehicle === 'palm'){ shakePalm(nearPalm); return; }
+  if (nearVehicle === 'kite'){ S.kite = true; SFX.cast(); return; }
+  if (nearVehicle === 'kiteOff'){ S.kite = false; SFX.door(); return; }
+  if (nearVehicle === 'horse'){ mountHorse(); return; }
   if (nearVehicle === 'car') enterCar(); else if (nearVehicle === 'camel') mountCamel(); else if (nearVehicle === 'boat') enterBoat(); else if (nearVehicle === 'fire') setFire(!window.__fire.on);
 }
 function setFollowersVisible(v){ S.hideKids = !v; S.followers.forEach(f => { if (f.kid) f.obj.visible = v; }); }
 function enterCar(){
-  S.ride = 'car'; S.carSpeed = 0; S.carAir = false; S.carVy = 0; SFX.door(); S.player.root.visible = false; S.player.swim = false; setFollowersVisible(false);
+  S.ride = 'car'; S.carSpeed = 0; S.carAir = false; S.carVy = 0; S.kite = false; SFX.door(); S.player.root.visible = false; S.player.swim = false; setFollowersVisible(false);
   S.pos.copy(car.root.position); S.heading = car.yaw; S.camYaw = car.yaw + PI; carCol.r = 0;
   ['jump', 'power'].forEach(id => $(id).hidden = true);
 }
 function enterBoat(){
-  S.ride = 'boat'; S.boatSpeed = 0; SFX.door(); S.player.swim = false; setFollowersVisible(false); S.hideAnimals = true;
+  S.ride = 'boat'; S.boatSpeed = 0; S.kite = false; SFX.door(); S.player.swim = false; setFollowersVisible(false); S.hideAnimals = true;
   S.pos.set(boat.root.position.x, WATER_Y, boat.root.position.z); S.heading = boat.yaw; S.camYaw = boat.yaw + PI;
   ['jump', 'power'].forEach(id => $(id).hidden = true);
 }
@@ -1490,8 +1507,13 @@ function landSpot(){
   for (let r = 3; r <= 8; r += 1) for (let i = 0; i < 16; i++){ const a = i/16*2*PI, x = P.x + Math.cos(a)*r, z = P.z + Math.sin(a)*r; if (groundAt(x, z, 99) > WATER_Y + 0.35) return [x, z]; }
   return null;
 }
+function mountHorse(){
+  S.ride = 'horse'; SFX.hoof(); S.player.sit = true; S.player.swim = false; horseCol.r = 0; if (S.kite) S.kite = false;
+  S.pos.copy(horse.root.position); S.heading = horse.root.rotation.y;
+  ['jump', 'power'].forEach(id => $(id).hidden = true);
+}
 function mountCamel(){
-  S.ride = 'camel'; SFX.door(); S.player.sit = true; S.player.swim = false; camelCol.r = 0;
+  S.ride = 'camel'; S.kite = false; SFX.door(); S.player.sit = true; S.player.swim = false; camelCol.r = 0;
   S.pos.copy(camel.root.position); S.heading = camel.root.rotation.y;
   ['jump', 'power'].forEach(id => $(id).hidden = true);
 }
@@ -1505,9 +1527,10 @@ function exitRide(){
     $('jump').hidden = false; $('power').hidden = S.kidType === 'saif';
     return;
   }
-  const yaw = S.ride === 'car' ? car.yaw : camel.root.rotation.y;
+  const yaw = S.ride === 'car' ? car.yaw : S.ride === 'horse' ? horse.root.rotation.y : camel.root.rotation.y;
   const side = new T.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)).multiplyScalar(S.ride === 'car' ? 2.4 : 1.6);
   if (S.ride === 'car'){ S.carAir = false; S.carVy = 0; carCol.x = car.root.position.x; carCol.z = car.root.position.z; carCol.r = 2.1; setFollowersVisible(true); S.player.root.visible = true; SFX.door(); }
+  else if (S.ride === 'horse'){ horseCol.x = horse.root.position.x; horseCol.z = horse.root.position.z; horseCol.r = 1.0; S.player.sit = false; }
   else { camelCol.x = camel.root.position.x; camelCol.z = camel.root.position.z; camelCol.r = 1.3; S.player.sit = false; }
   S.ride = null; S.pos.add(side); S.pos.y = groundAt(S.pos.x, S.pos.z, 99); S.vy = 0;
   S.crumbs.push(S.pos.clone());
@@ -1601,7 +1624,7 @@ function updatePlay(dt, t){
       S.drinkT -= dt; camel.neck.rotation.x = lerp(camel.neck.rotation.x, 1.0, Math.min(1, dt*3));
       trough.water.position.y = 0.58 - (1 - Math.max(0, S.drinkT)/3.2)*0.35;
       if (S.drinkT <= 0){ camel.neck.rotation.x = 0; missionDone('camel'); }
-    } else moveSpeed = walkMove(dt, jx, jy, input.sprint ? 11 : 6.5);
+    } else moveSpeed = S.race && S.race.st === 'count' ? 0 : walkMove(dt, jx, jy, input.sprint ? 11 : 6.5);
     S.pos.y = H(S.pos.x, S.pos.z);
     camel.root.position.copy(S.pos); camel.root.rotation.y = S.heading;
     { const ph0 = camel.phase; camel.phase += dt*moveSpeed*1.4; if (moveSpeed > 0.6 && Math.floor(ph0/(PI/2)) !== Math.floor(camel.phase/(PI/2))) SFX.thud(); }
@@ -1628,6 +1651,14 @@ function updatePlay(dt, t){
     p.root.position.copy(S.pos); p.root.rotation.y = S.heading; p.speed = moveSpeed; p.air = !S.onGround;
     animateKid(p, dt, t);
   }
+  if (S.ride === 'horse'){
+    moveSpeed = walkMove(dt, jx, jy, input.sprint ? 15 : 7.5); S.pos.y = H(S.pos.x, S.pos.z);
+    horse.root.position.copy(S.pos); horse.root.rotation.y = S.heading;
+    { const ph0 = horse.phase; horse.phase += dt*moveSpeed*1.9; if (moveSpeed > 0.6 && Math.floor(ph0/(PI/2)) !== Math.floor(horse.phase/(PI/2))) SFX.hoof(); }
+    walkLegs(horse.legs, horse.phase, clamp(moveSpeed/5, 0, 1)); horse.body.position.y = Math.abs(Math.sin(horse.phase))*0.08*clamp(moveSpeed/6, 0, 1);
+    const seat = new T.Vector3(0, HORSE_SEAT + horse.body.position.y, -0.05).applyAxisAngle(new T.Vector3(0, 1, 0), S.heading).add(S.pos);
+    p.root.position.copy(seat); p.root.rotation.y = S.heading; p.speed = 0; animateKid(p, dt, t);
+  }
   if (S.ride !== 'camel'){ camel.neck.rotation.x = S.feedT > 0 ? lerp(camel.neck.rotation.x, 1.0, Math.min(1, dt*4)) : Math.sin(t*1.1)*0.08; walkLegs(camel.legs, 0, 0); }
   // breadcrumbs & followers
   const last = S.crumbs[S.crumbs.length - 1];
@@ -1649,7 +1680,7 @@ function updatePlay(dt, t){
     else if (f.oryx){ f.oryx.phase += dt*sp*2.2; walkLegs(f.oryx.legs, f.oryx.phase, clamp(sp/3, 0, 1)); }
   });
   // stars
-  const cy = S.pos.y + (S.ride === 'car' ? 1.2 : S.ride === 'camel' ? 2.6 : S.ride === 'boat' ? 1.4 : 0.7), reach = S.ride === 'car' ? 2.2 : S.ride === 'camel' ? 1.5 : S.ride === 'boat' ? 2.6 : 0.95;
+  const cy = S.pos.y + (S.ride === 'car' ? 1.2 : S.ride === 'camel' ? 2.6 : S.ride === 'horse' ? 2.0 : S.ride === 'boat' ? 1.4 : 0.7), reach = S.ride === 'car' ? 2.2 : S.ride === 'camel' || S.ride === 'horse' ? 1.5 : S.ride === 'boat' ? 2.6 : 0.95;
   const magnet = S.kidType === 'khad' && S.powerT > 0 && !S.ride;
   stars.forEach(s => {
     if (s.got) return;
@@ -1659,8 +1690,10 @@ function updatePlay(dt, t){
   // vehicle prompt
   nearVehicle = null;
   if (!S.ride && !S.fish){ if (car.root.position.distanceTo(S.pos) < 3.6) nearVehicle = 'car'; else if (camel.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'camel'; else if (Math.hypot(boat.root.position.x - S.pos.x, boat.root.position.z - S.pos.z) < 4.8) nearVehicle = 'boat'; else if (Math.hypot(window.__fire.x - S.pos.x, window.__fire.z - S.pos.z) < 2.4) nearVehicle = 'fire';
-    else if ((nearPalm = palmNear()) ) nearVehicle = 'palm'; else if (fishSpot()) nearVehicle = 'fish'; }
-  let actKey = S.fish ? (S.fish.st === 'bite' ? 'reel' : 'fish') : S.ride === 'boat' ? (((miniTick & 7) === 0 ? (S.canLand = !!landSpot()) : S.canLand) ? 'out' : (Math.abs(S.boatSpeed) < 1.2 ? 'fish' : null)) : S.ride ? 'out' : (nearVehicle === 'fire' && window.__fire.on ? 'fireOut' : nearVehicle);
+    else if (horse.ready && horse.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'horse';
+    else if ((nearPalm = palmNear()) ) nearVehicle = 'palm'; else if (fishSpot()) nearVehicle = 'fish';
+    else if (!S.kite && Math.hypot(S.pos.x - KITE_STAND[0], S.pos.z - KITE_STAND[1]) < 2.4) nearVehicle = 'kite'; else if (S.kite) nearVehicle = 'kiteOff'; }
+  let actKey = S.fish ? (S.fish.st === 'bite' ? 'reel' : 'fish') : S.ride === 'boat' ? (((miniTick & 7) === 0 ? (S.canLand = !!landSpot()) : S.canLand) ? 'out' : (Math.abs(S.boatSpeed) < 1.2 ? 'fish' : null)) : (S.ride === 'camel' && !S.race && raceStartNear()) ? 'race' : S.ride ? 'out' : (nearVehicle === 'fire' && window.__fire.on ? 'fireOut' : nearVehicle);
   curAct = actKey; const actEl = $('act');
   if (actKey){ if (actEl.dataset.k !== actKey){ $('acticon').innerHTML = ACT_ICON[actKey]; actEl.dataset.k = actKey; } actEl.hidden = false; } else actEl.hidden = true;
   actEl.classList.toggle('hot', actKey === 'reel');
@@ -1676,8 +1709,8 @@ function updatePlay(dt, t){
   updateFun(dt, t);
   // camera
   const portrait = innerWidth < innerHeight;
-  const camD = S.ride === 'car' ? (portrait ? 14 : 12) : S.ride === 'boat' ? (portrait ? 17 : 14) : S.ride === 'camel' ? (portrait ? 10 : 8.5) : (portrait ? 8.2 : 7);
-  const camH = S.ride === 'car' ? 6.2 : S.ride === 'boat' ? 7.5 : S.ride === 'camel' ? 4.8 : 3.3;
+  const camD = S.ride === 'car' ? (portrait ? 14 : 12) : S.ride === 'boat' ? (portrait ? 17 : 14) : S.ride === 'camel' || S.ride === 'horse' ? (portrait ? 10 : 8.5) : (portrait ? 8.2 : 7);
+  const camH = S.ride === 'car' ? 6.2 : S.ride === 'boat' ? 7.5 : S.ride === 'camel' || S.ride === 'horse' ? 4.8 : 3.3;
   const cx = S.pos.x + Math.sin(S.camYaw)*camD, cz = S.pos.z + Math.cos(S.camYaw)*camD;
   let cyy = Math.max(S.pos.y, H(S.pos.x, S.pos.z)) + camH + (S.camPitch || 0)*camD; cyy = Math.max(cyy, H(cx, cz) + 1.6, WATER_Y + 1.5);
   for (let q = 0.35; q < 1; q += 0.3){ const hx = S.pos.x + (cx - S.pos.x)*q, hz = S.pos.z + (cz - S.pos.z)*q; cyy = Math.max(cyy, H(hx, hz) + 2.2); }
@@ -2156,8 +2189,155 @@ function resetFun(){
   S.dates = 0; $('dates').textContent = '0'; $('datesPill').hidden = true; S.feedT = 0;
   dates.forEach(d => d.m.visible = false); PALMS.forEach(g => { g.userData.cd = 0; g.userData.shake = 0; g.rotation.x = g.rotation.z = 0; });
   S.carAir = false; S.carVy = 0; resetBall();
+  resetFun2();
 }
-function updateFun(dt, t){ updateFishing(dt, t); updateBall(dt, t); updatePalmsAndDates(dt, t); updateSand(dt); }
+function updateFun(dt, t){ updateFishing(dt, t); updateBall(dt, t); updatePalmsAndDates(dt, t); updateSand(dt); updateFun2(dt, t); }
+
+/* ================= more play: camel race, kite, pearls, horse, gazelles, dolphins, turtles ================= */
+const HORSE_ROT = -PI/2, DOLPHIN_ROT = 0, TURTLE_ROT = 0, GAZELLE_ROT = 0, HORSE_SEAT = 1.32;
+const HORSE_HOME = [16, -3], KITE_STAND = [-8, 6];
+const horse = (function(){ const root = new T.Group(), body = new T.Group(); root.add(body); root.visible = false; scene.add(root);
+  const legs = [0, 1, 2, 3].map(() => new T.Group()); return {root, body, legs, phase: 0, ready: false}; })();
+const horseCol = {x: HORSE_HOME[0], z: HORSE_HOME[1], r: 1.0, top: null}; colliders.push(horseCol);
+// race track: white and red posts, start/finish arch with a chequered banner
+(function track(){
+  const W = M(0xffffff), Rd = M(0xd2493a), postG = new T.CylinderGeometry(0.06, 0.07, 1.1, 6);
+  const iw = new T.InstancedMesh(postG, W, 64), ir = new T.InstancedMesh(postG, Rd, 64), o = new T.Object3D(); let nw = 0, nr = 0;   // 128 posts in two draw calls
+  for (let i = 0; i < 64; i++){ const a = i/64*2*PI; [0.78, 1.22].forEach(k => { const x = TRACK.x + TRACK.a*k*Math.cos(a), z = TRACK.z + TRACK.b*k*Math.sin(a); o.position.set(x, H(x, z) + 0.55, z); o.updateMatrix(); if (i % 2) iw.setMatrixAt(nw++, o.matrix); else ir.setMatrixAt(nr++, o.matrix); }); }
+  scene.add(iw, ir);
+  const gx = TRACK.x + TRACK.a, gz = TRACK.z, g = new T.Group(); g.position.set(gx, H(gx, gz), gz); scene.add(g);
+  [-1, 1].forEach(sd => part(g, new T.CylinderGeometry(0.15, 0.15, 5, 8), W, [sd*9.5, 2.5, 0]));
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 32; const c = cv.getContext('2d'); for (let x = 0; x < 32; x++) for (let y = 0; y < 4; y++){ c.fillStyle = (x + y) % 2 ? '#222' : '#fff'; c.fillRect(x*8, y*8, 8, 8); }
+  const tx = new T.CanvasTexture(cv); tx.encoding = T.sRGBEncoding;
+  const ban = part(g, new T.BoxGeometry(19.4, 0.9, 0.12), new T.MeshStandardMaterial({map: tx}), [0, 4.6, 0]);
+  [-1, 1].forEach(sd => colliders.push({x: gx + sd*9.5, z: gz, r: 0.3, top: null}));
+  // kite stand at the camp
+  const k = new T.Group(); k.position.set(KITE_STAND[0], H(KITE_STAND[0], KITE_STAND[1]), KITE_STAND[1]); scene.add(k);
+  part(k, new T.CylinderGeometry(0.05, 0.06, 1.4, 6), M(0x7a5c40), [0, 0.7, 0]);
+  const kd = part(k, new T.ConeGeometry(0.5, 1.0, 4), M(0xe05a3a), [0, 1.6, 0.05], [1, 1, 0.12]); window.__kiteRest = kd;
+})();
+// racing camels with little robot jockeys (like the real races)
+const racers = [0, 1, 2].map(i => { const c = buildCamel(); scene.add(c.root); const j = new T.Group(); j.position.set(0, 2.25, -0.1); c.body.add(j);
+  part(j, new T.BoxGeometry(0.22, 0.3, 0.16), M([0x3f6fae, 0x2e9a5a, 0xe6bf5c][i]), [0, 0.15, 0]); part(j, SPH_LO, M(0xdddddd), [0, 0.4, 0], [0.12, 0.12, 0.12]);
+  return {c, i, th: 0, k: [0.9, 1.1, 1.0][i], v: [7.4, 8.2, 9.1][i], done: 0, phase: Math.random()*6}; });
+function placeRacers(){ racers.forEach(r => { r.th = -0.04*(r.i + 1); const x = TRACK.x + TRACK.a*r.k*Math.cos(r.th), z = TRACK.z + TRACK.b*r.k*Math.sin(r.th); r.c.root.position.set(x, H(x, z), z); r.c.root.rotation.y = 0; r.done = 0; }); }
+function raceStartNear(){ return Math.hypot(S.pos.x - (TRACK.x + TRACK.a), S.pos.z - TRACK.z) < 9; }
+function trackAngle(x, z){ return Math.atan2((z - TRACK.z)/TRACK.b, (x - TRACK.x)/TRACK.a); }
+function startRace(){
+  placeRacers(); const x = TRACK.x + TRACK.a*1.0, z = TRACK.z - 2; S.pos.set(x, H(x, z), z); S.heading = 0; S.camYaw = PI;
+  S.race = {st: 'count', t: 0, last: trackAngle(S.pos.x, S.pos.z), prog: 0, beeps: 0}; $('racePill').hidden = false; $('raceTxt').textContent = '1/2';
+}
+function endRace(finished, rank){
+  if (finished){ const col = rank === 1 ? '#e6bf5c' : rank === 2 ? '#c9ced4' : '#c98a5a';
+    popIcon(col, '<path d="M7 3h10v4a5 5 0 0 1-10 0z" fill="' + col + '" stroke="#5a3519" stroke-width="1.2"/><path d="M7 5H4c0 3 1.5 4 3 4M17 5h3c0 3-1.5 4-3 4" fill="none" stroke="#5a3519" stroke-width="1.2"/><path d="M10 12h4v4h-4zM8 16h8v3H8z" fill="#5a3519"/><text x="12" y="9" font-size="5.5" text-anchor="middle" fill="#5a3519" font-weight="800">' + rank + '</text>');
+    if (rank === 1){ SFX.win(); burst(S.pos.x, S.pos.y + 3, S.pos.z, 0xf0d590, 26); } else SFX.find(); }
+  S.race = null; S.raceHold = 4; $('racePill').hidden = true;
+}
+function updateRace(dt){
+  const Rc = S.race;
+  racers.forEach(r => { const run = Rc && Rc.st === 'run' && r.done < 2*2*PI; if (run){ const dth = r.v/(((TRACK.a + TRACK.b)/2)*r.k)*dt; r.th += dth; r.done += dth; }
+    const x = TRACK.x + TRACK.a*r.k*Math.cos(r.th), z = TRACK.z + TRACK.b*r.k*Math.sin(r.th), P = r.c.root.position, px = P.x, pz = P.z;
+    P.set(x, H(x, z), z); const sp = Math.hypot(x - px, z - pz)/Math.max(dt, 1e-4); if (sp > 0.2) r.c.root.rotation.y = Math.atan2(x - px, z - pz);
+    r.phase += dt*sp*1.4; walkLegs(r.c.legs, r.phase, clamp(sp/5, 0, 1)); r.c.body.position.y = Math.abs(Math.sin(r.phase))*0.06*clamp(sp/5, 0, 1); });
+  if (!Rc) return;
+  if (S.ride !== 'camel'){ endRace(false); return; }
+  Rc.t += dt;
+  if (Rc.st === 'count'){ const n = 3 - Math.floor(Rc.t); if (n !== Rc.beeps && n > 0){ Rc.beeps = n; SFX.beep(); popIcon('#e6bf5c', '<text x="12" y="17" font-size="15" text-anchor="middle" fill="#5a3519" font-weight="800">' + n + '</text>'); }
+    if (Rc.t >= 3){ Rc.st = 'run'; SFX.go(); popIcon('#7fbf7a', '<text x="12" y="16" font-size="8" text-anchor="middle" fill="#2e6a3a" font-weight="800">يلا!</text>'); } return; }
+  // the kid's progress only counts while on the track, going the right way round
+  const a = trackAngle(S.pos.x, S.pos.z), rr = Math.hypot((S.pos.x - TRACK.x)/TRACK.a, (S.pos.z - TRACK.z)/TRACK.b);
+  let d = a - Rc.last; if (d > PI) d -= 2*PI; if (d < -PI) d += 2*PI; Rc.last = a;
+  if (rr > 0.6 && rr < 1.45 && Math.abs(d) < 0.5) Rc.prog = Math.max(Rc.prog + d, Rc.prog - 0.5);
+  const lap = Math.min(2, Math.floor(Math.max(0, Rc.prog)/(2*PI)) + 1), ahead = racers.filter(r => r.done > Rc.prog).length;
+  $('raceTxt').textContent = lap + '/2 · ' + (ahead + 1);
+  if (Rc.prog >= 2*2*PI) endRace(true, ahead + 1);
+  if (Rc.t > 240) endRace(false);
+}
+// kite: hold it and it flies behind you with the wind
+const kite = (function(){ const g = new T.Group(); g.visible = false; scene.add(g);
+  const body = part(g, new T.ConeGeometry(0.9, 1.8, 4), new T.MeshStandardMaterial({color: 0xe05a3a, side: T.DoubleSide}), [0, 0, 0], [1, 1, 0.08], [PI/2, 0, 0]);
+  part(g, new T.BoxGeometry(1.8, 0.04, 0.04), M(0x6b4a2e), [0, 0, 0]); part(g, new T.BoxGeometry(0.04, 0.04, 1.8), M(0x6b4a2e), [0, 0, 0]);
+  const tail = [0, 1, 2, 3, 4].map(i => { const m = part(scene, new T.ConeGeometry(0.16, 0.3, 3), M([0xe6bf5c, 0x3f6fae, 0xffffff, 0x2e9a5a, 0xe6bf5c][i]), [0, 0, 0], null, null, true); m.visible = false; return m; });
+  const lg = new T.BufferGeometry().setFromPoints([new T.Vector3(), new T.Vector3()]), line = new T.Line(lg, new T.LineBasicMaterial({color: 0xffffff})); line.frustumCulled = false; line.visible = false; scene.add(line);
+  return {g, tail, line, pos: new T.Vector3(), trail: []}; })();
+function updateKite(dt, t){
+  const on = !!S.kite && !S.ride; kite.g.visible = kite.line.visible = on; kite.tail.forEach(m => m.visible = on); if (window.__kiteRest) window.__kiteRest.visible = !S.kite;
+  if (!on){ if (S.kite && S.ride) S.kite = false; kite.pos.copy(S.pos).add(new T.Vector3(0, 2, 0)); kite.trail.length = 0; return; }
+  const back = new T.Vector3(-Math.sin(S.heading), 0, -Math.cos(S.heading)), tg = S.pos.clone().addScaledVector(back, 8 + (S.player.speed || 0)*0.5).add(new T.Vector3(Math.sin(t*0.7)*2.5, 8.5 + Math.sin(t*1.3)*1.2, Math.cos(t*0.9)*1.5));
+  kite.pos.lerp(tg, Math.min(1, dt*2)); kite.g.position.copy(kite.pos); kite.g.lookAt(S.pos.x, S.pos.y + 1, S.pos.z); kite.g.rotateZ(Math.sin(t*2)*0.25);
+  kite.trail.unshift(kite.pos.clone()); if (kite.trail.length > 30) kite.trail.length = 30;
+  kite.tail.forEach((m, i) => { const q = kite.trail[Math.min(kite.trail.length - 1, 3 + i*5)]; m.position.copy(q).add(new T.Vector3(0, -0.6 - i*0.45, 0)); m.rotation.z = Math.sin(t*6 + i)*0.6; });
+  const hand = S.player.root.position.clone().add(new T.Vector3(Math.sin(S.heading)*0.3, 1.1, Math.cos(S.heading)*0.3)), pos = kite.line.geometry.attributes.position;
+  pos.setXYZ(0, hand.x, hand.y, hand.z); pos.setXYZ(1, kite.pos.x, kite.pos.y, kite.pos.z); pos.needsUpdate = true;
+}
+// pearls: shells along the beach, glowing oysters in the shallow water (swim over them)
+const pearlSpots = (function(){ const r = rng(91), out = [];
+  for (let i = 0; i < 10; i++){ const x = SEA_X - 13 + r()*6, z = -70 + i*20 + r()*6; if (Math.abs(z - PIER.z) < 5) continue; out.push({x, z, water: false}); }
+  for (let i = 0; i < 6; i++){ const a = i/6*2*PI + 0.3, x = ISLAND[0] + Math.cos(a)*34, z = ISLAND[1] + Math.sin(a)*34; out.push({x, z, water: true}); }
+  return out; })();
+const pearlObjs = pearlSpots.map(sp => { const g = new T.Group(), y = sp.water ? Math.max(H(sp.x, sp.z), WATER_Y - 2.2) : H(sp.x, sp.z); g.position.set(sp.x, y, sp.z); scene.add(g);
+  part(g, SPH, M(sp.water ? 0x8a7a6a : 0xe9d6c0), [0, 0.08, 0], [0.32, 0.12, 0.26]); part(g, SPH, M(0xf3e7d8), [0, 0.18, -0.08], [0.3, 0.1, 0.24], [0.5, 0, 0]);
+  const pearl = part(g, SPH_LO, new T.MeshBasicMaterial({color: 0xffffff}), [0, 0.22, 0.02], [0.07, 0.07, 0.07], null, true);
+  const glow = part(g, new T.RingGeometry(0.35, 0.5, 24), new T.MeshBasicMaterial({color: 0xfff6c8, transparent: true, opacity: 0.5, side: T.DoubleSide, depthWrite: false}), [0, 0.05, 0], null, [-PI/2, 0, 0], true);
+  return {sp, g, pearl, glow, got: false}; });
+function updatePearls(dt, t){
+  pearlObjs.forEach(o => { if (o.got) return; o.glow.material.opacity = 0.3 + 0.3*Math.sin(t*3 + o.sp.x); o.glow.scale.setScalar(1 + 0.15*Math.sin(t*3));
+    const d = Math.hypot(S.pos.x - o.sp.x, S.pos.z - o.sp.z); if (d < (o.sp.water ? 1.8 : 1.1) && !S.ride && (o.sp.water ? S.player.swim : true)){
+      o.got = true; o.g.visible = false; S.pearls = (S.pearls || 0) + 1; $('pearls').textContent = S.pearls + '/' + pearlObjs.length; $('pearlPill').hidden = false; SFX.star(); burst(o.sp.x, o.g.position.y + 0.4, o.sp.z, 0xffffff, 8);
+      if (S.pearls === pearlObjs.length){ SFX.win(); popIcon('#f3e7d8', '<path d="M3 15c0-5 4-8.5 9-8.5s9 3.5 9 8.5c-2.5 1.5-5.6 2.3-9 2.3S5.5 16.5 3 15z" fill="#d9c7a8" stroke="#5a3519" stroke-width="1.3"/><circle cx="12" cy="13" r="2.8" fill="#fff" stroke="#5a3519" stroke-width="1.2"/>'); } } });
+}
+// gazelles: a small herd that grazes and runs off when you come close
+const gazelles = [];
+function buildGazelles(){
+  const C = [-40, 175];
+  for (let i = 0; i < 6; i++){ const m = propClone('gazelle', 1.05, null, GAZELLE_ROT); if (!m) return; const root = new T.Group(); root.add(m); scene.add(root);
+    const a = i/6*2*PI; root.position.set(C[0] + Math.cos(a)*6, 0, C[1] + Math.sin(a)*6); root.position.y = H(root.position.x, root.position.z);
+    gazelles.push({root, m, legs: rigLegs(m, 0.45) || [], home: new T.Vector3(C[0], 0, C[1]), tgt: root.position.clone(), wait: Math.random()*3, phase: Math.random()*6, run: 0}); }
+}
+function updateGazelles(dt, t){
+  gazelles.forEach(g => { const P = g.root.position, dP = Math.hypot(P.x - S.pos.x, P.z - S.pos.z);
+    if (dP < 9){ const ax = P.x - S.pos.x, az = P.z - S.pos.z, L = Math.hypot(ax, az) || 1; g.tgt.set(P.x + ax/L*14, 0, P.z + az/L*14); g.run = 1.6; }
+    if (Math.hypot(g.tgt.x - g.home.x, g.tgt.z - g.home.z) > 45){ g.tgt.x = g.home.x + (g.tgt.x - g.home.x)*0.5; g.tgt.z = g.home.z + (g.tgt.z - g.home.z)*0.5; }
+    const dx = g.tgt.x - P.x, dz = g.tgt.z - P.z, d = Math.hypot(dx, dz);
+    if (d < 0.5){ g.wait -= dt; walkLegs(g.legs, g.phase, 0); if (g.wait <= 0){ const a = Math.random()*2*PI, r = Math.random()*14; g.tgt.set(g.home.x + Math.cos(a)*r, 0, g.home.z + Math.sin(a)*r); g.wait = 2 + Math.random()*4; } }
+    else { const v = g.run > 0 ? 9 : 1.4; g.run = Math.max(0, g.run - dt); P.x += dx/d*Math.min(d, v*dt); P.z += dz/d*Math.min(d, v*dt); g.root.rotation.y += angDiff(g.root.rotation.y, Math.atan2(dx, dz))*Math.min(1, dt*6); g.phase += dt*v*2.6; walkLegs(g.legs, g.phase, g.run > 0 ? 1 : 0.6); }
+    P.y = H(P.x, P.z); });
+}
+// dolphins: play near the harbour, jump, and swim along with the boat
+const dolphins = [];
+function buildDolphins(){ for (let i = 0; i < 3; i++){ const m = propClone('dolphin', 2.3, 'len', DOLPHIN_ROT); if (!m) return; const root = new T.Group(); root.add(m); scene.add(root); dolphins.push({root, i, a: i*2.1, jumpT: 2 + i*3, y: 0}); } }
+function updateDolphins(dt, t){
+  const nearBoat = S.ride === 'boat' && Math.hypot(S.pos.x - (SEA_X + 60), S.pos.z - 30) < 400;
+  dolphins.forEach(d => { const P = d.root.position; let x, z, h;
+    if (nearBoat){ const side = d.i - 1, fx = Math.sin(boat.yaw), fz = Math.cos(boat.yaw); x = S.pos.x + fx*(4 + d.i*2.5) + fz*side*4.5; z = S.pos.z + fz*(4 + d.i*2.5) - fx*side*4.5; P.x = lerp(P.x, x, Math.min(1, dt*2)); P.z = lerp(P.z, z, Math.min(1, dt*2)); h = boat.yaw; }
+    else { d.a += dt*0.25; const cx = SEA_X + 70, cz = 10; x = cx + Math.cos(d.a + d.i)*30; z = cz + Math.sin(d.a + d.i)*22; h = Math.atan2(x - P.x, z - P.z); P.x = x; P.z = z; }
+    d.jumpT -= dt; let y = WATER_Y - 0.25 + Math.sin(t*2 + d.i)*0.1, tilt = 0;
+    if (d.jumpT < 0){ const k = -d.jumpT/1.1; if (k >= 1){ d.jumpT = 3 + Math.random()*5; SFX.splash(); } else { y = WATER_Y + Math.sin(k*PI)*2.6; tilt = (k - 0.5)*1.6; if (k < 0.08 || k > 0.92) burst(P.x, WATER_Y + 0.2, P.z, 0xe8f4f8, 3); } }
+    P.y = y; d.root.rotation.set(tilt, h, 0, 'YXZ'); });
+}
+// sea turtles: paddle slowly near the island, swim with you when you swim close
+const turtles = [];
+function buildTurtles(){ for (let i = 0; i < 3; i++){ const m = propClone('turtle', 1.2, 'len', TURTLE_ROT); if (!m) return; const root = new T.Group(); root.add(m); scene.add(root); turtles.push({root, i, a: i*2.1}); } }
+function updateTurtles(dt, t){
+  turtles.forEach(u => { const P = u.root.position, near = S.player.swim && Math.hypot(P.x - S.pos.x, P.z - S.pos.z) < 8; let x, z;
+    if (near){ x = S.pos.x + Math.cos(u.i*2.1)*2.2; z = S.pos.z + Math.sin(u.i*2.1)*2.2; }
+    else { u.a += dt*0.12; x = ISLAND[0] + Math.cos(u.a)*(32 + u.i*4); z = ISLAND[1] + Math.sin(u.a)*(32 + u.i*4); }
+    const px = P.x, pz = P.z; P.x = lerp(P.x, x, Math.min(1, dt*(near ? 1.5 : 1))); P.z = lerp(P.z, z, Math.min(1, dt*(near ? 1.5 : 1)));
+    P.y = Math.max(groundAt(P.x, P.z, 0) + 0.3, WATER_Y - 0.9 + Math.sin(t + u.i)*0.15);
+    if (Math.hypot(P.x - px, P.z - pz) > 1e-3) u.root.rotation.y = Math.atan2(P.x - px, P.z - pz); u.root.rotation.z = Math.sin(t*1.5 + u.i)*0.08; });
+}
+function resetFun2(){
+  if (S.race) endRace(false); S.race = null; placeRacers(); S.kite = false; S.pearls = 0; $('pearls').textContent = '0'; $('pearlPill').hidden = true;
+  pearlObjs.forEach(o => { o.got = false; o.g.visible = true; });
+  horse.root.position.set(HORSE_HOME[0], H(HORSE_HOME[0], HORSE_HOME[1]), HORSE_HOME[1]); horse.root.rotation.y = -0.6; horseCol.x = HORSE_HOME[0]; horseCol.z = HORSE_HOME[1]; horseCol.r = 1.0;
+}
+function farHide(){   // keep the heavy animals off the screen when the kid is far away (saves the iPad)
+  const P = S.pos, dT = Math.hypot(P.x - TRACK.x, P.z - TRACK.z); racers.forEach(r => r.c.root.visible = dT < 110 || !!S.race);
+  gazelles.forEach(g => g.root.visible = Math.hypot(P.x - g.root.position.x, P.z - g.root.position.z) < 130);
+  dolphins.forEach(d => d.root.visible = Math.hypot(P.x - d.root.position.x, P.z - d.root.position.z) < 160);
+  turtles.forEach(u => u.root.visible = Math.hypot(P.x - u.root.position.x, P.z - u.root.position.z) < 120);
+}
+function updateFun2(dt, t){ if ((miniTick & 15) === 0) farHide(); updateRace(dt); updateKite(dt, t); updatePearls(dt, t); updateGazelles(dt, t); updateDolphins(dt, t); updateTurtles(dt, t); if (S.ride !== 'horse') walkLegs(horse.legs, 0, 0); }
 
 /* ================= loop ================= */
 let lastT = performance.now(), acc = 0, frames = 0, slow = 0, miniTick = 0;
@@ -2236,7 +2416,7 @@ function netDrop(id){
   if (r.k.g){ try { r.k.g.mixer.stopAllAction(); r.k.g.mixer.uncacheRoot(r.k.g.o); } catch(e){}
     r.k.g.o.traverse(o => { if (o.isSkinnedMesh){ o.geometry.dispose(); if (o.material.map) o.material.map.dispose(); if (o.material.normalMap) o.material.normalMap.dispose(); o.material.dispose(); if (o.skeleton) o.skeleton.dispose(); } }); }
 }
-const VEH_SRC = {car: () => car.root, camel: () => camel.root, boat: () => boat.root};
+const VEH_SRC = {car: () => car.root, camel: () => camel.root, boat: () => boat.root, horse: () => horse.root};
 function updateNet(dt, t){
   if (!NET.peer) return;
   netAnimate(dt, t);
@@ -2261,7 +2441,7 @@ function netAnimate(dt, t){
     const k = r.k, P = k.root.position;
     if (P.distanceTo(r.tgt) > 25) P.copy(r.tgt); else P.lerp(r.tgt, Math.min(1, dt*10));
     k.root.rotation.y += angDiff(k.root.rotation.y, r.h)*Math.min(1, dt*10);
-    k.speed = r.ride ? 0 : r.sp; k.swim = !r.ride && r.sw; k.air = !r.ride && r.air; k.sit = r.ride === 'camel';
+    k.speed = r.ride ? 0 : r.sp; k.swim = !r.ride && r.sw; k.air = !r.ride && r.air; k.sit = r.ride === 'camel' || r.ride === 'horse';
     animateKid(k, dt, t);
     // their car / camel / boat (a look-alike copy, so everyone sees what they ride)
     r.veh = r.veh || {};
