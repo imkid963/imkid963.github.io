@@ -1311,6 +1311,21 @@ const SFX = {
   crackle(){ noise(.03, .12, 2500 + Math.random()*2500, 2, 0, 'bandpass'); if (Math.random() < .5) noise(.02, .08, 4000, 3, .05 + Math.random()*.1, 'bandpass'); }
 };
 
+// car engine: a low hum that rises with speed while driving, silent otherwise (only made after the first tap unlocks audio)
+let ENG = null;
+function updateEngine(){
+  if (!AC) return;
+  const on = S.mode === 'play' && S.ride === 'car' && !muted && !document.hidden && $('settings').hidden && $('album').hidden;
+  if (!ENG){ if (!on) return;
+    const o1 = AC.createOscillator(), o2 = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain();
+    o1.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 380; f.Q.value = 1.2; g.gain.value = 0;
+    o1.connect(f); o2.connect(f); f.connect(g); g.connect(AC.destination); o1.start(); o2.start(); ENG = {o1, o2, f, g}; }
+  const k = clamp(Math.abs(S.carSpeed)/22, 0, 1.6), tt = AC.currentTime, hz = 46 + k*70 + (S.carAir ? 25 : 0);
+  ENG.o1.frequency.setTargetAtTime(hz, tt, 0.12); ENG.o2.frequency.setTargetAtTime(hz*0.5, tt, 0.12); ENG.f.frequency.setTargetAtTime(320 + k*500, tt, 0.15);
+  ENG.g.gain.setTargetAtTime(on ? 0.05 + k*0.05 : 0, tt, on ? 0.15 : 0.05);
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden && ENG && AC) ENG.g.gain.setTargetAtTime(0, AC.currentTime, 0.02); });
+
 /* ================= game flow ================= */
 function resetWorld(){
   stars.forEach(s => s.got = false); S.starsGot = 0; S.found = 0; S.ride = null; S.carSpeed = 0; S.drinkT = 0; S.caracalT = -1;
@@ -2194,7 +2209,7 @@ function resetFun(){
 function updateFun(dt, t){ updateFishing(dt, t); updateBall(dt, t); updatePalmsAndDates(dt, t); updateSand(dt); updateFun2(dt, t); }
 
 /* ================= more play: camel race, kite, pearls, horse, gazelles, dolphins, turtles ================= */
-const HORSE_ROT = -PI/2, DOLPHIN_ROT = 0, TURTLE_ROT = 0, GAZELLE_ROT = 0, HORSE_SEAT = 1.32;
+const HORSE_ROT = PI/2, DOLPHIN_ROT = 0, TURTLE_ROT = 0, GAZELLE_ROT = 0, HORSE_SEAT = 1.32;
 const HORSE_HOME = [16, -3], KITE_STAND = [-8, 6];
 const horse = (function(){ const root = new T.Group(), body = new T.Group(); root.add(body); root.visible = false; scene.add(root);
   const legs = [0, 1, 2, 3].map(() => new T.Group()); return {root, body, legs, phase: 0, ready: false}; })();
@@ -2312,7 +2327,7 @@ function updateDolphins(dt, t){
     if (nearBoat){ const side = d.i - 1, fx = Math.sin(boat.yaw), fz = Math.cos(boat.yaw); x = S.pos.x + fx*(4 + d.i*2.5) + fz*side*4.5; z = S.pos.z + fz*(4 + d.i*2.5) - fx*side*4.5; P.x = lerp(P.x, x, Math.min(1, dt*2)); P.z = lerp(P.z, z, Math.min(1, dt*2)); h = boat.yaw; }
     else { d.a += dt*0.25; const cx = SEA_X + 70, cz = 10; x = cx + Math.cos(d.a + d.i)*30; z = cz + Math.sin(d.a + d.i)*22; h = Math.atan2(x - P.x, z - P.z); P.x = x; P.z = z; }
     d.jumpT -= dt; let y = WATER_Y - 0.25 + Math.sin(t*2 + d.i)*0.1, tilt = 0;
-    if (d.jumpT < 0){ const k = -d.jumpT/1.1; if (k >= 1){ d.jumpT = 3 + Math.random()*5; SFX.splash(); } else { y = WATER_Y + Math.sin(k*PI)*2.6; tilt = (k - 0.5)*1.6; if (k < 0.08 || k > 0.92) burst(P.x, WATER_Y + 0.2, P.z, 0xe8f4f8, 3); } }
+    if (d.jumpT < 0){ const k = -d.jumpT/1.1; if (k >= 1){ d.jumpT = 3 + Math.random()*5; if (Math.hypot(P.x - S.pos.x, P.z - S.pos.z) < 45) SFX.splash(); } else { y = WATER_Y + Math.sin(k*PI)*2.6; tilt = (k - 0.5)*1.6; if (k < 0.08 || k > 0.92) burst(P.x, WATER_Y + 0.2, P.z, 0xe8f4f8, 3); } }
     P.y = y; d.root.rotation.set(tilt, h, 0, 'YXZ'); });
 }
 // sea turtles: paddle slowly near the island, swim with you when you swim close
@@ -2457,7 +2472,7 @@ function loop(now){
   let dt = (now - lastT)/1000; lastT = now; if (dt > 0.1) dt = 0.1;
   const t = now/1000;
   if (S.mode === 'select') updateSelect(dt, t); else if (S.mode === 'play'){ if ($('settings').hidden && $('album').hidden) updatePlay(dt, t); } else updateEnding(dt, t);
-  updateWorld(dt, t); updateNet(dt, t);
+  updateWorld(dt, t); updateNet(dt, t); updateEngine();
   camera.position.copy(camPos); camera.lookAt(camLook);
   renderer.render(scene, camera);
   if (S.mode !== 'select' && (miniTick++ & 1) === 0) drawMini();
