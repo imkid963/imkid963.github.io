@@ -287,7 +287,7 @@ function part(parent, geo, mat, pos, scl, rot, noShadow){
 // oasis to the west, oryx reserve to the east, houbara grounds to the south (+z)
 const CAMP = [0, -4], OASIS = [-70, -35], RESERVE = [95, 15];
 const TRACK = {x: 55, z: 150, a: 42, b: 24};   // سباق الهجن: oval camel race track south of the camp
-const FLATS = [[TRACK.x, TRACK.z, 58, 0.2], [CAMP[0], CAMP[1], 18, 0], [OASIS[0], OASIS[1], 18, 0], [RESERVE[0], RESERVE[1], 30, 0.2]];
+const FLATS = [[150, 98, 48, 0.4], [TRACK.x, TRACK.z, 58, 0.2], [CAMP[0], CAMP[1], 18, 0], [OASIS[0], OASIS[1], 18, 0], [RESERVE[0], RESERVE[1], 30, 0.2]];
 // big open world: the sea and a harbour village to the east, a high mountain (with a summit you can climb) to the north,
 // a pearl island out at sea; soft dunes ring the far edge on land
 const DUNES = [-125, 100, 62];   // العراقيب: tall sand dunes for driving over, like the desert festivals
@@ -418,7 +418,7 @@ const SPOT = {
   trough: [OASIS[0] + 9, OASIS[1] + 3], falconTree: [-112, 12], perch: [-6, -13], calf: [138, -38],
   caracal: [42, -120], hyrax: [-30, -104], camelHome: [11, -12], carHome: [7, 3]
 };
-const reserved = [[CAMP[0], CAMP[1], 16], [DUNES[0], DUNES[1], DUNES[2] + 6], [0, 13, 7], [TRACK.x, TRACK.z, 52], [-8, 6, 4], [16, -3, 4], [OASIS[0], OASIS[1], 18], [RESERVE[0], RESERVE[1], 30], [RELEASE.x, RELEASE.z, 9]]
+const reserved = [[150, 98, 52], [CAMP[0], CAMP[1], 16], [DUNES[0], DUNES[1], DUNES[2] + 6], [0, 13, 7], [TRACK.x, TRACK.z, 52], [-8, 6, 4], [16, -3, 4], [OASIS[0], OASIS[1], 18], [RESERVE[0], RESERVE[1], 30], [RELEASE.x, RELEASE.z, 9]]
   .concat(HB_SPOTS.map(s => [s[0], s[1], 5])).concat(Object.values(SPOT).map(s => [s[0], s[1], 7]));
 function freeSpot(r, opt){
   opt = opt || {};
@@ -437,7 +437,7 @@ function addRock(x, z, s){
   const sx = s*(1.1 + rand()*0.9), sy = s*(0.6 + rand()*0.4), sz = s*(1.1 + rand()*0.9), y = H(x, z);
   const m = part(scene, rockGeo, M(rand() < .5 ? 0xbf9a76 : 0xa9876a), [x, y + sy*0.35, z], [sx, sy, sz], [rand(), rand()*PI, rand()*0.3]);
   m.receiveShadow = true;
-  const c = {x, z, r: Math.min(sx, sz)*0.95, top: y + sy*1.25}; colliders.push(c); return c;
+  const c = {x, z, r: Math.min(sx, sz)*0.95, top: y + sy*1.25, rock: true, hop: 1, rh: sy*1.25}; colliders.push(c); return c;
 }
 for (let i = 0; i < 22; i++){ const [x, z] = freeSpot(2, {flat: true}); addRock(x, z, 1); }
 for (let i = 0; i < 16; i++){ const [x, z] = freeSpot(3, {mountain: true}); addRock(x, z, 1.5); }
@@ -567,6 +567,131 @@ const PIER = {x0: SEA_X - 9, x1: SEA_X + 26, z: HARBOUR[1], top: 0.8};
   // fishing boats pulled up on the sand
   [[-12, 4, 0.4], [-13, 60, -0.3]].forEach(q => { const b = buildBoat(true); b.root.position.set(SEA_X + q[0], H(SEA_X + q[0], q[1]) + 0.05, q[1]); b.root.rotation.y = q[2]; b.root.scale.setScalar(0.6); scene.add(b.root); colliders.push({x: SEA_X + q[0], z: q[1], r: 1.8, top: null}); });
 })();
+/* ================= old Dibba Al Hisn quarter (حارة دبا الحصن القديمة) =================
+   The fort in the middle of the quarter on a raised platform (square walls, a tall square tower — the round one is the older style), the old souq between
+   the fort and the sea, a small white mosque with a minaret, mud/coral houses (two with a barjeel), palm groves to the west and barasti huts by the beach. */
+const DIBBA = {x: 152, z: 96};
+const FOOTPRINTS = [];   // drawn on the minimap background
+const dibba = (function(){
+  const root = new T.Group(); scene.add(root);
+  const mud = M(0xcfb184), mud2 = M(0xc4a476), mudDark = M(0xa98a60), lime = M(0xf1ebde), wood = M(0x7a5232), darkWood = M(0x5a3a22), palmM = M(0x9c7a4c), rope = M(0xb79a6a);
+  const merlonGeo = new T.BoxGeometry(0.55, 0.6, 0.35), merlons = [];
+  const addMerlon = (x, y, z, ry) => { const o = new T.Object3D(); o.position.set(x, y, z); o.rotation.y = ry || 0; o.updateMatrix(); merlons.push(o.matrix.clone()); };
+  const wallRow = (x0, z0, x1, z1, r, top) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L/0.9)); for (let i = 0; i <= n; i++) colliders.push({x: x0 + (x1 - x0)*i/n, z: z0 + (z1 - z0)*i/n, r: r || 0.6, top: top === undefined ? null : top}); };
+  const foot = (x, z, w, d, col) => FOOTPRINTS.push({x, z, w, d, col});
+  // ---- the fort (حصن دبا) ----
+  const F = new T.Group(); F.position.set(DIBBA.x, H(DIBBA.x, DIBBA.z), DIBBA.z); root.add(F);
+  const S2 = 12, WH = 4.6, WT = 0.8;
+  part(F, new T.BoxGeometry(2*S2 + 4, 0.5, 2*S2 + 4), mudDark, [0, 0.25, 0]).receiveShadow = true;   // raised platform
+  // four walls, the east one (toward the sea) with the gate
+  [[0, -S2, 2*S2, WT], [-S2, 0, WT, 2*S2]].forEach(q => part(F, new T.BoxGeometry(q[2], WH, q[3]), mud, [q[0], 0.5 + WH/2, q[1]]).receiveShadow = true);
+  part(F, new T.BoxGeometry(2*S2, WH, WT), mud, [0, 0.5 + WH/2, S2]).receiveShadow = true;
+  [-1, 1].forEach(sd => part(F, new T.BoxGeometry(WT, WH, S2 - 2), mud, [S2, 0.5 + WH/2, sd*(S2/2 + 1)]).receiveShadow = true);
+  part(F, new T.BoxGeometry(WT + 0.4, 1.4, 4.6), mud2, [S2, 0.5 + WH - 0.2, 0]);   // lintel over the gate
+  const gateL = new T.Group(); gateL.position.set(S2 + 0.1, 0.5, -1.9); gateL.rotation.y = -1.2; F.add(gateL); part(gateL, new T.BoxGeometry(0.12, 3.2, 1.9), wood, [0, 1.6, 0.95]);
+  const gateR = new T.Group(); gateR.position.set(S2 + 0.1, 0.5, 1.9); gateR.rotation.y = 1.2; F.add(gateR); part(gateR, new T.BoxGeometry(0.12, 3.2, 1.9), wood, [0, 1.6, -0.95]);
+  [gateL, gateR].forEach(g => { for (let r = 0; r < 5; r++) for (let k = 0; k < 3; k++) part(g, new T.SphereGeometry(0.05, 6, 4), M(0xc9a24a), [0.08, 0.6 + r*0.55, (g === gateL ? 1 : -1)*(0.4 + k*0.55)], null, null, true); });
+  for (let a = -S2 + 0.5; a <= S2 - 0.5; a += 1.1){ addMerlon(DIBBA.x + a, F.position.y + 0.5 + WH + 0.3, DIBBA.z - S2); addMerlon(DIBBA.x + a, F.position.y + 0.5 + WH + 0.3, DIBBA.z + S2); addMerlon(DIBBA.x - S2, F.position.y + 0.5 + WH + 0.3, DIBBA.z + a, PI/2); if (Math.abs(a) > 2.6) addMerlon(DIBBA.x + S2, F.position.y + 0.5 + WH + 0.3, DIBBA.z + a, PI/2); }
+  // main square tower (north-west corner), and the round tower (south-east corner)
+  const TW = 6.4, TH = 11.5; part(F, new T.BoxGeometry(TW, TH, TW), mud2, [-S2 + 1.2, 0.5 + TH/2, -S2 + 1.2]).receiveShadow = true;
+  part(F, new T.BoxGeometry(TW + 0.4, 0.35, TW + 0.4), mudDark, [-S2 + 1.2, 0.5 + TH, -S2 + 1.2]);
+  for (let a = -TW/2 + 0.4; a <= TW/2 - 0.3; a += 0.9) [[a, -TW/2], [a, TW/2], [-TW/2, a], [TW/2, a]].forEach(q => addMerlon(DIBBA.x - S2 + 1.2 + q[0], F.position.y + 0.5 + TH + 0.5, DIBBA.z - S2 + 1.2 + q[1], Math.abs(q[1]) === TW/2 ? 0 : PI/2));
+  [3.5, 6.5, 9.2].forEach(y => [[0, TW/2 + 0.02, 0], [TW/2 + 0.02, 0, PI/2]].forEach(q => part(F, new T.BoxGeometry(0.35, 0.9, 0.1), darkWood, [-S2 + 1.2 + q[1], 0.5 + y, -S2 + 1.2 + q[0]], null, [0, q[2], 0], true)));   // loopholes
+  for (let k = -1; k <= 1; k += 2) part(F, new T.CylinderGeometry(0.08, 0.08, 1.1, 6), darkWood, [-S2 + 1.2 + k*1.6, 0.5 + TH - 0.4, -S2 + 1.2 + TW/2 + 0.45], null, [PI/2, 0, 0]);   // wooden water spouts
+  part(F, new T.CylinderGeometry(3, 3.3, 8.2, 20), mud, [S2 - 1, 0.5 + 4.1, S2 - 1]).receiveShadow = true;
+  part(F, new T.CylinderGeometry(3.25, 3.25, 0.3, 20), mudDark, [S2 - 1, 0.5 + 8.2, S2 - 1]);
+  for (let i = 0; i < 14; i++){ const a = i/14*2*PI; addMerlon(DIBBA.x + S2 - 1 + Math.cos(a)*2.95, F.position.y + 0.5 + 8.6, DIBBA.z + S2 - 1 + Math.sin(a)*2.95, -a + PI/2); }
+  // flag on the main tower
+  const pole = part(F, new T.CylinderGeometry(0.06, 0.08, 4, 8), M(0xdcdcdc), [-S2 + 1.2, 0.5 + TH + 2.2, -S2 + 1.2]);
+  const flag = new T.Group(); flag.position.set(-S2 + 1.2, 0.5 + TH + 3.6, -S2 + 1.2); F.add(flag);
+  part(flag, new T.BoxGeometry(0.5, 1.1, 0.04), M(0xc8312f), [0.25, 0, 0], null, null, true);
+  [[0x2d7a46, 0.37], [0xffffff, 0], [0x222222, -0.37]].forEach(q => part(flag, new T.BoxGeometry(1.3, 0.37, 0.04), M(q[0]), [1.15, q[1], 0], null, null, true));
+  // courtyard: a well and a small room along the west wall, a bench (دكّة) by the gate
+  part(F, new T.CylinderGeometry(0.9, 1, 0.9, 16), mud2, [-2, 0.95, 3]); part(F, new T.CylinderGeometry(0.7, 0.7, 0.05, 16), M(0x4b7f8f), [-2, 1.38, 3], null, null, true);
+  [-1, 1].forEach(sd => part(F, new T.CylinderGeometry(0.06, 0.06, 1.8, 6), wood, [-2 + sd*0.9, 1.9, 3])); part(F, new T.CylinderGeometry(0.06, 0.06, 2, 6), wood, [-2, 2.8, 3], null, [0, 0, PI/2]);
+  part(F, new T.BoxGeometry(3.4, 3, 6), mud2, [-S2 + 2.2, 0.5 + 1.5, 4]); part(F, new T.BoxGeometry(0.1, 2, 1.1), wood, [-S2 + 3.95, 0.5 + 1, 4], null, null, true);
+  part(F, new T.BoxGeometry(0.9, 0.5, 5), mud2, [S2 - 1.2, 0.75, -6]);
+  // colliders: walls (gate open), towers, room, well
+  const fx = DIBBA.x, fz = DIBBA.z;
+  wallRow(fx - S2, fz - S2, fx + S2, fz - S2); wallRow(fx - S2, fz + S2, fx + S2, fz + S2); wallRow(fx - S2, fz - S2, fx - S2, fz + S2);
+  wallRow(fx + S2, fz - S2, fx + S2, fz - 2.4); wallRow(fx + S2, fz + 2.4, fx + S2, fz + S2);
+  colliders.push({x: fx - S2 + 1.2, z: fz - S2 + 1.2, r: 4.2, top: null}, {x: fx + S2 - 1, z: fz + S2 - 1, r: 3.4, top: null}, {x: fx - 2, z: fz + 3, r: 1.1, top: F.position.y + 1.4}, {x: fx - S2 + 2.2, z: fz + 4, r: 2.2, top: null});
+  foot(fx, fz, 2*S2 + 2, 2*S2 + 2, '#a98a60');
+  // ---- old houses (some with a barjeel) ----
+  function oldHouse(x, z, w, d, h, ry, barjeel, col){
+    const g = new T.Group(); g.position.set(x, H(x, z), z); g.rotation.y = ry; root.add(g);
+    part(g, new T.BoxGeometry(w, h, d), col || mud, [0, h/2, 0]).receiveShadow = true;
+    part(g, new T.BoxGeometry(w + 0.2, 0.25, d + 0.2), mudDark, [0, h + 0.05, 0]);
+    for (let a = -w/2 + 0.35; a <= w/2 - 0.3; a += 0.8){ const o = new T.Object3D(); o.position.set(a, h + 0.45, d/2); o.updateMatrix(); merlons.push(new T.Matrix4().multiplyMatrices(g.matrixWorld.clone().compose(g.position, g.quaternion, new T.Vector3(1, 1, 1)), o.matrix)); }
+    part(g, new T.BoxGeometry(1.1, 2.1, 0.1), wood, [0, 1.05, d/2 + 0.04], null, null, true);
+    part(g, new T.BoxGeometry(1.4, 0.18, 0.18), darkWood, [0, 2.25, d/2 + 0.08], null, null, true);
+    [-1, 1].forEach(sd => { if (w < 4.5) return; part(g, new T.BoxGeometry(0.7, 0.9, 0.1), darkWood, [sd*w*0.3, h*0.6, d/2 + 0.04], null, null, true); });
+    if (barjeel){ const bx = w/2 - 1.1, bz = -d/2 + 1.1; part(g, new T.BoxGeometry(1.8, 3.4, 1.8), col || mud, [bx, h + 1.7, bz]);
+      [[0, 0.92, 0], [0.92, 0, PI/2], [0, -0.92, 0], [-0.92, 0, PI/2]].forEach(q => { for (let k = -1; k <= 1; k++) part(g, new T.BoxGeometry(0.22, 2, 0.06), darkWood, [bx + q[0] + (q[2] ? 0 : k*0.45), h + 2.2, bz + q[1] + (q[2] ? k*0.45 : 0)], null, [0, q[2], 0], true); });
+      part(g, new T.BoxGeometry(2.1, 0.25, 2.1), mudDark, [bx, h + 3.5, bz]); }
+    colliders.push({x, z, r: Math.max(w, d)*0.5, top: null}); foot(x, z, w, d, '#bfa070');
+    return g;
+  }
+  [[130, 74, 6, 5, 3.6, 0.1, false], [146, 70, 7, 5, 4, -0.05, true, mud2], [162, 72, 5.5, 4.5, 3.4, 0.08, false], [176, 76, 5, 5, 3.4, -0.1, false, lime],
+   [128, 122, 6, 5, 3.8, 3.1, false, mud2], [161, 124, 7, 5.5, 4.2, 3.2, true], [174, 120, 5, 4.5, 3.4, 3.05, false, lime], [113, 96, 5, 4.5, 3.2, PI/2, false]].forEach(q => oldHouse(...q));
+  // ---- mosque with a minaret ----
+  const Mq = new T.Group(); const mx = 140, mz = 128; Mq.position.set(mx, H(mx, mz), mz); Mq.rotation.y = 0.05; root.add(Mq);
+  part(Mq, new T.BoxGeometry(9, 4, 6.5), lime, [0, 2, 0]).receiveShadow = true;
+  part(Mq, new T.BoxGeometry(9.3, 0.3, 6.8), M(0xe2d8c4), [0, 4.1, 0]);
+  part(Mq, new T.SphereGeometry(2, 18, 10, 0, 2*PI, 0, PI/2), lime, [0, 4.2, 0]);
+  [-3, -1, 1, 3].forEach(x => part(Mq, new T.CylinderGeometry(0.55, 0.55, 2.4, 14, 1, false, 0, PI), M(0x6b8fa3), [x, 1.6, -3.27], null, [0, PI, 0], true));   // arched doorways
+  part(Mq, new T.BoxGeometry(2.2, 0.5, 2.2), lime, [4.6, 0.25, 3.4]); part(Mq, new T.CylinderGeometry(0.85, 1, 9, 16), lime, [4.6, 4.5, 3.4]);
+  part(Mq, new T.CylinderGeometry(1.25, 1.25, 0.25, 16), M(0xe2d8c4), [4.6, 7.6, 3.4]); part(Mq, new T.CylinderGeometry(0.7, 0.8, 1.6, 14), lime, [4.6, 8.8, 3.4]);
+  part(Mq, new T.SphereGeometry(0.75, 14, 8, 0, 2*PI, 0, PI/2), M(0xd4a73c), [4.6, 9.6, 3.4]); part(Mq, new T.CylinderGeometry(0.04, 0.04, 0.8, 6), M(0xd4a73c), [4.6, 10.6, 3.4]);
+  colliders.push({x: mx, z: mz, r: 4.6, top: null}, {x: mx + 4.6, z: mz + 3.4, r: 1.3, top: null}); foot(mx, mz, 9, 6.5, '#eee6d6');
+  // ---- the souq: little shops with palm-frond awnings between the fort and the sea ----
+  const stripe = document.createElement('canvas'); stripe.width = 64; stripe.height = 8; const sg = stripe.getContext('2d');
+  for (let i = 0; i < 16; i++){ sg.fillStyle = i % 2 ? '#9c7a4c' : '#b8955f'; sg.fillRect(i*4, 0, 4, 8); }
+  const frondTex = new T.CanvasTexture(stripe); frondTex.encoding = T.sRGBEncoding; frondTex.wrapS = T.RepeatWrapping; frondTex.repeat.set(3, 1);
+  const frondM = new T.MeshLambertMaterial({map: frondTex, side: T.DoubleSide});
+  const goods = [
+    g => { for (let k = 0; k < 3; k++) part(g, new T.CylinderGeometry(0.3, 0.35, 0.7, 10), M([0xd8b56a, 0xc2702c, 0x8e4a2a][k]), [-0.8 + k*0.8, 0.35, 0.9]); for (let k = 0; k < 3; k++) part(g, new T.ConeGeometry(0.25, 0.25, 10), M([0xf0c040, 0xd25a2a, 0x7a3a1a][k]), [-0.8 + k*0.8, 0.82, 0.9], null, null, true); },   // spices
+    g => { part(g, new T.BoxGeometry(2.2, 0.8, 0.9), wood, [0, 0.4, 0.9]); for (let k = 0; k < 6; k++) part(g, SPH_LO, M(0xb9c6cf), [-0.85 + k*0.34, 0.86, 0.9 + (k % 2)*0.15], [0.14, 0.05, 0.32], [0, 0.3*k, 0], true); },   // salted fish (مالح) on a table
+    g => { for (let k = 0; k < 4; k++) part(g, new T.SphereGeometry(0.32, 12, 10), M(k % 2 ? 0xb5651d : 0x9a4e1a), [-0.9 + k*0.6, 0.38, 0.9], [1, 1.15, 1]); },   // clay pots
+    g => { for (let k = 0; k < 3; k++){ part(g, new T.CylinderGeometry(0.4, 0.32, 0.35, 12), rope, [-0.8 + k*0.8, 0.18, 0.9]); for (let j = 0; j < 5; j++) part(g, SPH_LO, M(0x6b3a12), [-0.8 + k*0.8 + Math.cos(j)*0.15, 0.4, 0.9 + Math.sin(j)*0.15], [0.07, 0.05, 0.1], null, true); } },   // dates
+    g => { part(g, new T.BoxGeometry(2.2, 0.7, 0.8), darkWood, [0, 0.35, 0.9]); for (let k = 0; k < 4; k++) part(g, new T.BoxGeometry(0.4, 0.12, 0.6), M([0xc8312f, 0x2f4f7a, 0xe6bf5c, 0x3f6b4a][k]), [-0.75 + k*0.5, 0.76, 0.9], null, null, true); },   // cloth
+    g => { for (let k = 0; k < 3; k++){ part(g, new T.CylinderGeometry(0.12, 0.2, 0.42, 12), M(0xd4a73c), [-0.7 + k*0.7, 0.21, 0.9]); part(g, new T.ConeGeometry(0.12, 0.22, 12), M(0xd4a73c), [-0.7 + k*0.7, 0.53, 0.9], null, null, true); } }   // dallahs
+  ];
+  for (let i = 0; i < 6; i++){
+    const side = i < 3 ? -1 : 1, k = i % 3, x = 172, z = 86 + k*8 + (side > 0 ? 0 : 0);
+    const g = new T.Group(); const sx = x + side*4.2; g.position.set(sx, H(sx, z), z); g.rotation.y = side > 0 ? -PI/2 : PI/2; root.add(g);
+    part(g, new T.BoxGeometry(3.2, 3, 0.25), mud2, [0, 1.5, -1.3]); [-1, 1].forEach(s => part(g, new T.BoxGeometry(0.25, 3, 2.6), mud2, [s*1.5, 1.5, 0]));
+    part(g, new T.BoxGeometry(3.4, 0.25, 2.8), mudDark, [0, 3.1, 0]);
+    const aw = new T.Mesh(new T.PlaneGeometry(3.4, 1.6), frondM); aw.position.set(0, 2.55, 1.9); aw.rotation.x = -PI/2 + 0.45; aw.castShadow = true; g.add(aw);
+    [-1, 1].forEach(s => part(g, new T.CylinderGeometry(0.06, 0.06, 2.3, 6), wood, [s*1.55, 1.15, 2.5]));
+    goods[i](g);
+    colliders.push({x: sx - side*0.2, z, r: 1.7, top: null}); foot(sx, z, 3, 3, '#a98a60');
+  }
+  // the souq lane sign
+  const sc = document.createElement('canvas'); sc.width = 512; sc.height = 160; const s2 = sc.getContext('2d');
+  s2.fillStyle = '#6b4a2e'; s2.fillRect(0, 0, 512, 160); s2.strokeStyle = '#e6bf5c'; s2.lineWidth = 10; s2.strokeRect(8, 8, 496, 144);
+  s2.fillStyle = '#fff6dc'; s2.font = '800 84px Tajawal, "Segoe UI", sans-serif'; s2.textAlign = 'center'; s2.textBaseline = 'middle'; s2.direction = 'rtl'; s2.fillText('دبا الحصن', 256, 84);
+  const signTex = new T.CanvasTexture(sc); signTex.encoding = T.sRGBEncoding;
+  const sign = new T.Group(); sign.position.set(181, H(181, 80), 80); sign.rotation.y = PI/2 + 0.3; root.add(sign);
+  [-1, 1].forEach(s => part(sign, new T.CylinderGeometry(0.1, 0.12, 3.4, 8), darkWood, [s*1.6, 1.7, 0]));
+  const board = new T.Mesh(new T.PlaneGeometry(3.6, 1.12), new T.MeshLambertMaterial({map: signTex, side: T.DoubleSide})); board.position.set(0, 2.7, 0.08); sign.add(board);
+  colliders.push({x: 181, z: 80, r: 0.6, top: null});
+  // ---- barasti huts (عريش) by the beach ----
+  [[181, 128, 0.3], [184, 66, -0.2]].forEach(q => { const g = new T.Group(); g.position.set(q[0], H(q[0], q[1]), q[1]); g.rotation.y = q[2]; root.add(g);
+    [[0, -1.6, 4, 0], [0, 1.6, 4, 0], [-2, 0, 3.2, PI/2], [2, 0, 3.2, PI/2]].forEach(w => { const m = new T.Mesh(new T.PlaneGeometry(w[2], 2.4), frondM); m.position.set(w[0], 1.2, w[1]); m.rotation.y = w[3]; m.castShadow = true; g.add(m); });
+    const roof = new T.Mesh(new T.PlaneGeometry(4.4, 3.6), frondM); roof.rotation.x = -PI/2; roof.position.y = 2.45; g.add(roof);
+    for (let k = -1; k <= 1; k += 2) for (let j = -1; j <= 1; j += 2) part(g, new T.CylinderGeometry(0.07, 0.08, 2.6, 6), palmM, [k*2, 1.3, j*1.6]);
+    colliders.push({x: q[0], z: q[1], r: 2.1, top: null}); foot(q[0], q[1], 4, 3.2, '#9c7a4c'); });
+  // ---- palm groves to the west, with a little falaj channel ----
+  const pr = rng(512);
+  for (let i = 0; i < 16; i++){ const x = 104 + (i % 4)*7 + (pr() - 0.5)*2.5, z = 80 + Math.floor(i/4)*10 + (pr() - 0.5)*2.5; if (Math.hypot(x - 113, z - 96) < 4.5) continue; palm(x, z, 1.25 + pr()*0.45); }
+  const fal = new T.Mesh(new T.PlaneGeometry(0.6, 44), new T.MeshLambertMaterial({color: 0x6fa9b8})); fal.rotation.x = -PI/2; fal.position.set(124.5, H(124.5, 98) + 0.06, 98); root.add(fal);
+  const falEdge = new T.Mesh(new T.PlaneGeometry(1.2, 44), mudDark); falEdge.rotation.x = -PI/2; falEdge.position.set(124.5, H(124.5, 98) + 0.04, 98); root.add(falEdge);
+  // all the battlements in one draw
+  const mi = new T.InstancedMesh(merlonGeo, mud, merlons.length); merlons.forEach((m, i) => mi.setMatrixAt(i, m)); mi.castShadow = true; scene.add(mi);
+  return {root, mi, flag};
+})();
+
 const summitFlag = (function(){
   const x = SUMMIT[0], z = SUMMIT[1], y = H(x, z), g = new T.Group(); g.position.set(x, y, z); scene.add(g);
   for (let i = 0; i < 9; i++){ const a = i/9*2*PI; part(g, rockGeo, M(0x8f7a66), [Math.cos(a)*0.9, 0.25, Math.sin(a)*0.9], [0.45, 0.35, 0.45], [i, i*2, 0]); }
@@ -611,6 +736,21 @@ for (let i = 0; i < 4; i++){
   for (let j = 0; j < 8; j++){ const a = j/8*2*PI; o.position.set(x + Math.cos(a)*0.55, y + 0.05, z + Math.sin(a)*0.55); o.rotation.set(rand(), rand(), rand()); o.updateMatrix(); stoneIM.setMatrixAt(i*8+j, o.matrix); }
 }
 scene.add(stoneIM, eggIM);
+const FIRES = [window.__fire];
+function makeFirePit(x, z){
+  const fg = new T.Group(); fg.position.set(x, H(x, z), z); scene.add(fg); const wood = M(0x6b4a2e), char = M(0x3a2a1e);
+  [0, 1, 2].forEach(i => part(fg, new T.CylinderGeometry(0.05, 0.06, 0.62, 7), i % 2 ? char : wood, [0, 0.12, 0], null, [0.35, i*PI/3*2, PI/2 - 0.35]));
+  const flames = [], fl = new T.Group(); fl.position.y = 0.12; fl.visible = false; fg.add(fl);
+  [[0xff5a1a, 0.21, 0.6, 0, 0], [0xff7f22, 0.15, 0.5, 0.08, 0.05], [0xff7f22, 0.14, 0.46, -0.07, -0.05], [0xffc23a, 0.11, 0.4, 0, 0.02], [0xffe680, 0.06, 0.26, 0, 0.01]].forEach(q => {
+    const m = new T.Mesh(new T.ConeGeometry(q[1], q[2], 9, 1, true), new T.MeshBasicMaterial({color: q[0], transparent: true, opacity: 0.9, depthWrite: false, side: T.DoubleSide, fog: false, toneMapped: false}));
+    m.position.set(q[3], q[2]/2, q[4]); fl.add(m); flames.push({m, h: q[2], ph: Math.random()*6}); });
+  const halo = new T.Mesh(new T.CircleGeometry(1.4, 20), new T.MeshBasicMaterial({color: 0xff9a4a, transparent: true, opacity: 0, depthWrite: false, fog: false, toneMapped: false})); halo.rotation.x = -PI/2; halo.position.y = 0.03; fg.add(halo);
+  const glow = {intensity: 0, set i(v){ halo.material.opacity = Math.min(0.35, v*0.2); }};   // no extra real light (keeps the iPad fast): a warm glow on the sand instead
+  const embers = [0, 1, 2, 3].map(() => { const e = new T.Mesh(new T.SphereGeometry(0.025, 5, 4), new T.MeshBasicMaterial({color: 0xffc070, fog: false})); e.visible = false; fg.add(e); return {e, t: Math.random()}; });
+  const F = {g: fg, x, z, fl, flames, glow, embers, on: false, k: 0, crackle: 0, halo}; FIRES.push(F); return F;
+}
+nests.forEach(n => { makeFirePit(n.x, n.z); n.fire = true; });
+eggIM.visible = false; colliders.forEach(c => { if (c.nest){ c.nest = null; c.r = 0.7; } });
 function updateEggs(t){
   const o = new T.Object3D();
   nests.forEach((n, i) => {
@@ -738,7 +878,21 @@ function animateModel(k, dt, t){
     if (S.mode === 'select' && !k.remote) for (const [b, q] of g.thumb.arm) b.quaternion.copy(q);   // thumbs-up pose, only when choosing
     else { for (const [b, q] of g.thumb.rest) b.quaternion.copy(q); g.thumb.t1.quaternion.copy(g.thumb.fold); }   // thumb folded during play
   }
+  if (g.book){   // the book shows on the select screen and while he reads it (his power); otherwise it is in his bag
+    const want = (S.mode === 'select' && !k.remote) || (k === S.player && S.kidType === 'saeedan' && S.powerT > 0);
+    if (want !== g.book.shown){ g.book.geo.setIndex(want ? g.book.full : g.book.no); g.book.shown = want; }
+  }
+  if (g.book && !(S.mode === 'select' && !k.remote)) fixArms(g);
   k.body.position.y = (g.w.swimF || 0)*1.4 + (g.w.swimI || 0)*0.45;   // keep swimmers at the surface
+}
+// turn سيف's arms (sculpted reaching forward to hold the book) so they hang and swing like the other kids' arms
+const FQ = new T.Quaternion(), FQ2 = new T.Quaternion(), FQo = new T.Quaternion();
+function fixArms(g){
+  if (!g.armFix){ const ref = ['khad', 'saif'].map(k => kids[k] && kids[k].g).find(r => r && r.armRest.Left && r.armRest.Right); if (!ref || !g.armRest.Left || !g.armRest.Right) return;
+    g.armFix = ['Left', 'Right'].map(sd => { const s = g.armRest[sd], r = ref.armRest[sd], R1 = new T.Quaternion().setFromUnitVectors(s.up, r.up), lo = s.lo.clone().applyQuaternion(R1), R2 = new T.Quaternion().setFromUnitVectors(lo, r.lo); return {A: s.A, F: s.F, R1, R2}; }); }
+  g.o.updateMatrixWorld(true); g.o.getWorldQuaternion(FQo); FQo.invert();
+  const fix = (bone, R) => { bone.parent.getWorldQuaternion(FQ); FQ.premultiply(FQo); FQ2.copy(FQ).invert().multiply(R).multiply(FQ); bone.quaternion.premultiply(FQ2); bone.updateMatrixWorld(true); };
+  g.armFix.forEach(f => { fix(f.A, f.R1); fix(f.F, f.R2); });
 }
 const GLB = {saeedan: 'saeedan.glb.wasm', khad: 'khaddouya.glb.wasm', saif: 'saif.glb.wasm'};
 const GLB_H = {saeedan: 1.5, khad: 1.48, saif: 1.5};
@@ -791,7 +945,32 @@ function loadKidModel(key, k, fin, fallback){
           thumb = {arm: arm.map(b => [b, b.quaternion.clone()]), t1, fold, rest: [t1, t3, B.RightHandMiddle2].map(b => [b, b.quaternion.clone()])};
         }
       }
-      const g = {thumb, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, state: 'idle'};
+      // arm directions at rest (model space): سيف was sculpted holding his book out in front, so in play his arms are turned to match the other kids
+      const Bn = {}; o.traverse(n => { if (n.isBone) Bn[n.name.replace(/^mixamorig:?/, '')] = n; }); o.updateMatrixWorld(true);
+      const oInv = o.matrixWorld.clone().invert(), mp = n => n.getWorldPosition(new T.Vector3()).applyMatrix4(oInv), armRest = {};
+      ['Left', 'Right'].forEach(sd => { const A = Bn[sd + 'Arm'], F = Bn[sd + 'ForeArm'], Hd = Bn[sd + 'Hand']; if (A && F && Hd) armRest[sd] = {A, F, up: mp(F).sub(mp(A)).normalize(), lo: mp(Hd).sub(mp(F)).normalize()}; });
+      // سيف's book is part of his model: find its triangles (left-hand vertices coloured like the book) so it can be put away while he plays
+      let book = null;
+      if (key === 'saeedan') try {
+        let sk = null; o.traverse(n => { if (n.isSkinnedMesh && !sk) sk = n; });
+        const geo = sk && sk.geometry, img = sk && sk.material.map && sk.material.map.image;
+        if (geo && geo.index && img){
+          const N = 512, cv = document.createElement('canvas'); cv.width = cv.height = N; const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0, N, N); const px = cx.getImageData(0, 0, N, N).data;
+          const si = geo.attributes.skinIndex, sw = geo.attributes.skinWeight, uv = geo.attributes.uv, bones = sk.skeleton.bones, n = geo.attributes.position.count, isBook = new Uint8Array(n);
+          const leftHand = bones.map(b => /LeftHand/.test(b.name) ? 1 : (/LeftForeArm/.test(b.name) ? 2 : 0)), GETC = ['getX', 'getY', 'getZ', 'getW'];
+          for (let i = 0; i < n; i++){
+            let bi = 0, bw = -1; for (let c = 0; c < 4; c++){ const w = sw[GETC[c]](i); if (w > bw){ bw = w; bi = si[GETC[c]](i); } }
+            if (!leftHand[bi]) continue;
+            const x = Math.min(N - 1, Math.max(0, Math.floor(uv.getX(i)*N))), y = Math.min(N - 1, Math.max(0, Math.floor(uv.getY(i)*N))), q = (y*N + x)*4, r = px[q], gg = px[q + 1], b = px[q + 2];
+            const skin = r > gg + 12 && gg > b - 5 && r > 90, bluish = b > r + 15 || (gg > r + 15 && b > r + 10) || r + gg + b < 150;   // hand = skin; book cover = blue/teal/dark
+            if (leftHand[bi] === 1 ? !skin : bluish) isBook[i] = 1;   // on the forearm only the blue/dark book cover (its white is the kandura sleeve)
+          }
+          const full = geo.index, src = full.array, keep = [];
+          for (let t = 0; t < src.length; t += 3) if (isBook[src[t]] + isBook[src[t + 1]] + isBook[src[t + 2]] < 2) keep.push(src[t], src[t + 1], src[t + 2]);
+          book = {geo, full, no: new T.BufferAttribute(new Uint32Array(keep), 1), shown: true, hidden: (src.length - keep.length)/3};
+        }
+      } catch (e) { console.warn('book', e); }
+      const g = {thumb, book, armRest, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, state: 'idle'};
       g.wi[0] = 1; a.idle[0].setEffectiveWeight(1);
       k.body.add(o); k.g = g; try { setupHeadFrame(k); applyOutfit(k); } catch (e) { console.warn('outfit', e); } fin();
     }, undefined, () => fallback(k));
@@ -1247,6 +1426,7 @@ const miniBG = (function(){
   g.putImageData(img, 0, 0);
   g.fillStyle = '#7a5a3c'; const s = N/(2*MAP_R), X = x => (x + MAP_R)*s;
   g.fillRect(X(PIER.x0), X(PIER.z) - 2, (PIER.x1 - PIER.x0)*s, 4);
+  FOOTPRINTS.forEach(f => { g.fillStyle = f.col; g.fillRect(X(f.x) - f.w*s/2, X(f.z) - f.d*s/2, Math.max(2, f.w*s), Math.max(2, f.d*s)); });
   return cv;
 })();
 function drawMini(){
@@ -1444,6 +1624,7 @@ function drawBig(){
     if (it.veh){ const w = R0*1.1; g.fillStyle = it.c; g.strokeStyle = '#5a3519'; g.lineWidth = 2*k; g.fillRect(x - w/2, y - w/2, w, w); g.strokeRect(x - w/2, y - w/2, w, w); g.fillStyle = '#5a3519'; g.font = '800 ' + F + 'px Tajawal, sans-serif'; g.textAlign = 'center'; g.fillText({car: 'سيارة', camel: 'بعير', boat: 'قارب', horse: 'حصان'}[it.veh], x, y + w/2 + F); return; }
     g.fillStyle = '#fffbe8'; g.strokeStyle = it.c; g.lineWidth = 4*k; g.beginPath(); g.arc(x, y, R0, 0, 2*PI); g.fill(); g.stroke();
     const im = iconImg[it.icon]; if (im && im.complete) g.drawImage(im, x - R0*0.72, y - R0*0.72, R0*1.44, R0*1.44); });
+  if (Math.abs(DIBBA.x - BIG.cx) < BIG.R && Math.abs(DIBBA.z - BIG.cz) < BIG.R){ g.font = '800 ' + Math.round(15*k) + 'px Tajawal, sans-serif'; g.textAlign = 'center'; g.lineWidth = 4*k; g.strokeStyle = '#fff6dc'; g.strokeText('دبا الحصن', X(DIBBA.x), Y(DIBBA.z) - 20*k); g.fillStyle = '#5a3519'; g.fillText('دبا الحصن', X(DIBBA.x), Y(DIBBA.z) - 20*k); }
   // you
   const px = clamp(X(S.pos.x), 18, N - 18), py = clamp(Y(S.pos.z), 18, N - 18);
   g.save(); g.translate(px, py); g.rotate(PI - S.heading); g.scale(k*0.8, k*0.8); g.fillStyle = '#d9483b'; g.strokeStyle = '#fff'; g.lineWidth = 4; g.beginPath(); g.moveTo(0, -20); g.lineTo(14, 14); g.lineTo(0, 6); g.lineTo(-14, 14); g.closePath(); g.stroke(); g.fill(); g.restore();
@@ -1560,7 +1741,7 @@ function resetWorld(){
   boat.yaw = PI/2; boat.root.position.set(BOAT_HOME[0], WATER_Y, BOAT_HOME[1]); boat.root.rotation.y = boat.yaw; S.boatSpeed = 0;
   oyster.open = 0; oyster.lid.rotation.x = 0; oyster.pearl.visible = true;
   trough.water.position.y = 0.58;
-  if (window.__fire && !(typeof NET !== 'undefined' && NET.remotes.size)) window.__fire.on = false;   // shared fire stays lit while others are playing
+  if (typeof FIRES !== 'undefined' && !(typeof NET !== 'undefined' && NET.remotes.size)) FIRES.forEach(F => F.on = false);   // shared fire stays lit while others are playing
   falcon.mode = 'lost';
   const fx = SPOT.falconTree[0], fz = SPOT.falconTree[1]; falcon.g.position.set(fx, H(fx, fz) + 4.9, fz + 0.3); falcon.g.rotation.set(0, 0.5, 0); falcon.body.rotation.set(0, 0, 0);
   herd.forEach((o, i) => { const a = i/5*2*PI; o.root.position.set(RESERVE[0] + Math.cos(a)*8, H(RESERVE[0], RESERVE[1]), RESERVE[1] + Math.sin(a)*8); o.target.copy(o.root.position); o.wait = Math.random()*3; });
@@ -1713,10 +1894,10 @@ const ACT_ICON = {
   out: '<path d="M14 4h4.5c.8 0 1.5.7 1.5 1.5v13c0 .8-.7 1.5-1.5 1.5H14" fill="none" stroke="#5a3519" stroke-width="2.4" stroke-linecap="round"/><path d="M10 8l-4 4 4 4M6 12h9" fill="none" stroke="#5a3519" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'
 };
 let nearVehicle = null, nearPalm = null, curAct = null;
-function setFire(on, fromNet){
-  const F = window.__fire; if (F.on === on) return; F.on = on;
+function setFire(on, fromNet, id){
+  const F = FIRES[id || 0]; if (!F || F.on === on) return; F.on = on;
   if (on){ SFX.ignite(); burst(F.x, F.g.position.y + 0.6, F.z, 0xffb060, 14); } else { SFX.douse(); burst(F.x, F.g.position.y + 0.5, F.z, 0xd8d2c8, 10); }
-  if (!fromNet && typeof netSend === 'function') netSend({t: 'fire', on});
+  if (!fromNet && typeof netSend === 'function') netSend({t: 'fire', on, id: id || 0});
 }
 function doAction(){
   if (S.mode !== 'play') return;
@@ -1729,7 +1910,7 @@ function doAction(){
   if (nearVehicle === 'horse'){ mountHorse(); return; }
   if (nearVehicle === 'door'){ enterHouse(S.nearHouse); return; }
   if (nearVehicle === 'doorOut'){ exitHouse(); return; }
-  if (nearVehicle === 'car') enterCar(); else if (nearVehicle === 'camel'){ if (S.nearRacer) takeRacer(S.nearRacer); mountCamel(); } else if (nearVehicle === 'boat') enterBoat(); else if (nearVehicle === 'fire') setFire(!window.__fire.on);
+  if (nearVehicle === 'car') enterCar(); else if (nearVehicle === 'camel'){ if (S.nearRacer) takeRacer(S.nearRacer); mountCamel(); } else if (nearVehicle === 'boat') enterBoat(); else if (nearVehicle === 'fire' && S.nearFire) setFire(!S.nearFire.on, false, FIRES.indexOf(S.nearFire));
 }
 function setFollowersVisible(v){ S.hideKids = !v; S.followers.forEach(f => { if (f.kid) f.obj.visible = v; }); }
 function enterCar(){
@@ -1811,6 +1992,10 @@ function collide(nx, nz, rad, onHit){
     const dx = nx - c.x, dz = nz - c.z, d = Math.hypot(dx, dz), R = c.r + rad;
     if (d < R){
       if (c.top !== null && S.pos.y >= c.top - 0.35 && !S.ride) continue;
+      if (c.rock && c.rh < 2.2){   // desert rocks: vehicles go over them, a kid steps up onto the low ones
+        if (S.ride && S.ride !== 'boat'){ if (S.ride === 'car' && !S.carAir && Math.abs(S.carSpeed) > 2.5){ S.carAir = true; S.airT = 0; S.carVy = Math.max(S.carVy || 0, 3.5 + Math.min(4, Math.abs(S.carSpeed)*0.12)); } continue; }
+        if (!S.ride && S.onGround && c.top - S.pos.y < 0.75){ S.vy = Math.max(S.vy, Math.sqrt(2*GRAV*Math.max(0.15, c.top + 0.15 - S.pos.y))); S.onGround = false; continue; }
+      }
       if (c.hop && c.top !== null && !S.ride && !S.onGround && S.vy > -3 && S.pos.y >= c.top - 1.4){ S.vy = Math.max(S.vy, Math.sqrt(2*GRAV*Math.max(0.25, c.top + 0.35 - S.pos.y))); continue; }
       const k = R/(d || 1); nx = c.x + dx*k; nz = c.z + dz*k;
       if (c.nest && S.bumpCD <= 0){ c.nest.wig = 1; SFX.bump(); S.bumpCD = 1; }
@@ -1952,11 +2137,11 @@ function updatePlay(dt, t){
   S.nearRacer = null; S.nearHouse = null;
   if (S.indoor){ nearVehicle = Math.hypot(S.pos.x - ROOM.x, S.pos.z - (ROOM.z + ROOM.d/2)) < 2.4 ? 'doorOut' : null; }
   else if (!S.ride && !S.fish && (S.nearHouse = houseDoorNear())) nearVehicle = 'door';
-  else if (!S.ride && !S.fish){ if (car.root.position.distanceTo(S.pos) < 3.6) nearVehicle = 'car'; else if (camel.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'camel'; else if (!S.race && (S.nearRacer = racerNear())) nearVehicle = 'camel'; else if (Math.hypot(boat.root.position.x - S.pos.x, boat.root.position.z - S.pos.z) < 4.8) nearVehicle = 'boat'; else if (Math.hypot(window.__fire.x - S.pos.x, window.__fire.z - S.pos.z) < 2.4) nearVehicle = 'fire';
+  else if (!S.ride && !S.fish){ if (car.root.position.distanceTo(S.pos) < 3.6) nearVehicle = 'car'; else if (camel.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'camel'; else if (!S.race && (S.nearRacer = racerNear())) nearVehicle = 'camel'; else if (Math.hypot(boat.root.position.x - S.pos.x, boat.root.position.z - S.pos.z) < 4.8) nearVehicle = 'boat'; else if ((S.nearFire = FIRES.find(F => Math.hypot(F.x - S.pos.x, F.z - S.pos.z) < 2.4))) nearVehicle = 'fire';
     else if (horse.ready && horse.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'horse';
     else if ((nearPalm = palmNear()) ) nearVehicle = 'palm'; else if (fishSpot()) nearVehicle = 'fish';
     else if (!S.kite && Math.hypot(S.pos.x - KITE_STAND[0], S.pos.z - KITE_STAND[1]) < 2.4) nearVehicle = 'kite'; else if (S.kite) nearVehicle = 'kiteOff'; }
-  let actKey = S.fish ? (S.fish.st === 'bite' ? 'reel' : 'fish') : S.ride === 'boat' ? (((miniTick & 7) === 0 ? (S.canLand = !!landSpot()) : S.canLand), 'out') : (S.ride === 'camel' && !S.race && raceStartNear()) ? 'race' : S.ride ? 'out' : (nearVehicle === 'fire' && window.__fire.on ? 'fireOut' : nearVehicle);
+  let actKey = S.fish ? (S.fish.st === 'bite' ? 'reel' : 'fish') : S.ride === 'boat' ? (((miniTick & 7) === 0 ? (S.canLand = !!landSpot()) : S.canLand), 'out') : (S.ride === 'camel' && !S.race && raceStartNear()) ? 'race' : S.ride ? 'out' : (nearVehicle === 'fire' && S.nearFire && S.nearFire.on ? 'fireOut' : nearVehicle);
   { const fb = $('fishBtn'), show = S.ride === 'boat' && !S.fish && !S.canLand && Math.abs(S.boatSpeed) < 1.2; if (show && !fb.dataset.ok){ $('fishicon').innerHTML = ACT_ICON.fish; fb.dataset.ok = 1; } fb.hidden = !show; }
   if (S.hideAnimals && !S.ride && !S.player.swim && !S.indoor) S.hideAnimals = false;   // back on land after jumping off the boat at sea
   curAct = actKey; const actEl = $('act');
@@ -2206,13 +2391,13 @@ function updateWorld(dt, t){
   sun.position.set(c.x + 18, c.y + 34, c.z + 10); sun.target.position.copy(c);
   sea.mat.uniforms.time.value = t;
   window.__dome.position.copy(camera.position); window.__clouds.rotation.y += dt*0.004;
-  { const F = window.__fire; F.k = clamp(F.k + (F.on ? dt*2.5 : -dt*3), 0, 1); F.fl.visible = F.k > 0.01;
+  FIRES.forEach(F => { F.k = clamp(F.k + (F.on ? dt*2.5 : -dt*3), 0, 1); F.fl.visible = F.k > 0.01;
     if (F.fl.visible){
       F.flames.forEach((f, i) => { const s = (0.85 + 0.25*Math.sin(t*13 + f.ph) + 0.1*Math.sin(t*23 + i))*F.k; f.m.scale.set(F.k*(0.9 + 0.1*Math.sin(t*17 + f.ph)), s, F.k); f.m.position.y = f.h*s/2; f.m.rotation.y = t*(1 + i*0.3); });
-      F.glow.intensity = F.k*(1.5 + 0.35*Math.sin(t*11) + 0.2*Math.sin(t*27));
+      F.glow.intensity = F.k*(1.5 + 0.35*Math.sin(t*11) + 0.2*Math.sin(t*27)); if (F.halo) F.glow.i = F.glow.intensity;
       F.embers.forEach((e, i) => { e.t += dt*(0.5 + i*0.08); if (e.t > 1){ e.t = 0; e.a = Math.random()*2*PI; } e.e.visible = F.on; const a = (e.a || i) + e.t*2; e.e.position.set(Math.cos(a)*0.15*(1 - e.t), 0.3 + e.t*1.8, Math.sin(a)*0.15*(1 - e.t)); e.e.scale.setScalar(1 - e.t); });
-    } else F.glow.intensity = 0;
-    if (F.on && S.mode === 'play' && Math.hypot(S.pos.x - F.x, S.pos.z - F.z) < 14){ F.crackle -= dt; if (F.crackle <= 0){ SFX.crackle(); F.crackle = 0.12 + Math.random()*0.5; } } }
+    } else { F.glow.intensity = 0; if (F.halo) F.glow.i = 0; }
+    if (F.on && S.mode === 'play' && Math.hypot(S.pos.x - F.x, S.pos.z - F.z) < 14){ F.crackle -= dt; if (F.crackle <= 0){ SFX.crackle(); F.crackle = 0.12 + Math.random()*0.5; } } });
 }
 
 /* ================= fun things: fishing, football, dates from the palms, dune jumps ================= */
@@ -2617,6 +2802,7 @@ function resetFun2(){
   horse.root.position.set(HORSE_HOME[0], H(HORSE_HOME[0], HORSE_HOME[1]), HORSE_HOME[1]); horse.root.rotation.y = -0.6; horseCol.x = HORSE_HOME[0]; horseCol.z = HORSE_HOME[1]; horseCol.r = 1.0;
 }
 function farHide(){   // keep the heavy animals off the screen when the kid is far away (saves the iPad)
+  { const far = S.indoor || Math.hypot(S.pos.x - DIBBA.x, S.pos.z - DIBBA.z) > 300; dibba.root.visible = dibba.mi.visible = !far; }
   const P = S.pos, dT = Math.hypot(P.x - TRACK.x, P.z - TRACK.z); racers.forEach(r => r.c.root.visible = !r.hidden && (dT < 110 || !!S.race));
   gazelles.forEach(g => g.root.visible = Math.hypot(P.x - g.root.position.x, P.z - g.root.position.z) < 130);
   dolphins.forEach(d => d.root.visible = Math.hypot(P.x - d.root.position.x, P.z - d.root.position.z) < 160);
@@ -2640,7 +2826,7 @@ function netOnData(conn, raw){
   if (NET.host) NET.conns.forEach(c => { if (c !== conn && c.open) try { c.send(JSON.stringify(m)); } catch(e){} });   // relay to the others
   if (m.t === 's') netState(m);
   else if (m.t === 'bye') netDrop(m.from);
-  else if (m.t === 'fire') setFire(!!m.on, true);
+  else if (m.t === 'fire') setFire(!!m.on, true, m.id || 0);
 }
 function netConn(c){
   NET.conns.push(c);
@@ -2685,7 +2871,7 @@ function netState(m){
     loadKidModel(m.k, k, () => {}, kk => kk.prim.forEach(o => o.visible = true));
     r = {type: m.k, k, tgt: new T.Vector3(m.x, m.y, m.z), h: m.h || 0, seen: 0}; NET.remotes.set(m.from, r);
     k.root.position.copy(r.tgt);
-    if (window.__fire && window.__fire.on) netSend({t: 'fire', on: true});   // a newcomer sees the campfire already burning
+    FIRES.forEach((F, id) => { if (F.on) netSend({t: 'fire', on: true, id}); });   // a newcomer sees the campfire already burning
   }
   r.tgt.set(m.x, m.y, m.z); r.h = m.h || 0; r.sp = m.sp || 0; r.sw = !!m.sw; r.air = !!m.a; r.seen = performance.now();
   r.ride = typeof m.r === 'string' && VEH_SRC[m.r] ? m.r : 0; r.pl = m.pl !== 0;
