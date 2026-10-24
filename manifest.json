@@ -1,0 +1,14 @@
+{
+  "name": "مغامرات عيال وليد",
+  "short_name": "عيال وليد",
+  "lang": "ar",
+  "dir": "rtl",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#efdcb6",
+  "theme_color": "#efdcb6",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}

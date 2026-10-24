@@ -2,6 +2,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>مغامرات عيال وليد</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="عيال وليد">
+<meta name="theme-color" content="#efdcb6">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;800&display=swap">
 <style>
@@ -13,7 +20,7 @@
   color-scheme:light;
 }
 [hidden]{display:none!important}
-html,body{height:100%;margin:0;overflow:hidden;background:var(--sand);color:var(--ink);
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;background:var(--sand);color:var(--ink);
   touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block}
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
@@ -1045,8 +1052,8 @@ const caracal = buildCaracal(); scene.add(caracal.root);
 const birds = [0, 1, 2].map(() => { const b = new T.Group(); part(b, SPH_LO, M(0x7d756a), [0, 0, 0], [0.08, 0.07, 0.12]); part(b, SPH_LO, M(0x7d756a), [0, 0.06, 0.1], [0.05, 0.05, 0.05]); scene.add(b); return b; });
 const hyraxRock = (function(){ const x = SPOT.hyrax[0], z = SPOT.hyrax[1], y = H(x, z); const m = part(scene, new T.CylinderGeometry(2.4, 2.8, 1.2, 9), M(0xa9876a), [x, y + 0.5, z]); m.receiveShadow = true; const c = {x, z, r: 2.6, top: y + 1.1}; colliders.push(c); return c; })();
 const hyraxes = [0, 1, 2, 3].map(i => { const h = buildHyrax(); const a = i/4*2*PI; h.root.position.set(SPOT.hyrax[0] + Math.cos(a)*1.2, hyraxRock.top, SPOT.hyrax[1] + Math.sin(a)*1.2); h.root.rotation.y = a + PI/2; scene.add(h.root); return h; });
-const camelCol = {x: 0, z: 0, r: 1.3, top: null}; colliders.push(camelCol);
-const carCol = {x: 0, z: 0, r: 2.1, top: null}; colliders.push(carCol);
+const camelCol = {x: 0, z: 0, r: 1.3, top: null, hop: 0.8, land: 0.55}; colliders.push(camelCol);
+const carCol = {x: 0, z: 0, r: 2.1, top: null, hop: 0.95, land: 1.0}; colliders.push(carCol);
 
 /* ================= real 3D models for animals, palms, tent and dhow (Meshy) ================= */
 const PROP = {}, CAR_ROT = PI/2;
@@ -1146,14 +1153,16 @@ function loadProps(){
     PROP[n] = gl.scene; try { use[n](); } catch (e) { console.warn('prop', n, e); }
   }, undefined, () => {}));
 }
-loadProps();
+let propsStarted = false;
+function startProps(){ if (propsStarted) return; propsStarted = true; loadProps(); }
+setTimeout(startProps, 20000);   // safety: never wait for ever
 
 /* ================= kids ================= */
 const kids = {saeedan: buildKid('saeedan'), khad: buildKid('khad'), saif: buildKid('saif')};
 const ORDER = ['saeedan', 'khad', 'saif'];
 Object.values(kids).forEach(k => scene.add(k.root));
 document.querySelectorAll('.pick').forEach(b => b.style.visibility = 'hidden');
-loadModels(kids, () => { $('loading').hidden = true; document.querySelectorAll('.pick').forEach(b => b.style.visibility = ''); if (S.mode === 'select'){ $('lobby').hidden = false; markSel(); } });
+loadModels(kids, () => { startProps(); $('loading').hidden = true; document.querySelectorAll('.pick').forEach(b => b.style.visibility = ''); if (S.mode === 'select'){ $('lobby').hidden = false; markSel(); } });
 
 /* ================= missions ================= */
 const ICON = {
@@ -1266,6 +1275,10 @@ function syncMusic(){
   else if (!musicSrc){ musicSrc = AC.createBufferSource(); musicSrc.buffer = musicBuf; musicSrc.loop = true; musicSrc.connect(musicG); musicSrc.start(0); }
 }
 ['touchend', 'click'].forEach(ev => document.addEventListener(ev, () => ensureAudio(), {passive: true}));
+// a finger drag must never move or pull the page (in-app browsers like WhatsApp pull their sheet down otherwise); the fish album list may still scroll
+document.addEventListener('touchmove', e => { if (!(e.target.closest && e.target.closest('#album .card'))) e.preventDefault(); }, {passive: false});
+// after the first visit the game files are kept on the device, so later launches load fast (kids' site only)
+if ('serviceWorker' in navigator && /github\.io$/.test(location.hostname)) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 let NB = null;
 function noise(d, vol, f, q, when, type){
   if (!AC || muted) return;
@@ -1321,9 +1334,13 @@ function updateEngine(){
     const o1 = AC.createOscillator(), o2 = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain();
     o1.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 380; f.Q.value = 1.2; g.gain.value = 0;
     o1.connect(f); o2.connect(f); f.connect(g); g.connect(AC.destination); o1.start(); o2.start(); ENG = {o1, o2, f, g}; }
-  const k = clamp(Math.abs(S.carSpeed)/22, 0, 1.6), tt = AC.currentTime, hz = 72 + k*95 + (S.carAir ? 35 : 0);
-  ENG.o1.frequency.setTargetAtTime(hz, tt, 0.12); ENG.o2.frequency.setTargetAtTime(hz*0.5, tt, 0.12); ENG.f.frequency.setTargetAtTime(700 + k*1000, tt, 0.15);
-  ENG.g.gain.setTargetAtTime(on ? 0.06 + k*0.06 : 0, tt, on ? 0.15 : 0.05);
+  // 5 gears: the revs climb inside a gear, then drop with a short dip when it changes up
+  const sp = Math.abs(S.carSpeed), G = [0, 6, 13, 21, 29, 40], tt = AC.currentTime; let g = 0; while (g < 4 && sp > G[g + 1]) g++;
+  const rpm = clamp((sp - G[g])/(G[g + 1] - G[g]), 0, 1), hz = 64 + g*7 + rpm*52 + (S.carAir ? 22 : 0);
+  if (ENG.gear !== undefined && g > ENG.gear) ENG.dip = tt + 0.18; ENG.gear = g;
+  ENG.o1.frequency.setTargetAtTime(hz, tt, 0.09); ENG.o2.frequency.setTargetAtTime(hz*0.5, tt, 0.09); ENG.f.frequency.setTargetAtTime(650 + rpm*550 + g*60, tt, 0.12);
+  const vol = (0.055 + rpm*0.022 - g*0.004)*(tt < (ENG.dip || 0) ? 0.45 : 1);
+  ENG.g.gain.setTargetAtTime(on ? vol : 0, tt, on ? 0.08 : 0.05);
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && ENG && AC) ENG.g.gain.setTargetAtTime(0, AC.currentTime, 0.02); });
 
@@ -1556,7 +1573,15 @@ function exitRide(){
 
 /* ================= play ================= */
 const GRAV = 24;
-function groundAt(x, z, y){ let g = H(x, z); for (const c of colliders){ if (c.top !== null && c.r && Math.hypot(x - c.x, z - c.z) < c.r*0.85 && y >= c.top - 0.35) g = Math.max(g, c.top); } return g; }
+function groundAt(x, z, y){ let g = H(x, z); for (const c of colliders){ if (c.top !== null && c.r && Math.hypot(x - c.x, z - c.z) < (c.land || c.r*0.85) && y >= c.top - 0.35) g = Math.max(g, c.top); } return g; }
+// the car, camel and horse have a real height: jump close to one and you hop over it (or land on top), walk into it and it still stops you
+const HOP_BOX = new T.Box3();
+const HOP_TMP = new T.Box3();
+function visBox(o){ HOP_BOX.makeEmpty(); o.updateWorldMatrix(true, true); (function walk(n){ if (!n.visible) return; if (n.isMesh && n.geometry){ if (!n.geometry.boundingBox) n.geometry.computeBoundingBox(); HOP_TMP.copy(n.geometry.boundingBox).applyMatrix4(n.matrixWorld); HOP_BOX.union(HOP_TMP); } n.children.forEach(walk); })(o); return HOP_BOX; }   // only what you can see (old box parts are hidden under the models)
+const HOP_RAY = new T.Raycaster();
+function roofAt(o, x, z){ HOP_RAY.set(new T.Vector3(x, o.position.y + 30, z), new T.Vector3(0, -1, 0)); const hit = HOP_RAY.intersectObject(o, true).find(h => { let n = h.object; while (n){ if (!n.visible) return false; n = n.parent; } return true; }); return hit ? hit.point.y : null; }
+function syncTops(){ [[carCol, car.root], [camelCol, camel.root], [horseCol, horse.root]].forEach(([c, o]) => { if (!o.visible){ c.top = null; return; }
+    if (c === carCol){ if (!c.hRel && car.model && !S.ride){ const y = roofAt(o, o.position.x, o.position.z); if (y !== null) c.hRel = y - o.position.y; } if (c.hRel){ c.top = o.position.y + c.hRel; return; } } const B = visBox(o); if (B.isEmpty()){ c.top = null; return; } c.top = B.min.y + (B.max.y - B.min.y)*c.hop; }); }
 function readStick(){
   let jx = input.jx, jy = input.jy;
   if (keys.KeyA || keys.ArrowLeft) jx = -1; if (keys.KeyD || keys.ArrowRight) jx = 1;
@@ -1570,6 +1595,7 @@ function collide(nx, nz, rad, onHit){
     const dx = nx - c.x, dz = nz - c.z, d = Math.hypot(dx, dz), R = c.r + rad;
     if (d < R){
       if (c.top !== null && S.pos.y >= c.top - 0.35 && !S.ride) continue;
+      if (c.hop && c.top !== null && !S.ride && !S.onGround && S.vy > -3 && S.pos.y >= c.top - 1.4){ S.vy = Math.max(S.vy, Math.sqrt(2*GRAV*Math.max(0.25, c.top + 0.35 - S.pos.y))); continue; }
       const k = R/(d || 1); nx = c.x + dx*k; nz = c.z + dz*k;
       if (c.nest && S.bumpCD <= 0){ c.nest.wig = 1; SFX.bump(); S.bumpCD = 1; }
       if (onHit) onHit();
@@ -1593,6 +1619,7 @@ function walkMove(dt, jx, jy, speed){
   return Math.hypot(move.x, move.z);
 }
 function updatePlay(dt, t){
+  if ((miniTick & 15) === 3 || S.onGround === false) syncTops();
   if (S.gameMode === 'stars' && !S.raceOver){
     S.timeLeft -= dt; const tl = Math.max(0, S.timeLeft); $('tleft').textContent = Math.floor(tl/60) + ':' + String(Math.floor(tl % 60)).padStart(2, '0');
     if (S.timeLeft <= 0){ S.raceOver = true; $('endstars').textContent = S.starsGot; $('endmis').innerHTML = ''; $('end').hidden = false; SFX.win(); }
@@ -1680,6 +1707,7 @@ function updatePlay(dt, t){
   const last = S.crumbs[S.crumbs.length - 1];
   if (last.distanceTo(S.pos) > 0.3){ S.crumbs.push(S.pos.clone()); if (S.crumbs.length > 600) S.crumbs.shift(); }
   S.followers.forEach(f => {
+    if (f.racer) return;   // riding a race camel right now
     const i0 = Math.max(1, S.crumbs.length - 1 - f.lag), c = S.crumbs[i0], cp = S.crumbs[i0 - 1];
     const tgt = c.clone();
     if (f.side){ const dx = c.x - cp.x, dz = c.z - cp.z, L = Math.hypot(dx, dz) || 1; tgt.x += -dz/L*f.side; tgt.z += dx/L*f.side; }
@@ -2215,7 +2243,7 @@ const HORSE_ROT = PI/2, DOLPHIN_ROT = 0, TURTLE_ROT = 0, GAZELLE_ROT = 0, HORSE_
 const HORSE_HOME = [16, -3], KITE_STAND = [-8, 6];
 const horse = (function(){ const root = new T.Group(), body = new T.Group(); root.add(body); root.visible = false; scene.add(root);
   const legs = [0, 1, 2, 3].map(() => new T.Group()); return {root, body, legs, phase: 0, ready: false}; })();
-const horseCol = {x: HORSE_HOME[0], z: HORSE_HOME[1], r: 1.0, top: null}; colliders.push(horseCol);
+const horseCol = {x: HORSE_HOME[0], z: HORSE_HOME[1], r: 1.0, top: null, hop: 0.72, land: 0.5}; colliders.push(horseCol);
 // race track: white and red posts, start/finish arch with a chequered banner
 (function track(){
   const W = M(0xffffff), Rd = M(0xd2493a), postG = new T.CylinderGeometry(0.06, 0.07, 1.1, 6);
@@ -2234,7 +2262,7 @@ const horseCol = {x: HORSE_HOME[0], z: HORSE_HOME[1], r: 1.0, top: null}; collid
   const kd = part(k, new T.ConeGeometry(0.5, 1.0, 4), M(0xe05a3a), [0, 1.6, 0.05], [1, 1, 0.12]); window.__kiteRest = kd;
 })();
 // racing camels with little robot jockeys (like the real races)
-const racers = [0, 1, 2].map(i => { const c = buildCamel(); scene.add(c.root); const j = new T.Group(); j.position.set(0, 2.25, -0.1); c.body.add(j);
+const racers = [0, 1, 2].map(i => { const c = buildCamel(); scene.add(c.root); const j = new T.Group(); c.jockey = j; j.position.set(0, 2.25, -0.1); c.body.add(j);
   part(j, new T.BoxGeometry(0.22, 0.3, 0.16), M([0x3f6fae, 0x2e9a5a, 0xe6bf5c][i]), [0, 0.15, 0]); part(j, SPH_LO, M(0xdddddd), [0, 0.4, 0], [0.12, 0.12, 0.12]);
   return {c, i, th: 0, k: [0.9, 1.1, 1.0][i], v: [7.4, 8.2, 9.1][i], done: 0, phase: Math.random()*6}; });
 function placeRacers(){ racers.forEach(r => { r.th = -0.04*(r.i + 1); const x = TRACK.x + TRACK.a*r.k*Math.cos(r.th), z = TRACK.z + TRACK.b*r.k*Math.sin(r.th); r.c.root.position.set(x, H(x, z), z); r.c.root.rotation.y = 0; r.done = 0; }); }
@@ -2245,6 +2273,9 @@ function raceStartNear(){ return Math.hypot(S.pos.x - (TRACK.x + TRACK.a), S.pos
 function trackAngle(x, z){ return Math.atan2((z - TRACK.z)/TRACK.b, (x - TRACK.x)/TRACK.a); }
 function startRace(){
   racers.forEach(r => { r.hidden = false; r.c.root.visible = true; }); placeRacers(); const x = TRACK.x + TRACK.a*1.0, z = TRACK.z - 2; S.pos.set(x, H(x, z), z); S.heading = 0; S.camYaw = PI;
+  // brothers / sister come along: each sits on a race camel instead of the little robot
+  racers.forEach(r => { r.rider = null; r.c.jockey.visible = true; });
+  S.followers.filter(f => f.kid && !netHas(f.kid.type)).slice(0, 2).forEach((f, i) => { racers[i].rider = f; f.racer = racers[i]; racers[i].c.jockey.visible = false; f.kid.sit = true; });
   S.race = {st: 'count', t: 0, last: trackAngle(S.pos.x, S.pos.z), prog: 0, beeps: 0}; $('racePill').hidden = false; $('raceTxt').textContent = '1/2';
 }
 function endRace(finished, rank){
@@ -2252,13 +2283,15 @@ function endRace(finished, rank){
     popIcon(col, '<path d="M7 3h10v4a5 5 0 0 1-10 0z" fill="' + col + '" stroke="#5a3519" stroke-width="1.2"/><path d="M7 5H4c0 3 1.5 4 3 4M17 5h3c0 3-1.5 4-3 4" fill="none" stroke="#5a3519" stroke-width="1.2"/><path d="M10 12h4v4h-4zM8 16h8v3H8z" fill="#5a3519"/><text x="12" y="9" font-size="5.5" text-anchor="middle" fill="#5a3519" font-weight="800">' + rank + '</text>');
     if (rank === 1){ SFX.win(); burst(S.pos.x, S.pos.y + 3, S.pos.z, 0xf0d590, 26); } else SFX.find(); }
   S.race = null; S.raceHold = 4; $('racePill').hidden = true;
+  racers.forEach(r => { if (r.rider){ const f = r.rider, P = f.obj.position; f.racer = null; f.kid.sit = false; P.set(P.x + 1.4, 0, P.z); P.y = H(P.x, P.z); } r.rider = null; r.c.jockey.visible = true; });
 }
 function updateRace(dt){
   const Rc = S.race;
   racers.forEach(r => { const run = Rc && Rc.st === 'run' && r.done < 2*2*PI; if (run){ const dth = r.v/(((TRACK.a + TRACK.b)/2)*r.k)*dt; r.th += dth; r.done += dth; }
     const x = TRACK.x + TRACK.a*r.k*Math.cos(r.th), z = TRACK.z + TRACK.b*r.k*Math.sin(r.th), P = r.c.root.position, px = P.x, pz = P.z;
     P.set(x, H(x, z), z); const sp = Math.hypot(x - px, z - pz)/Math.max(dt, 1e-4); if (sp > 0.2) r.c.root.rotation.y = Math.atan2(x - px, z - pz);
-    r.phase += dt*sp*1.4; walkLegs(r.c.legs, r.phase, clamp(sp/5, 0, 1)); r.c.body.position.y = Math.abs(Math.sin(r.phase))*0.06*clamp(sp/5, 0, 1); });
+    r.phase += dt*sp*1.4; walkLegs(r.c.legs, r.phase, clamp(sp/5, 0, 1)); r.c.body.position.y = Math.abs(Math.sin(r.phase))*0.06*clamp(sp/5, 0, 1);
+    if (r.rider){ const k = r.rider.kid, yaw = r.c.root.rotation.y; k.root.position.copy(new T.Vector3(0, 2.12 + r.c.body.position.y, 0).applyAxisAngle(new T.Vector3(0, 1, 0), yaw).add(P)); k.root.rotation.y = yaw; k.root.visible = r.c.root.visible; k.speed = 0; k.sit = true; animateKid(k, dt, 0); } });
   if (!Rc && S.ride !== 'camel') racers.forEach(r => { if (r.hidden){ r.hidden = false; r.c.root.visible = true; } });
   if (!Rc) return;
   if (S.ride !== 'camel'){ endRace(false); return; }
