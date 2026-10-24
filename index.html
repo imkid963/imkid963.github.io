@@ -39,6 +39,15 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
   box-shadow:0 3px 0 var(--sand-deep),0 6px 14px var(--shadow);font-family:var(--display);font-weight:800;font-size:21px;
   font-variant-numeric:tabular-nums;direction:ltr}
 .pill svg{width:26px;height:26px}
+#fade{position:fixed;inset:0;background:#2a1a0e;opacity:0;pointer-events:none;transition:opacity .28s}
+#fade.on{opacity:1}
+#mis .mi{pointer-events:auto;cursor:pointer}
+#mini{cursor:pointer}
+#bigmap{position:fixed;inset:0;direction:rtl;display:grid;place-items:center;background:rgba(239,220,182,.45);padding:12px;font-family:var(--display)}
+#bigmap .mapwrap{position:relative;width:min(94vw,calc(100vh - 24px));height:min(94vw,calc(100vh - 24px))}
+#bigc{width:100%;height:100%;border-radius:26px;touch-action:none;border:4px solid var(--glass);box-shadow:0 6px 0 var(--sand-deep),0 14px 34px var(--shadow);box-sizing:border-box}
+.mapnote{position:absolute;left:58px;right:10px;top:12px;margin:auto;width:max-content;max-width:calc(100% - 70px);padding:5px 12px;border-radius:14px;background:var(--glass);font-size:13px;font-weight:800;text-align:center}
+#mapDone{position:absolute;top:10px;left:10px}
 #mis{position:fixed;left:max(14px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 70px);display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .mi{position:relative;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--glass);
   box-shadow:0 2px 0 var(--sand-deep),0 4px 10px var(--shadow);border:3px solid var(--c);transition:background .3s,transform .3s}
@@ -50,10 +59,12 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 .mi .dots i{width:6px;height:6px;border-radius:50%;background:rgba(90,53,25,.25)}
 .mi .dots i.on{background:var(--ink)}
 #mini{position:fixed;right:max(14px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 66px);width:118px;height:118px;border-radius:50%;
-  box-shadow:0 3px 0 var(--sand-deep),0 6px 16px var(--shadow);border:3px solid var(--glass);pointer-events:none}
+  box-shadow:0 3px 0 var(--sand-deep),0 6px 16px var(--shadow);border:3px solid var(--glass);pointer-events:auto}
 #jump{position:fixed;width:84px;height:84px;right:calc(max(18px,env(safe-area-inset-right,0px)) + 4px);bottom:calc(env(safe-area-inset-bottom,0px) + 24px)}
 #act{position:fixed;width:70px;height:70px;right:calc(max(18px,env(safe-area-inset-right,0px)) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 124px)}
 #act svg{width:62%;height:62%}
+#fishBtn{position:fixed;width:64px;height:64px;right:calc(max(18px,env(safe-area-inset-right,0px)) + 100px);bottom:calc(env(safe-area-inset-bottom,0px) + 64px)}
+#fishBtn svg{width:62%;height:62%}
 #power{position:fixed;width:64px;height:64px;right:calc(max(18px,env(safe-area-inset-right,0px)) + 100px);bottom:calc(env(safe-area-inset-bottom,0px) + 64px)}
 #sprint{position:fixed;width:66px;height:66px;right:calc(max(18px,env(safe-area-inset-right,0px)) + 14px);bottom:calc(env(safe-area-inset-bottom,0px) + 208px)}
 #timer{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 70px)}
@@ -149,8 +160,10 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 <button class="round" id="jump" hidden aria-label="قفز"><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 14l7-7 7 7"/><path d="M5 20l7-7 7 7" opacity=".45"/></svg></button>
 <button class="round" id="act" hidden aria-label="اركب"><svg id="acticon" viewBox="0 0 24 24"></svg></button>
 <button class="round" id="sprint" hidden aria-label="سرعة"><svg viewBox="0 0 24 24"><path d="M13.5 2.5 5 13.5h6l-1.5 8 8.5-11h-6z" fill="#e6bf5c" stroke="#5a3519" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+<button class="round" id="fishBtn" hidden aria-label="صيد"><svg id="fishicon" viewBox="0 0 24 24"></svg></button>
 <button class="round" id="power" hidden aria-label="القوة"><span class="cd"></span><svg id="powicon" viewBox="0 0 24 24"></svg></button>
 <div id="pop" hidden></div>
+<div id="fade"></div>
 
 <div id="select">
   <div id="title">مغامرات عيال وليد</div>
@@ -180,6 +193,13 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
     <div class="ltitle">دفتر السمك</div>
     <div class="agrid" id="agrid"></div>
     <div class="lrow"><button class="lbtn play" id="albDone">تمام</button></div>
+  </div>
+</div>
+<div id="bigmap" hidden>
+  <div class="mapwrap">
+    <canvas id="bigc" width="760" height="760"></canvas>
+    <div class="mapnote">دوس على حيوان، ويدلّك عليه سهم ذهبي</div>
+    <button class="round small" id="mapDone" aria-label="سكّر الخريطة"><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
 </div>
 <div id="settings" hidden>
@@ -535,7 +555,7 @@ const PIER = {x0: SEA_X - 9, x1: SEA_X + 26, z: HARBOUR[1], top: 0.8};
     for (let j = 0; j < 5; j++) part(g, new T.BoxGeometry(0.5, 0.45, 0.25), M(0xd9cbb0), [-w/2 + 0.6 + j*(w - 1.2)/4, hgt + 0.45, 2.55]);
     part(g, new T.BoxGeometry(1.1, 2.0, 0.1), door, [0, 1.0, 2.52], null, null, true);
     [-1, 1].forEach(sd => part(g, new T.BoxGeometry(0.8, 0.8, 0.1), win, [sd*w*0.32, hgt*0.62, 2.52], null, null, true));
-    colliders.push({x, z, r: Math.max(w, 5)*0.55, top: null}); HOUSES.push({g, w, i});
+    colliders.push({x, z, r: Math.max(w, 5)*0.55, top: null}); HOUSES.push({g, w, i, ry: q[2] + PI/2});
   });
   // old watchtower by the shore
   const tx = SEA_X - 18, tz = -8, ty = H(tx, tz);
@@ -1182,7 +1202,7 @@ const MIS = [
 ];
 const misById = {}; MIS.forEach(m => misById[m.id] = m);
 const CK = '<span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="#3a7a4a" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>';
-function misHTML(m, extra){ return '<div class="mi' + (m.done ? ' done' : '') + '" style="--c:' + m.color + '"><svg viewBox="0 0 24 24">' + ICON[m.id] + '</svg>' + CK + (extra || '') + '</div>'; }
+function misHTML(m, extra){ return '<div class="mi' + (m.done ? ' done' : '') + '" data-id="' + m.id + '" style="--c:' + m.color + '"><svg viewBox="0 0 24 24">' + ICON[m.id] + '</svg>' + CK + (extra || '') + '</div>'; }
 const beaconGeo = new T.CylinderGeometry(1.1, 1.1, 40, 20, 1, true);
 MIS.forEach(m => { m.beacon = new T.Mesh(beaconGeo, new T.MeshBasicMaterial({color: new T.Color(m.color), transparent: true, opacity: 0.22, side: T.DoubleSide, depthWrite: false, fog: false})); scene.add(m.beacon); });
 
@@ -1238,6 +1258,8 @@ function drawMini(){
   const pin = (x, z, col, r) => { let X = toX(x), Y = toY(z); const dx = X - N/2, dy = Y - N/2, d = Math.hypot(dx, dy), lim = N/2 - r - 3; if (d > lim){ X = N/2 + dx/d*lim; Y = N/2 + dy/d*lim; } mctx.fillStyle = col; mctx.strokeStyle = '#fff'; mctx.lineWidth = 4; mctx.beginPath(); mctx.arc(X, Y, r, 0, 2*PI); mctx.fill(); mctx.stroke(); };
   if (S.gameMode === 'adv' && !misById.houbara.done && S.found < 3){ mctx.fillStyle = 'rgba(227,194,122,.5)'; mctx.beginPath(); mctx.arc(toX(5), toY(37), 46*s, 0, 2*PI); mctx.fill(); }
   if (S.gameMode === 'adv') MIS.forEach(m => { if (m.done) return; const tg = missionTarget(m); if (tg) pin(tg[0], tg[1], m.color, 10); });
+  if (S.gameMode === 'adv' && !misById.houbara.done) houbaras.forEach(h => { if (!h.found) pin(h.root.position.x, h.root.position.z, misById.houbara.color, 8); });
+  if (S.guide){ const g = S.guide.get(); if (g){ let X = toX(g.x), Y = toY(g.z); const dx = X - N/2, dy = Y - N/2, d = Math.hypot(dx, dy), lim = N/2 - 20; if (d > lim){ X = N/2 + dx/d*lim; Y = N/2 + dy/d*lim; } mctx.strokeStyle = '#e6bf5c'; mctx.lineWidth = 5; mctx.beginPath(); mctx.arc(X, Y, 15 + 3*Math.sin(performance.now()/180), 0, 2*PI); mctx.stroke(); } }
   const box = (o, col, w) => { mctx.fillStyle = col; mctx.strokeStyle = '#5a3519'; mctx.lineWidth = 2; mctx.fillRect(toX(o.x) - w/2, toY(o.z) - w/2, w, w); mctx.strokeRect(toX(o.x) - w/2, toY(o.z) - w/2, w, w); };
   if (S.ride !== 'car') box(car.root.position, '#f3f1ea', 12);
   if (S.ride !== 'camel') box(camel.root.position, '#c99a62', 10);
@@ -1344,11 +1366,189 @@ function updateEngine(){
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && ENG && AC) ENG.g.gain.setTargetAtTime(0, AC.currentTime, 0.02); });
 
+// سعيدان's power: a golden compass over his head points to the next open mission (or, outside Adventure, the nearest star)
+const compass = (function(){ const g = new T.Group(); g.visible = false; g.rotation.order = 'YXZ'; scene.add(g);
+  const face = new T.Mesh(new T.CircleGeometry(0.42, 28), new T.MeshBasicMaterial({color: 0xfff6dc, fog: false, transparent: true, opacity: 0.92, side: T.DoubleSide})); face.rotation.x = -PI/2; face.position.y = -0.02; g.add(face);
+  const ring = new T.Mesh(new T.TorusGeometry(0.42, 0.05, 8, 28), new T.MeshBasicMaterial({color: 0xe6bf5c, fog: false})); ring.rotation.x = PI/2; g.add(ring);
+  const arrow = new T.Group(); g.add(arrow);
+  const tip = new T.Mesh(new T.ConeGeometry(0.16, 0.5, 4), new T.MeshBasicMaterial({color: 0xd9483b, fog: false})); tip.rotation.x = PI/2; tip.position.z = 0.2; arrow.add(tip);
+  const tail = new T.Mesh(new T.ConeGeometry(0.12, 0.34, 4), new T.MeshBasicMaterial({color: 0x8a8f96, fog: false})); tail.rotation.x = -PI/2; tail.position.z = -0.2; arrow.add(tail);
+  return {g, ring, arrow, tip, last: null}; })();
+function compassTarget(){
+  const P = S.pos; let best = null, bd = 1e9;
+  if (S.gameMode === 'adv') MIS.forEach(m => { if (m.done) return; const tg = missionTarget(m); if (!tg || (m.id === 'falcon' && falcon.mode === 'home')) return; const d = Math.hypot(tg[0] - P.x, tg[1] - P.z); if (d < bd){ bd = d; best = {x: tg[0], z: tg[1], c: m.color}; } });
+  if (!best) stars.forEach(st => { if (st.got) return; const d = Math.hypot(st.x - P.x, st.z - P.z); if (d < bd){ bd = d; best = {x: st.x, z: st.z, c: '#e6bf5c'}; } });
+  return best;
+}
+function updateCompass(t){
+  updateGuide();
+  const C = compass, on = S.mode === 'play' && !S.indoor && (!!S.guide || (S.kidType === 'saif' && S.powerT > 0));
+  C.g.visible = on; if (!on){ C.last = null; return; }
+  if (S.guide) C.last = Object.assign({c: S.guide.c}, S.guide.get() || {}); else if ((miniTick & 7) === 0 || !C.last) C.last = compassTarget();
+  if (C.last && C.last.x === undefined) C.last = null;
+  const T0 = C.last; if (!T0){ C.g.visible = false; return; }
+  const top = S.ride === 'car' ? 2.9 : S.ride === 'camel' ? 4.3 : S.ride === 'horse' ? 3.6 : S.ride === 'boat' ? 3.4 : 2.45;
+  C.g.position.set(S.pos.x, S.pos.y + top + Math.sin(t*3)*0.06, S.pos.z);
+  // tilt it up toward the camera so it reads like a compass in your hand; the needle still turns to the target
+  const gy = Math.atan2(S.pos.x - camera.position.x, S.pos.z - camera.position.z); C.g.rotation.set(-0.85, gy, 0);
+  C.arrow.rotation.y = Math.atan2(T0.x - S.pos.x, T0.z - S.pos.z) - gy;
+  C.tip.material.color.set(T0.c); const f = S.guide ? 1 : Math.min(1, S.powerT); C.g.scale.setScalar((0.6 + 0.4*f)*1.35);
+}
+
+// guide: a golden arrow over any kid's head that leads to the goal you picked (big map, a mission icon, or the automatic hint)
+function goalFor(id){
+  if (id === 'houbara' && S.found < 3){ let best = null, bd = 1e9; houbaras.forEach(h => { if (h.found) return; const d = h.root.position.distanceTo(S.pos); if (d < bd){ bd = d; best = h; } }); if (best) return houbaraGoal(best); }
+  const m = misById[id]; if (!m || m.done) return null;
+  return {id, c: m.color, get: () => { const tg = missionTarget(m); return tg ? {x: tg[0], z: tg[1]} : null; }, done: () => m.done};
+}
+function houbaraGoal(h){ return {id: 'houbara', hb: h, c: misById.houbara.color, get: () => ({x: h.root.position.x, z: h.root.position.z}), done: () => h.found}; }
+function setGuide(g, auto){ if (!g) return; S.guide = Object.assign(g, {t0: performance.now(), auto: !!auto}); if (!auto) SFX.find(); }
+function updateGuide(){
+  const g = S.guide; if (!g) return;
+  const p = g.get(), age = (performance.now() - g.t0)/1000;
+  if (!p || g.done() || Math.hypot(p.x - S.pos.x, p.z - S.pos.z) < (g.hb ? 3 : 6) || age > (g.auto ? 12 : 150)) S.guide = null;
+}
+// automatic hint: in Adventure, if nothing gets done for a long while, the arrow shows the nearest goal for a few seconds
+let hintClock = 0, hintDone = 0;
+function updateHint(dt){
+  if (S.gameMode !== 'adv' || S.guide) return;
+  const done = MIS.filter(m => m.done).length + S.found; if (done !== hintDone){ hintDone = done; hintClock = 0; return; }
+  hintClock += dt; if (hintClock < 75) return; hintClock = 0;
+  let best = null, bd = 1e9; MIS.forEach(m => { if (m.done) return; const g = goalFor(m.id); const p = g && g.get(); if (!p) return; const d = Math.hypot(p.x - S.pos.x, p.z - S.pos.z); if (d < bd){ bd = d; best = g; } });
+  if (best){ setGuide(best, true); SFX.squeak(); }
+}
+// big map: tap the small map
+const BIG = {cx: 90, cz: -30, R: 400};
+const iconImg = {}; ['camel', 'falcon', 'oryx', 'caracal', 'hyrax', 'summit', 'pearl', 'houbara'].forEach(k => { const im = new Image(); im.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + ICON[k] + '</svg>'); iconImg[k] = im; });
+function mapItems(){
+  const out = [];
+  if (S.gameMode === 'adv'){
+    MIS.forEach(m => { if (m.done || m.id === 'houbara') return; const g = goalFor(m.id); const p = g && g.get(); if (p) out.push({x: p.x, z: p.z, c: m.color, icon: m.id, goal: g}); });
+    if (!misById.houbara.done){ if (S.found < 3) houbaras.forEach(h => { if (!h.found) out.push({x: h.root.position.x, z: h.root.position.z, c: misById.houbara.color, icon: 'houbara', goal: houbaraGoal(h)}); });
+      else { const g = goalFor('houbara'); const p = g && g.get(); if (p) out.push({x: p.x, z: p.z, c: misById.houbara.color, icon: 'houbara', goal: g}); } }
+  }
+  [[car.root, 'car', '#f3f1ea'], [camel.root, 'camel', '#c99a62'], [boat.root, 'boat', '#9a6f45']].concat(horse.ready ? [[horse.root, 'horse', '#8a5a3a']] : []).forEach(([o, k, c]) => {
+    if (S.ride === k) return; out.push({x: o.position.x, z: o.position.z, c, veh: k, goal: {id: k, c, get: () => ({x: o.position.x, z: o.position.z}), done: () => S.ride === k}}); });
+  return out;
+}
+function drawBig(){
+  const items = mapItems(); BIG.items = items;
+  // zoom to where the things are (and where you are)
+  let x0 = S.pos.x, x1 = S.pos.x, z0 = S.pos.z, z1 = S.pos.z; items.forEach(it => { x0 = Math.min(x0, it.x); x1 = Math.max(x1, it.x); z0 = Math.min(z0, it.z); z1 = Math.max(z1, it.z); });
+  BIG.R = Math.max(110, Math.max(x1 - x0, z1 - z0)/2*1.18 + 34); BIG.cx = (x0 + x1)/2; BIG.cz = (z0 + z1)/2 - BIG.R*0.08;
+  const cv = $('bigc'), g = cv.getContext('2d'), N = cv.width, s = N/(2*BIG.R), k = N/Math.max(1, cv.getBoundingClientRect().width), X = x => (x - BIG.cx + BIG.R)*s, Y = z => (z - BIG.cz + BIG.R)*s, bs = miniBG.width/(2*MAP_R);
+  g.fillStyle = '#78b6c4'; g.fillRect(0, 0, N, N);
+  g.drawImage(miniBG, (BIG.cx - BIG.R + MAP_R)*bs, (BIG.cz - BIG.R + MAP_R)*bs, 2*BIG.R*bs, 2*BIG.R*bs, 0, 0, N, N);
+  const R0 = 19*k, F = Math.round(14*k);
+  items.forEach(it => { const x = clamp(X(it.x), R0 + 4, N - R0 - 4), y = clamp(Y(it.z), R0 + 4, N - R0 - 4); it.px = x; it.py = y;
+    if (it.veh){ const w = R0*1.1; g.fillStyle = it.c; g.strokeStyle = '#5a3519'; g.lineWidth = 2*k; g.fillRect(x - w/2, y - w/2, w, w); g.strokeRect(x - w/2, y - w/2, w, w); g.fillStyle = '#5a3519'; g.font = '800 ' + F + 'px Tajawal, sans-serif'; g.textAlign = 'center'; g.fillText({car: 'سيارة', camel: 'بعير', boat: 'قارب', horse: 'حصان'}[it.veh], x, y + w/2 + F); return; }
+    g.fillStyle = '#fffbe8'; g.strokeStyle = it.c; g.lineWidth = 4*k; g.beginPath(); g.arc(x, y, R0, 0, 2*PI); g.fill(); g.stroke();
+    const im = iconImg[it.icon]; if (im && im.complete) g.drawImage(im, x - R0*0.72, y - R0*0.72, R0*1.44, R0*1.44); });
+  // you
+  const px = clamp(X(S.pos.x), 18, N - 18), py = clamp(Y(S.pos.z), 18, N - 18);
+  g.save(); g.translate(px, py); g.rotate(PI - S.heading); g.scale(k*0.8, k*0.8); g.fillStyle = '#d9483b'; g.strokeStyle = '#fff'; g.lineWidth = 4; g.beginPath(); g.moveTo(0, -20); g.lineTo(14, 14); g.lineTo(0, 6); g.lineTo(-14, 14); g.closePath(); g.stroke(); g.fill(); g.restore();
+}
+function openBigMap(){ if (S.mode !== 'play' || S.indoor) return; ensureAudio(); SFX.door(); $('bigmap').hidden = false; drawBig(); }
+$('mini').addEventListener('click', openBigMap);
+$('mapDone').onclick = () => { $('bigmap').hidden = true; };
+$('bigc').addEventListener('click', e => {
+  const cv = $('bigc'), r = cv.getBoundingClientRect(), x = (e.clientX - r.left)*cv.width/r.width, y = (e.clientY - r.top)*cv.height/r.height;
+  let best = null, bd = 30*cv.width/r.width; (BIG.items || []).forEach(it => { const d = Math.hypot(it.px - x, it.py - y); if (d < bd){ bd = d; best = it; } });
+  if (best){ setGuide(best.goal); $('bigmap').hidden = true; }
+});
+$('mis').addEventListener('click', e => { const el = e.target.closest && e.target.closest('.mi'); if (!el || S.mode !== 'play') return; const g = goalFor(el.dataset.id); if (g) setGuide(g); });
+
+// inside the shore houses: one majlis room (kept out of sight under the far desert), dressed in each house's colours
+const ROOM = {x: -300, y: -60, z: 300, w: 14, d: 10, h: 4.6};
+function inRoom(x, z){ return Math.abs(x - ROOM.x) < ROOM.w/2 + 0.6 && Math.abs(z - ROOM.z) < ROOM.d/2 + 0.6; }
+const room = (function(){
+  const g = new T.Group(); g.position.set(ROOM.x, ROOM.y, ROOM.z); scene.add(g); const W = ROOM.w, D = ROOM.d, Hh = ROOM.h, NS = true;
+  const wallM = new T.MeshLambertMaterial({color: 0xe9dcc2}), trimM = new T.MeshLambertMaterial({color: 0xcdb48c}), woodM = new T.MeshLambertMaterial({color: 0x7a5232}), darkWood = new T.MeshLambertMaterial({color: 0x5a3a22});
+  // carpet texture (red with a patterned border)
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 192; const c2 = cv.getContext('2d');
+  function paintCarpet(base, edge){ c2.fillStyle = base; c2.fillRect(0, 0, 256, 192); c2.strokeStyle = edge; c2.lineWidth = 10; c2.strokeRect(10, 10, 236, 172); c2.lineWidth = 3; c2.strokeRect(26, 26, 204, 140);
+    c2.fillStyle = edge; for (let i = 0; i < 12; i++){ c2.beginPath(); c2.moveTo(40 + i*16, 26); c2.lineTo(48 + i*16, 18); c2.lineTo(56 + i*16, 26); c2.fill(); c2.beginPath(); c2.moveTo(40 + i*16, 166); c2.lineTo(48 + i*16, 174); c2.lineTo(56 + i*16, 166); c2.fill(); }
+    c2.beginPath(); c2.moveTo(128, 52); c2.lineTo(178, 96); c2.lineTo(128, 140); c2.lineTo(78, 96); c2.closePath(); c2.fill(); c2.fillStyle = base; c2.beginPath(); c2.moveTo(128, 70); c2.lineTo(158, 96); c2.lineTo(128, 122); c2.lineTo(98, 96); c2.closePath(); c2.fill(); }
+  paintCarpet('#9e2f2a', '#e6bf5c'); const carpetTex = new T.CanvasTexture(cv); carpetTex.encoding = T.sRGBEncoding;
+  const floor = new T.Mesh(new T.PlaneGeometry(W, D), new T.MeshLambertMaterial({color: 0xcaa978})); floor.rotation.x = -PI/2; floor.receiveShadow = true; g.add(floor);
+  const carpet = new T.Mesh(new T.PlaneGeometry(9, 5.6), new T.MeshLambertMaterial({map: carpetTex})); carpet.rotation.x = -PI/2; carpet.position.set(0, 0.012, -0.6); g.add(carpet);
+  [[0, Hh/2, -D/2, W, Hh, 0.3], [0, Hh/2, D/2, W, Hh, 0.3], [-W/2, Hh/2, 0, 0.3, Hh, D], [W/2, Hh/2, 0, 0.3, Hh, D]].forEach(q => { const m = new T.Mesh(new T.BoxGeometry(q[3], q[4], q[5]), wallM); m.position.set(q[0], q[1], q[2]); g.add(m); });
+  const ceil = new T.Mesh(new T.BoxGeometry(W, 0.2, D), new T.MeshLambertMaterial({color: 0xb08a5a})); ceil.position.y = Hh + 0.1; g.add(ceil);
+  for (let x = -W/2 + 1; x < W/2; x += 1.2) part(g, new T.CylinderGeometry(0.07, 0.07, D, 6), darkWood, [x, Hh - 0.05, 0], null, [PI/2, 0, 0], NS);   // chandal beams
+  part(g, new T.BoxGeometry(W - 0.4, 0.18, 0.06), trimM, [0, 0.09, -D/2 + 0.16], null, null, NS);
+  // door (it swings open when you go out)
+  part(g, new T.BoxGeometry(1.7, 2.6, 0.12), trimM, [0, 1.3, D/2 - 0.12], null, null, NS);
+  const doorPivot = new T.Group(); doorPivot.position.set(-0.7, 0, D/2 - 0.2); g.add(doorPivot);
+  part(doorPivot, new T.BoxGeometry(1.4, 2.4, 0.08), woodM, [0.7, 1.2, 0], null, null, NS);
+  [0.45, 0.95].forEach(x => part(doorPivot, new T.SphereGeometry(0.05, 8, 6), new T.MeshLambertMaterial({color: 0xe6bf5c}), [x, 1.2, -0.06], null, null, NS));
+  for (let r = 0; r < 4; r++) for (let k = 0; k < 3; k++) part(doorPivot, new T.SphereGeometry(0.03, 6, 4), new T.MeshLambertMaterial({color: 0xc9a24a}), [0.25 + k*0.45, 0.5 + r*0.55, -0.05], null, null, NS);
+  // windows with wooden bars, bright like daylight
+  [-1, 1].forEach(sd => { const wx = sd*(W/2 - 0.16); const pane = new T.Mesh(new T.PlaneGeometry(1.6, 1.3), new T.MeshBasicMaterial({color: 0xcfe8f2})); pane.position.set(wx - sd*0.02, 2.3, -1.5); pane.rotation.y = -sd*PI/2; g.add(pane);
+    for (let k = -2; k <= 2; k++) part(g, new T.BoxGeometry(0.06, 1.3, 0.06), darkWood, [wx - sd*0.05, 2.3, -1.5 + k*0.34], null, null, NS);
+    part(g, new T.BoxGeometry(0.12, 0.12, 1.8), darkWood, [wx - sd*0.06, 1.62, -1.5], null, null, NS); });
+  // wall niches (arches) on the back wall with clay pots
+  [-4.5, 4.5].forEach(x => { part(g, new T.BoxGeometry(1.2, 1.6, 0.08), trimM, [x, 2.4, -D/2 + 0.17], null, null, NS); part(g, new T.CylinderGeometry(0.6, 0.6, 0.08, 16, 1, false, 0, PI), trimM, [x, 3.2, -D/2 + 0.17], null, [PI/2, 0, PI/2], NS);
+    part(g, new T.SphereGeometry(0.22, 12, 10), new T.MeshLambertMaterial({color: 0xb5651d}), [x, 1.85, -D/2 + 0.35], [1, 1.2, 1], null, NS); });
+  // majlis: floor cushions with back rests and armrests along three walls
+  const seatM = new T.MeshLambertMaterial({color: 0x8e2b3a}), backM = new T.MeshLambertMaterial({color: 0xa8423e}), armM = new T.MeshLambertMaterial({color: 0xd9a441});
+  function seatRow(x, z, len, rotY){ const sg = new T.Group(); sg.position.set(x, 0, z); sg.rotation.y = rotY; g.add(sg);
+    part(sg, new T.BoxGeometry(len, 0.28, 0.85), seatM, [0, 0.14, 0], null, null, NS); part(sg, new T.BoxGeometry(len, 0.65, 0.22), backM, [0, 0.5, -0.36], null, null, NS);
+    for (let a = -len/2 + 0.7; a < len/2; a += 1.5) part(sg, new T.CylinderGeometry(0.17, 0.17, 0.55, 12), armM, [a, 0.45, 0.05], null, [PI/2, 0, 0], NS); }
+  seatRow(0, -D/2 + 0.6, W - 1.6, 0); seatRow(-W/2 + 0.6, -0.2, D - 3.4, PI/2); seatRow(W/2 - 0.6, -0.2, D - 3.4, -PI/2);
+  // coffee: brass tray, dallah, finjan cups and dates
+  const brass = new T.MeshLambertMaterial({color: 0xd4a73c}); const tray = new T.Group(); tray.position.set(0, 0, -0.8); g.add(tray);
+  part(tray, new T.CylinderGeometry(0.55, 0.55, 0.04, 24), brass, [0, 0.03, 0], null, null, NS);
+  part(tray, new T.CylinderGeometry(0.1, 0.16, 0.26, 14), brass, [0.15, 0.18, 0], null, null, NS); part(tray, new T.ConeGeometry(0.1, 0.16, 14), brass, [0.15, 0.39, 0], null, null, NS);
+  part(tray, new T.CylinderGeometry(0.02, 0.03, 0.26, 6), brass, [0.32, 0.26, 0], null, [0, 0, -0.9], NS); part(tray, new T.TorusGeometry(0.08, 0.015, 6, 12, PI), brass, [0.0, 0.28, 0], null, [0, 0, PI/2], NS);
+  [0, 1, 2, 3].forEach(k => { const a = k*0.6 + 2.2; part(tray, new T.CylinderGeometry(0.035, 0.025, 0.05, 10), new T.MeshLambertMaterial({color: 0xf5f0e4}), [Math.cos(a)*0.35, 0.07, Math.sin(a)*0.35], null, null, NS); });
+  part(tray, new T.CylinderGeometry(0.16, 0.12, 0.04, 16), new T.MeshLambertMaterial({color: 0xf5f0e4}), [-0.25, 0.07, 0.15], null, null, NS);
+  for (let k = 0; k < 6; k++) part(tray, SPH_LO, new T.MeshLambertMaterial({color: 0x6b3a12}), [-0.25 + Math.cos(k)*0.07, 0.11, 0.15 + Math.sin(k)*0.07], [0.035, 0.025, 0.05], null, NS);
+  // mandoos (wooden chest with brass studs)
+  const chest = new T.Group(); chest.position.set(W/2 - 1.1, 0, D/2 - 1.4); chest.rotation.y = -PI/2; g.add(chest);
+  part(chest, new T.BoxGeometry(1.1, 0.6, 0.6), woodM, [0, 0.3, 0], null, null, NS); part(chest, new T.BoxGeometry(1.14, 0.12, 0.64), darkWood, [0, 0.64, 0], null, null, NS);
+  for (let k = 0; k < 7; k++) part(chest, new T.SphereGeometry(0.025, 6, 4), brass, [-0.45 + k*0.15, 0.4, 0.31], null, null, NS);
+  // hanging lantern + its light (made at the start with intensity 0, so going inside never recompiles shaders)
+  part(g, new T.CylinderGeometry(0.01, 0.01, 1.2, 4), darkWood, [0, Hh - 0.6, -0.6], null, null, NS);
+  part(g, new T.CylinderGeometry(0.14, 0.18, 0.36, 8), new T.MeshBasicMaterial({color: 0xffd27a}), [0, Hh - 1.35, -0.6], null, null, NS);
+  const light = new T.PointLight(0xffd9a0, 0, 16, 1.6); light.position.set(0, Hh - 1.6, -0.6); g.add(light);
+  // walls you bump into (only used while you are inside)
+  for (let x = -W/2 + 0.3; x <= W/2 - 0.3; x += 0.6){ colliders.push({x: ROOM.x + x, z: ROOM.z - D/2 - 0.2, r: 0.45, top: null, room: true}); colliders.push({x: ROOM.x + x, z: ROOM.z + D/2 + 0.2, r: 0.45, top: null, room: true}); }
+  for (let z = -D/2 + 0.3; z <= D/2 - 0.3; z += 0.6) [-1, 1].forEach(sd => colliders.push({x: ROOM.x + sd*(W/2 + 0.2), z: ROOM.z + z, r: 0.45, top: null, room: true}));
+  colliders.push({x: ROOM.x + chest.position.x, z: ROOM.z + chest.position.z, r: 0.55, top: ROOM.y + 0.7, room: true});
+  colliders.push({x: ROOM.x + 0, z: ROOM.z - 0.8, r: 0.6, top: ROOM.y + 0.1, room: true});
+  const WALLS = [0xe9dcc2, 0xe6d3b3, 0xdfe4dc, 0xeadfd0, 0xe3d6c4, 0xf0e2c8, 0xdcd3c0], CARPETS = [['#9e2f2a', '#e6bf5c'], ['#2f4f7a', '#e6bf5c'], ['#7a2f5a', '#f0d590'], ['#3f6b4a', '#e6bf5c'], ['#8a4a1e', '#f3e3b0'], ['#9e2f2a', '#f3e3b0'], ['#5a3a7a', '#e6bf5c']];
+  return {g, doorPivot, light, dress(i){ wallM.color.set(WALLS[i % WALLS.length]); const c = CARPETS[i % CARPETS.length]; paintCarpet(c[0], c[1]); carpetTex.needsUpdate = true; }};
+})();
+function houseDoor(h){ const d = 2.5 + 1.0; return {x: h.g.position.x + Math.sin(h.ry)*d, z: h.g.position.z + Math.cos(h.ry)*d}; }
+function houseDoorNear(){ for (const h of HOUSES){ const p = houseDoor(h); if (Math.hypot(S.pos.x - p.x, S.pos.z - p.z) < 2.4) return h; } return null; }
+function fadeThen(fn){ const f = $('fade'); f.classList.add('on'); setTimeout(() => { fn(); setTimeout(() => f.classList.remove('on'), 60); }, 300); }
+function placeFollowersAt(x, y, z){ S.crumbs = []; for (let k = 0; k < 80; k++) S.crumbs.push(new T.Vector3(x, y, z)); S.followers.forEach((f, i) => { f.obj.position.set(x + (i % 2 ? -1 : 1)*(0.8 + 0.3*i), y, z + 0.6); }); }
+function enterHouse(h){
+  if (!h || S.indoor) return; SFX.door(); SFX.squeak();
+  fadeThen(() => {
+    room.dress(h.i); room.doorPivot.rotation.y = 0; room.light.intensity = 1.6;
+    S.indoor = {h}; S.hideAnimals = true; S.guide = null; S.kite = false;
+    const x = ROOM.x, z = ROOM.z + ROOM.d/2 - 1.5; S.pos.set(x, ROOM.y, z); S.vy = 0; S.heading = PI; S.camYaw = 0; S.camPitch = 0;
+    placeFollowersAt(x, ROOM.y, z + 0.3); camPos.set(x, ROOM.y + 2.9, z + 3.5); camLook.set(x, ROOM.y + 1.1, z - 2);
+    $('mini').hidden = true; $('fishBtn').hidden = true;
+  });
+}
+function leaveRoomNow(){ S.indoor = null; room.light.intensity = 0; }
+function exitHouse(){
+  if (!S.indoor) return; const h = S.indoor.h; SFX.door(); room.doorPivot.rotation.y = -1.3;
+  fadeThen(() => {
+    leaveRoomNow(); const p = houseDoor(h), out = 1.3, x = p.x + Math.sin(h.ry)*out, z = p.z + Math.cos(h.ry)*out, y = groundAt(x, z, 99);
+    S.pos.set(x, y, z); S.vy = 0; S.heading = h.ry; S.camYaw = h.ry + PI; placeFollowersAt(x, y, z);
+    camPos.set(x - Math.sin(h.ry)*6, y + 3.3, z - Math.cos(h.ry)*6); camLook.set(x, y + 1.5, z);
+    S.hideAnimals = false; $('mini').hidden = false;
+  });
+}
+
 /* ================= game flow ================= */
 function resetWorld(){
   stars.forEach(s => s.got = false); S.starsGot = 0; S.found = 0; S.ride = null; S.carSpeed = 0; S.drinkT = 0; S.caracalT = -1;
   MIS.forEach(m => { m.done = false; m.beacon.visible = false; });
-  houbaras.forEach((h, i) => { h.found = false; h.flying = false; h.reveal = 0; h.peek = i*2; h.root.visible = true; h.root.position.copy(h.home); h.root.rotation.y = i*2.1; h.wings.forEach(w => w.visible = false); h.pose.visible = true; if (h.fly) h.fly.visible = false; h.ring.material.opacity = 0; setCrouch(h, 1); });
+  houbaras.forEach((h, i) => { if (h.beacon) h.beacon.visible = false; h.found = false; h.flying = false; h.reveal = 0; h.peek = i*2; h.root.visible = true; h.root.position.copy(h.home); h.root.rotation.y = i*2.1; h.wings.forEach(w => w.visible = false); h.pose.visible = true; if (h.fly) h.fly.visible = false; h.ring.material.opacity = 0; setCrouch(h, 1); });
   nests.forEach(n => n.wig = 0);
   relEggs.forEach(e => { e.visible = true; e.rotation.z = 0; }); chicks.forEach(c => c.visible = false);
   mother.root.position.set(RELEASE.x + 4, H(RELEASE.x + 4, RELEASE.z + 3), RELEASE.z + 3); mother.root.rotation.y = PI*0.9; setCrouch(mother, 1);
@@ -1386,14 +1586,16 @@ function startGame(type){
   $('datesPill').hidden = !S.dates; $('pearlPill').hidden = !S.pearls;
   S.gameMode = gameMode; S.timeLeft = gameMode === 'stars' ? 180 : 0; S.raceOver = false;
   $('mis').hidden = gameMode !== 'adv'; $('timer').hidden = gameMode !== 'stars'; $('tleft').textContent = '3:00';
-  $('power').hidden = type === 'saif';
-  $('powicon').innerHTML = type === 'saeedan'
+  $('power').hidden = false;
+  $('powicon').innerHTML = type === 'saif'
+    ? '<circle cx="12" cy="12" r="9" fill="#fffbe8" stroke="#5a3519" stroke-width="1.8"/><path d="M12 4.5l2.6 7.5H9.4z" fill="#d9483b"/><path d="M12 19.5l-2.6-7.5h5.2z" fill="#8a8f96"/><circle cx="12" cy="12" r="1.4" fill="#5a3519"/>'
+    : type === 'saeedan'
     ? '<path d="M3 5.5c3-1.3 6-1.3 9 .7 3-2 6-2 9-.7V19c-3-1.3-6-1.3-9 .7-3-2-6-2-9-.7z" fill="#4f78a8" stroke="#36577c" stroke-width="1.4" stroke-linejoin="round"/><path d="M12 6.2v13.5" stroke="#fffbe8" stroke-width="1.6"/>'
     : '<circle cx="7" cy="13" r="4.2" fill="none" stroke="#e07fa8" stroke-width="2.4"/><circle cx="17" cy="13" r="4.2" fill="none" stroke="#e07fa8" stroke-width="2.4"/><path d="M11 12.5h2" stroke="#e07fa8" stroke-width="2.4" stroke-linecap="round"/>';
 }
 function goHome(){
   S.mode = 'select'; resetWorld(); placeSelect();
-  ['hud', 'jump', 'power', 'end', 'act', 'mis', 'mini', 'pop', 'sprint', 'timer', 'catch', 'album', 'racePill'].forEach(id => $(id).hidden = true);
+  ['hud', 'jump', 'power', 'fishBtn', 'end', 'act', 'mis', 'mini', 'pop', 'sprint', 'timer', 'catch', 'album', 'racePill', 'bigmap'].forEach(id => $(id).hidden = true); S.guide = null; if (S.indoor) leaveRoomNow();
   $('joy').hidden = true; $('select').hidden = false;
 }
 function updateHud(){
@@ -1446,7 +1648,8 @@ function holdBtn(id, key){
   el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); ensureAudio(); input[key] = true; el.classList.add('on'); });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => el.addEventListener(ev, () => { input[key] = false; el.classList.remove('on'); }));
 }
-holdBtn('jump', 'jump'); holdBtn('power', 'power'); holdBtn('sprint', 'sprint');
+holdBtn('jump', 'jump'); holdBtn('power', 'power');
+$('fishBtn').addEventListener('click', e => { e.preventDefault(); $('fishBtn').blur(); if (S.mode === 'play' && S.ride === 'boat' && !S.fish) startFish(); }); holdBtn('sprint', 'sprint');
 $('act').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); ensureAudio(); doAction(); });
 const keys = {};
 addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space'){ input.jump = true; e.preventDefault(); } if (e.code === 'KeyE') input.power = true; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.sprint = true; if (e.code === 'KeyF') doAction(); ensureAudio(); });
@@ -1505,6 +1708,8 @@ const ACT_ICON = {
   kite: '<path d="M12 2 19 9l-7 9-7-9z" fill="#e05a3a" stroke="#5a3519" stroke-width="1.3" stroke-linejoin="round"/><path d="M12 2v16M5 9h14" stroke="#fff" stroke-width="1"/><path d="M12 18c-1 2 1 2.5 0 4.5" stroke="#5a3519" stroke-width="1.3" fill="none"/>',
   kiteOff: '<path d="M12 4 17 9l-5 6.5L7 9z" fill="#e8b0a0" stroke="#5a3519" stroke-width="1.2"/><path d="M4 20 20 4" stroke="#d2493a" stroke-width="2.4" stroke-linecap="round"/>',
   horse: '<path d="M5 20l1-6c-1-2 0-4 2-5l3-1 2-4 2 1-1 2 3 1c1 .5 1 2 0 2l-2 .5-1 4 1 6h-2l-1-5h-3l-1 5z" fill="#8a5a3a" stroke="#4a2e1a" stroke-width="1" stroke-linejoin="round"/>',
+  door: '<path d="M6 21V9a6 6 0 0 1 12 0v12z" fill="#9a6f45" stroke="#5a3519" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 4v17" stroke="#5a3519" stroke-width="1.4"/><circle cx="10" cy="14" r="1" fill="#e6bf5c"/><circle cx="14" cy="14" r="1" fill="#e6bf5c"/>',
+  doorOut: '<path d="M6 21V9a6 6 0 0 1 12 0v12z" fill="#cfe8f2" stroke="#5a3519" stroke-width="1.8" stroke-linejoin="round"/><path d="M15 13l-4 0M13 10.5 15.5 13 13 15.5" fill="none" stroke="#5a3519" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
   out: '<path d="M14 4h4.5c.8 0 1.5.7 1.5 1.5v13c0 .8-.7 1.5-1.5 1.5H14" fill="none" stroke="#5a3519" stroke-width="2.4" stroke-linecap="round"/><path d="M10 8l-4 4 4 4M6 12h9" fill="none" stroke="#5a3519" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'
 };
 let nearVehicle = null, nearPalm = null, curAct = null;
@@ -1522,6 +1727,8 @@ function doAction(){
   if (nearVehicle === 'kite'){ S.kite = true; SFX.cast(); return; }
   if (nearVehicle === 'kiteOff'){ S.kite = false; SFX.door(); return; }
   if (nearVehicle === 'horse'){ mountHorse(); return; }
+  if (nearVehicle === 'door'){ enterHouse(S.nearHouse); return; }
+  if (nearVehicle === 'doorOut'){ exitHouse(); return; }
   if (nearVehicle === 'car') enterCar(); else if (nearVehicle === 'camel'){ if (S.nearRacer) takeRacer(S.nearRacer); mountCamel(); } else if (nearVehicle === 'boat') enterBoat(); else if (nearVehicle === 'fire') setFire(!window.__fire.on);
 }
 function setFollowersVisible(v){ S.hideKids = !v; S.followers.forEach(f => { if (f.kid) f.obj.visible = v; }); }
@@ -1552,12 +1759,21 @@ function mountCamel(){
 }
 function exitRide(){
   if (S.ride === 'boat'){
-    const L = landSpot(); if (!L) return;
+    const L = landSpot();
+    if (!L){   // out at sea: jump in beside the boat and swim (swim back to it to climb in again)
+      const by = boat.yaw, sx = Math.cos(by)*3.2, sz = -Math.sin(by)*3.2, x = boat.root.position.x + sx, z = boat.root.position.z + sz;
+      S.ride = null; S.boatSpeed = 0; if (S.fish) stopFish(); SFX.splash(); setFollowersVisible(true);
+      S.pos.set(x, WATER_Y - 0.95, z); S.vy = 0; S.player.swim = true; S.crumbs.push(S.pos.clone());
+      S.followers.forEach((f, i) => { if (f.kid){ f.obj.position.set(x + (i ? -1 : 1)*1.2, WATER_Y - 0.95, z + 1); } });
+      burst(x, WATER_Y + 0.2, z, 0xe8f4f8, 10);
+      $('jump').hidden = false; $('power').hidden = false; $('fishBtn').hidden = true;
+      return;
+    }
     S.ride = null; S.boatSpeed = 0; SFX.door(); setFollowersVisible(true);
     S.pos.set(L[0], groundAt(L[0], L[1], 99), L[1]); S.vy = 0; S.crumbs.push(S.pos.clone());
     S.hideAnimals = false;
     S.followers.forEach((f, i) => { f.obj.position.set(L[0] + (f.kid ? (i ? -1 : 1)*0.9 : Math.cos(i*1.3)*1.6), 0, L[1] + (f.kid ? 0.6 : 1.2 + Math.sin(i*1.3)*1.2)); f.obj.position.y = groundAt(f.obj.position.x, f.obj.position.z, 99); });
-    $('jump').hidden = false; $('power').hidden = S.kidType === 'saif';
+    $('jump').hidden = false; $('power').hidden = false; $('fishBtn').hidden = true;
     return;
   }
   const yaw = S.ride === 'car' ? car.yaw : S.ride === 'horse' ? horse.root.rotation.y : camel.root.rotation.y;
@@ -1568,12 +1784,12 @@ function exitRide(){
   S.ride = null; S.pos.add(side); S.pos.y = groundAt(S.pos.x, S.pos.z, 99); S.vy = 0;
   S.crumbs.push(S.pos.clone());
   S.followers.forEach((f, i) => { if (f.kid){ f.obj.position.set(S.pos.x - Math.sin(yaw)*(1.5 + i), 0, S.pos.z - Math.cos(yaw)*(1.5 + i)); f.obj.position.y = H(f.obj.position.x, f.obj.position.z); } });
-  $('jump').hidden = false; $('power').hidden = S.kidType === 'saif';
+  $('jump').hidden = false; $('power').hidden = false;
 }
 
 /* ================= play ================= */
 const GRAV = 24;
-function groundAt(x, z, y){ let g = H(x, z); for (const c of colliders){ if (c.top !== null && c.r && Math.hypot(x - c.x, z - c.z) < (c.land || c.r*0.85) && y >= c.top - 0.35) g = Math.max(g, c.top); } return g; }
+function groundAt(x, z, y){ let g = S.indoor && inRoom(x, z) ? ROOM.y : H(x, z); for (const c of colliders){ if (!!c.room !== !!S.indoor) continue; if (c.top !== null && c.r && Math.hypot(x - c.x, z - c.z) < (c.land || c.r*0.85) && y >= c.top - 0.35) g = Math.max(g, c.top); } return g; }
 // the car, camel and horse have a real height: jump close to one and you hop over it (or land on top), walk into it and it still stops you
 const HOP_BOX = new T.Box3();
 const HOP_TMP = new T.Box3();
@@ -1591,7 +1807,7 @@ function readStick(){
 }
 function collide(nx, nz, rad, onHit){
   for (const c of colliders){
-    if (!c.r) continue;
+    if (!c.r || !!c.room !== !!S.indoor) continue;
     const dx = nx - c.x, dz = nz - c.z, d = Math.hypot(dx, dz), R = c.r + rad;
     if (d < R){
       if (c.top !== null && S.pos.y >= c.top - 0.35 && !S.ride) continue;
@@ -1601,7 +1817,7 @@ function collide(nx, nz, rad, onHit){
       if (onHit) onHit();
     }
   }
-  const lim = S.ride === 'boat' ? 1150 : WORLD_R + 40, dc = Math.hypot(nx, nz); if (dc > lim){ nx *= lim/dc; nz *= lim/dc; if (onHit) onHit(); }
+  const lim = S.ride === 'boat' || S.player.swim ? 1150 : WORLD_R + 40, dc = Math.hypot(nx, nz); if (dc > lim){ nx *= lim/dc; nz *= lim/dc; if (onHit) onHit(); }
   return [nx, nz];
 }
 function walkMove(dt, jx, jy, speed){
@@ -1733,29 +1949,38 @@ function updatePlay(dt, t){
   });
   // vehicle prompt
   nearVehicle = null;
-  S.nearRacer = null;
-  if (!S.ride && !S.fish){ if (car.root.position.distanceTo(S.pos) < 3.6) nearVehicle = 'car'; else if (camel.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'camel'; else if (!S.race && (S.nearRacer = racerNear())) nearVehicle = 'camel'; else if (Math.hypot(boat.root.position.x - S.pos.x, boat.root.position.z - S.pos.z) < 4.8) nearVehicle = 'boat'; else if (Math.hypot(window.__fire.x - S.pos.x, window.__fire.z - S.pos.z) < 2.4) nearVehicle = 'fire';
+  S.nearRacer = null; S.nearHouse = null;
+  if (S.indoor){ nearVehicle = Math.hypot(S.pos.x - ROOM.x, S.pos.z - (ROOM.z + ROOM.d/2)) < 2.4 ? 'doorOut' : null; }
+  else if (!S.ride && !S.fish && (S.nearHouse = houseDoorNear())) nearVehicle = 'door';
+  else if (!S.ride && !S.fish){ if (car.root.position.distanceTo(S.pos) < 3.6) nearVehicle = 'car'; else if (camel.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'camel'; else if (!S.race && (S.nearRacer = racerNear())) nearVehicle = 'camel'; else if (Math.hypot(boat.root.position.x - S.pos.x, boat.root.position.z - S.pos.z) < 4.8) nearVehicle = 'boat'; else if (Math.hypot(window.__fire.x - S.pos.x, window.__fire.z - S.pos.z) < 2.4) nearVehicle = 'fire';
     else if (horse.ready && horse.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'horse';
     else if ((nearPalm = palmNear()) ) nearVehicle = 'palm'; else if (fishSpot()) nearVehicle = 'fish';
     else if (!S.kite && Math.hypot(S.pos.x - KITE_STAND[0], S.pos.z - KITE_STAND[1]) < 2.4) nearVehicle = 'kite'; else if (S.kite) nearVehicle = 'kiteOff'; }
-  let actKey = S.fish ? (S.fish.st === 'bite' ? 'reel' : 'fish') : S.ride === 'boat' ? (((miniTick & 7) === 0 ? (S.canLand = !!landSpot()) : S.canLand) ? 'out' : (Math.abs(S.boatSpeed) < 1.2 ? 'fish' : null)) : (S.ride === 'camel' && !S.race && raceStartNear()) ? 'race' : S.ride ? 'out' : (nearVehicle === 'fire' && window.__fire.on ? 'fireOut' : nearVehicle);
+  let actKey = S.fish ? (S.fish.st === 'bite' ? 'reel' : 'fish') : S.ride === 'boat' ? (((miniTick & 7) === 0 ? (S.canLand = !!landSpot()) : S.canLand), 'out') : (S.ride === 'camel' && !S.race && raceStartNear()) ? 'race' : S.ride ? 'out' : (nearVehicle === 'fire' && window.__fire.on ? 'fireOut' : nearVehicle);
+  { const fb = $('fishBtn'), show = S.ride === 'boat' && !S.fish && !S.canLand && Math.abs(S.boatSpeed) < 1.2; if (show && !fb.dataset.ok){ $('fishicon').innerHTML = ACT_ICON.fish; fb.dataset.ok = 1; } fb.hidden = !show; }
+  if (S.hideAnimals && !S.ride && !S.player.swim && !S.indoor) S.hideAnimals = false;   // back on land after jumping off the boat at sea
   curAct = actKey; const actEl = $('act');
   if (actKey){ if (actEl.dataset.k !== actKey){ $('acticon').innerHTML = ACT_ICON[actKey]; actEl.dataset.k = actKey; } actEl.hidden = false; } else actEl.hidden = true;
   actEl.classList.toggle('hot', actKey === 'reel');
   // powers
   S.powerCD = Math.max(0, S.powerCD - dt); S.powerT = Math.max(0, S.powerT - dt);
-  if (input.power && S.powerCD <= 0 && S.kidType !== 'saif' && !S.ride){
-    input.power = false; S.powerCD = 7; S.powerT = 5; SFX.power();
+  if (input.power && S.powerCD <= 0 && (S.kidType === 'saif' || !S.ride)){
+    input.power = false; S.powerCD = 7; S.powerT = S.kidType === 'saif' ? 8 : 5; SFX.power();
     if (S.kidType === 'khad') burst(S.pos.x, S.pos.y + 1.2, S.pos.z, 0xe7a9c4, 12);
   }
   $('power').querySelector('.cd').style.setProperty('--p', (S.powerCD/7*100) + '%');
   if (p.book) p.book.rotation.x = S.powerT > 0 ? -1.1 : -0.25;
+  updateHint(dt); updateCompass(t);
   updateMissions(dt, t);
   updateFun(dt, t);
   // camera
   const portrait = innerWidth < innerHeight;
   const camD = S.ride === 'car' ? (portrait ? 14 : 12) : S.ride === 'boat' ? (portrait ? 17 : 14) : S.ride === 'camel' || S.ride === 'horse' ? (portrait ? 10 : 8.5) : (portrait ? 8.2 : 7);
   const camH = S.ride === 'car' ? 6.2 : S.ride === 'boat' ? 7.5 : S.ride === 'camel' || S.ride === 'horse' ? 4.8 : 3.3;
+  if (S.indoor){   // inside a house: a closer camera that stays within the walls
+    const R = ROOM, ix = clamp(S.pos.x + Math.sin(S.camYaw)*4.6, R.x - R.w/2 + 0.45, R.x + R.w/2 - 0.45), iz = clamp(S.pos.z + Math.cos(S.camYaw)*4.6, R.z - R.d/2 + 0.45, R.z + R.d/2 - 0.45);
+    camPos.lerp(new T.Vector3(ix, R.y + 2.9, iz), Math.min(1, dt*6)); camLook.lerp(new T.Vector3(S.pos.x, S.pos.y + 1.1, S.pos.z), Math.min(1, dt*8)); return;
+  }
   const cx = S.pos.x + Math.sin(S.camYaw)*camD, cz = S.pos.z + Math.cos(S.camYaw)*camD;
   let cyy = Math.max(S.pos.y, H(S.pos.x, S.pos.z)) + camH + (S.camPitch || 0)*camD; cyy = Math.max(cyy, H(cx, cz) + 1.6, WATER_Y + 1.5);
   for (let q = 0.35; q < 1; q += 0.3){ const hx = S.pos.x + (cx - S.pos.x)*q, hz = S.pos.z + (cz - S.pos.z)*q; cyy = Math.max(cyy, H(hx, hz) + 2.2); }
@@ -1854,14 +2079,16 @@ function updateMissions(dt, t){
     const d = h.root.position.distanceTo(P);
     const glasses = S.kidType === 'khad' && S.powerT > 0 && d < 50;
     h.peek -= dt; if (h.peek < -1) h.peek = 5 + Math.random()*3;
-    h.reveal = lerp(h.reveal, d < 7 || glasses ? 1 : (h.peek < 0 ? 0.6 : 0), Math.min(1, dt*4));
+    const guided = S.guide && S.guide.hb === h;
+    h.reveal = lerp(h.reveal, d < 11 || glasses || (guided && d < 30) ? 1 : (h.peek < 0 ? 0.6 : 0), Math.min(1, dt*4));
     setCrouch(h, 1 - h.reveal);
-    h.ring.material.opacity = glasses ? 0.55 + 0.35*Math.sin(t*6) : 0; h.ring.scale.setScalar(glasses ? 1 + 0.15*Math.sin(t*6) : 1);
+    const ringOn = glasses || (guided && d < 40); h.ring.material.opacity = ringOn ? 0.55 + 0.35*Math.sin(t*6) : 0; h.ring.scale.setScalar(ringOn ? 1 + 0.15*Math.sin(t*6) : 1);
     if (d < 7) h.root.rotation.y += angDiff(h.root.rotation.y, Math.atan2(P.x - h.root.position.x, P.z - h.root.position.z))*Math.min(1, dt*3);
-    if (adv && d < 2.4){
+    if (adv && d < 3.6){
       h.found = true; S.found++; h.ring.material.opacity = 0; setCrouch(h, 0); SFX.find();
       burst(h.root.position.x, h.root.position.y + 1, h.root.position.z, 0xf0d590, 14);
       S.followers.push({obj: h.root, h, lag: 9 + S.found*5, side: 0}); updateHud();
+      if (S.found === 3) setTimeout(() => { if (S.mode === 'play') setGuide(goalFor('houbara')); }, 1200);   // all three found: the arrow leads to their mother at the release nest
     }
   });
   nests.forEach(n => n.wig = Math.max(0, n.wig - dt*1.2)); S.bumpCD -= dt;
@@ -1875,12 +2102,16 @@ function updateMissions(dt, t){
   }
   // beacons over each open goal
   MIS.forEach(m => {
-    if (S.gameMode !== 'adv'){ m.beacon.visible = false; return; }
+    if (S.gameMode !== 'adv' || S.indoor){ m.beacon.visible = false; return; }
     const tg = m.done ? null : missionTarget(m);
     if (!tg || (m.id === 'falcon' && falcon.mode === 'home')){ m.beacon.visible = false; return; }
     m.beacon.visible = true; m.beacon.position.set(tg[0], H(tg[0], tg[1]) + 20, tg[1]);
     m.beacon.material.opacity = clamp((Math.hypot(P.x - tg[0], P.z - tg[1]) - 6)/30, 0, 1)*0.22;
   });
+  // a light beam over every houbara still hiding, like the other animals have
+  houbaras.forEach((h, i) => { if (!h.beacon){ h.beacon = new T.Mesh(beaconGeo, new T.MeshBasicMaterial({color: new T.Color(misById.houbara.color), transparent: true, opacity: 0.22, side: T.DoubleSide, depthWrite: false, fog: false})); h.beacon.scale.set(1.2, 1, 1.2); h.beacon.material.color.set(0xf2c14e); scene.add(h.beacon); }
+    const on = S.gameMode === 'adv' && !h.found && !misById.houbara.done && !S.indoor; h.beacon.visible = on; if (!on) return;
+    const q = h.root.position; h.beacon.position.set(q.x, q.y + 20, q.z); h.beacon.material.opacity = clamp((Math.hypot(P.x - q.x, P.z - q.z) - 5)/20, 0, 1)*0.45; });
 }
 
 /* ================= houbara release story ================= */
@@ -1939,7 +2170,7 @@ function updateEnding(dt, t){
     confIM.visible = false; S.mode = 'play'; S.pos.copy(S.player.root.position); S.vy = 0; S.heading = 0.25; S.camYaw = 0.25 + PI;
     S.player.body.position.y = 0; S.followers.forEach(f => { if (f.kid) f.kid.body.position.y = 0; });
     S.crumbs.push(S.pos.clone());
-    $('jump').hidden = false; $('power').hidden = S.kidType === 'saif'; $('joy').hidden = false;
+    $('jump').hidden = false; $('power').hidden = false; $('joy').hidden = false;
     missionDone('houbara');
   }
 }
@@ -2510,7 +2741,7 @@ function loop(now){
   requestAnimationFrame(loop);
   let dt = (now - lastT)/1000; lastT = now; if (dt > 0.1) dt = 0.1;
   const t = now/1000;
-  if (S.mode === 'select') updateSelect(dt, t); else if (S.mode === 'play'){ if ($('settings').hidden && $('album').hidden) updatePlay(dt, t); } else updateEnding(dt, t);
+  if (S.mode === 'select') updateSelect(dt, t); else if (S.mode === 'play'){ if ($('settings').hidden && $('album').hidden && $('bigmap').hidden) updatePlay(dt, t); } else updateEnding(dt, t);
   updateWorld(dt, t); updateNet(dt, t); updateEngine();
   camera.position.copy(camPos); camera.lookAt(camLook);
   renderer.render(scene, camera);
