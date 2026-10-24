@@ -880,7 +880,7 @@ function buildChick(){
 function legRig(parent, positions, r, len, mat, hoofMat){
   return positions.map(p => { const g = new T.Group(); g.position.set(p[0], p[1], p[2]); parent.add(g); part(g, capsule(r, len), mat, [0, -len/2 - r*0.5, 0]); if (hoofMat) part(g, SPH_LO, hoofMat, [0, -len - r, 0.03], [r*1.4, r*0.7, r*1.7]); return g; });
 }
-function walkLegs(legs, phase, amt){ legs.forEach((l, i) => { l.rotation.x = Math.sin(phase + (i === 0 || i === 3 ? 0 : PI))*(l.isBone ? 0.38 : 0.5)*amt; }); }
+function walkLegs(legs, phase, amt){ legs.forEach((l, i) => { const a = Math.sin(phase + (i === 0 || i === 3 ? 0 : PI))*(l.isBone ? 0.38 : 0.5)*amt; if (l.userData.swingZ) l.rotation.z = a; else l.rotation.x = a; }); }
 function buildCamel(){
   const root = new T.Group(), body = new T.Group(); root.add(body); const C = M(0xc99a62), D = M(0xae7f4b);
   part(body, SPH, C, [0, 1.75, 0], [0.45, 0.52, 0.95]);
@@ -1104,7 +1104,8 @@ function rigLegs(model, legFrac){
     }
     geo.setAttribute('skinIndex', new T.Uint16BufferAttribute(si, 4)); geo.setAttribute('skinWeight', new T.Float32BufferAttribute(sw, 4));
   }
-  const root = new T.Bone(), legs = sum.map(v => { const b = new T.Bone(); b.position.set(v[0]/v[2], yLeg + hgt*0.02, v[1]/v[2]); root.add(b); return b; });
+  const longX = (bb.max.x - bb.min.x) > (bb.max.z - bb.min.z)*1.15;
+  const root = new T.Bone(), legs = sum.map(v => { const b = new T.Bone(); b.position.set(v[0]/v[2], yLeg + hgt*0.02, v[1]/v[2]); b.userData.swingZ = longX; root.add(b); return b; });
   const sk = new T.SkinnedMesh(geo, mesh.material); sk.castShadow = true; sk.frustumCulled = false;
   sk.position.copy(mesh.position); sk.quaternion.copy(mesh.quaternion); sk.scale.copy(mesh.scale);
   sk.add(root); mesh.parent.add(sk); mesh.parent.remove(mesh);
@@ -1301,8 +1302,8 @@ const SFX = {
   cast(){ noise(.35, .12, 2400, .8, 0, 'highpass'); tone(700, .2, 'sine', .04, 0, .6); },
   plop(){ tone(420, .12, 'sine', .1, 0, .5); noise(.18, .12, 1200, .8, .02); },
   reel(){ for (let i = 0; i < 8; i++) tone(1500 + i*40, .03, 'square', .025, i*.06); noise(.5, .2, 2200, .6, .1); },
-  kick(){ noise(.08, .3, 500, 1.2); tone(140, .12, 'sine', .14, 0, .6); },
-  bounce(){ tone(180, .08, 'sine', .07, 0, .7); },
+  kick(){ noise(.07, .45, 1300, 1.1, 0, 'bandpass'); noise(.12, .3, 2600, .8); tone(330, .14, 'triangle', .16, 0, .5); },
+  bounce(){ tone(360, .09, 'triangle', .09, 0, .6); noise(.05, .16, 1500, 1.2, 0, 'bandpass'); },
   rustle(){ noise(.9, .2, 3200, .5, 0, 'highpass'); noise(.6, .12, 1800, .7, .25, 'bandpass'); },
   munch(){ [0, .18, .36].forEach(w => noise(.07, .16, 900, 1, w)); tone(600, .15, 'sine', .05, .55, 1.4); },
   hoof(){ noise(.06, .22, 700, 1.4); noise(.05, .12, 1400, 1.2, .07); },
@@ -1320,9 +1321,9 @@ function updateEngine(){
     const o1 = AC.createOscillator(), o2 = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain();
     o1.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 380; f.Q.value = 1.2; g.gain.value = 0;
     o1.connect(f); o2.connect(f); f.connect(g); g.connect(AC.destination); o1.start(); o2.start(); ENG = {o1, o2, f, g}; }
-  const k = clamp(Math.abs(S.carSpeed)/22, 0, 1.6), tt = AC.currentTime, hz = 46 + k*70 + (S.carAir ? 25 : 0);
-  ENG.o1.frequency.setTargetAtTime(hz, tt, 0.12); ENG.o2.frequency.setTargetAtTime(hz*0.5, tt, 0.12); ENG.f.frequency.setTargetAtTime(320 + k*500, tt, 0.15);
-  ENG.g.gain.setTargetAtTime(on ? 0.05 + k*0.05 : 0, tt, on ? 0.15 : 0.05);
+  const k = clamp(Math.abs(S.carSpeed)/22, 0, 1.6), tt = AC.currentTime, hz = 72 + k*95 + (S.carAir ? 35 : 0);
+  ENG.o1.frequency.setTargetAtTime(hz, tt, 0.12); ENG.o2.frequency.setTargetAtTime(hz*0.5, tt, 0.12); ENG.f.frequency.setTargetAtTime(700 + k*1000, tt, 0.15);
+  ENG.g.gain.setTargetAtTime(on ? 0.06 + k*0.06 : 0, tt, on ? 0.15 : 0.05);
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && ENG && AC) ENG.g.gain.setTargetAtTime(0, AC.currentTime, 0.02); });
 
@@ -1504,7 +1505,7 @@ function doAction(){
   if (nearVehicle === 'kite'){ S.kite = true; SFX.cast(); return; }
   if (nearVehicle === 'kiteOff'){ S.kite = false; SFX.door(); return; }
   if (nearVehicle === 'horse'){ mountHorse(); return; }
-  if (nearVehicle === 'car') enterCar(); else if (nearVehicle === 'camel') mountCamel(); else if (nearVehicle === 'boat') enterBoat(); else if (nearVehicle === 'fire') setFire(!window.__fire.on);
+  if (nearVehicle === 'car') enterCar(); else if (nearVehicle === 'camel'){ if (S.nearRacer) takeRacer(S.nearRacer); mountCamel(); } else if (nearVehicle === 'boat') enterBoat(); else if (nearVehicle === 'fire') setFire(!window.__fire.on);
 }
 function setFollowersVisible(v){ S.hideKids = !v; S.followers.forEach(f => { if (f.kid) f.obj.visible = v; }); }
 function enterCar(){
@@ -1704,7 +1705,8 @@ function updatePlay(dt, t){
   });
   // vehicle prompt
   nearVehicle = null;
-  if (!S.ride && !S.fish){ if (car.root.position.distanceTo(S.pos) < 3.6) nearVehicle = 'car'; else if (camel.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'camel'; else if (Math.hypot(boat.root.position.x - S.pos.x, boat.root.position.z - S.pos.z) < 4.8) nearVehicle = 'boat'; else if (Math.hypot(window.__fire.x - S.pos.x, window.__fire.z - S.pos.z) < 2.4) nearVehicle = 'fire';
+  S.nearRacer = null;
+  if (!S.ride && !S.fish){ if (car.root.position.distanceTo(S.pos) < 3.6) nearVehicle = 'car'; else if (camel.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'camel'; else if (!S.race && (S.nearRacer = racerNear())) nearVehicle = 'camel'; else if (Math.hypot(boat.root.position.x - S.pos.x, boat.root.position.z - S.pos.z) < 4.8) nearVehicle = 'boat'; else if (Math.hypot(window.__fire.x - S.pos.x, window.__fire.z - S.pos.z) < 2.4) nearVehicle = 'fire';
     else if (horse.ready && horse.root.position.distanceTo(S.pos) < 2.8) nearVehicle = 'horse';
     else if ((nearPalm = palmNear()) ) nearVehicle = 'palm'; else if (fishSpot()) nearVehicle = 'fish';
     else if (!S.kite && Math.hypot(S.pos.x - KITE_STAND[0], S.pos.z - KITE_STAND[1]) < 2.4) nearVehicle = 'kite'; else if (S.kite) nearVehicle = 'kiteOff'; }
@@ -2236,10 +2238,13 @@ const racers = [0, 1, 2].map(i => { const c = buildCamel(); scene.add(c.root); c
   part(j, new T.BoxGeometry(0.22, 0.3, 0.16), M([0x3f6fae, 0x2e9a5a, 0xe6bf5c][i]), [0, 0.15, 0]); part(j, SPH_LO, M(0xdddddd), [0, 0.4, 0], [0.12, 0.12, 0.12]);
   return {c, i, th: 0, k: [0.9, 1.1, 1.0][i], v: [7.4, 8.2, 9.1][i], done: 0, phase: Math.random()*6}; });
 function placeRacers(){ racers.forEach(r => { r.th = -0.04*(r.i + 1); const x = TRACK.x + TRACK.a*r.k*Math.cos(r.th), z = TRACK.z + TRACK.b*r.k*Math.sin(r.th); r.c.root.position.set(x, H(x, z), z); r.c.root.rotation.y = 0; r.done = 0; }); }
+function racerNear(){ return racers.find(r => !r.hidden && r.c.root.visible && Math.hypot(r.c.root.position.x - S.pos.x, r.c.root.position.z - S.pos.z) < 2.8) || null; }
+// riding a race camel: our own camel takes its place (same look) and that racer steps aside until we get off
+function takeRacer(r){ const P = r.c.root.position; camel.root.position.copy(P); camel.root.rotation.y = r.c.root.rotation.y; camelCol.x = P.x; camelCol.z = P.z; r.hidden = true; r.c.root.visible = false; }
 function raceStartNear(){ return Math.hypot(S.pos.x - (TRACK.x + TRACK.a), S.pos.z - TRACK.z) < 9; }
 function trackAngle(x, z){ return Math.atan2((z - TRACK.z)/TRACK.b, (x - TRACK.x)/TRACK.a); }
 function startRace(){
-  placeRacers(); const x = TRACK.x + TRACK.a*1.0, z = TRACK.z - 2; S.pos.set(x, H(x, z), z); S.heading = 0; S.camYaw = PI;
+  racers.forEach(r => { r.hidden = false; r.c.root.visible = true; }); placeRacers(); const x = TRACK.x + TRACK.a*1.0, z = TRACK.z - 2; S.pos.set(x, H(x, z), z); S.heading = 0; S.camYaw = PI;
   S.race = {st: 'count', t: 0, last: trackAngle(S.pos.x, S.pos.z), prog: 0, beeps: 0}; $('racePill').hidden = false; $('raceTxt').textContent = '1/2';
 }
 function endRace(finished, rank){
@@ -2254,6 +2259,7 @@ function updateRace(dt){
     const x = TRACK.x + TRACK.a*r.k*Math.cos(r.th), z = TRACK.z + TRACK.b*r.k*Math.sin(r.th), P = r.c.root.position, px = P.x, pz = P.z;
     P.set(x, H(x, z), z); const sp = Math.hypot(x - px, z - pz)/Math.max(dt, 1e-4); if (sp > 0.2) r.c.root.rotation.y = Math.atan2(x - px, z - pz);
     r.phase += dt*sp*1.4; walkLegs(r.c.legs, r.phase, clamp(sp/5, 0, 1)); r.c.body.position.y = Math.abs(Math.sin(r.phase))*0.06*clamp(sp/5, 0, 1); });
+  if (!Rc && S.ride !== 'camel') racers.forEach(r => { if (r.hidden){ r.hidden = false; r.c.root.visible = true; } });
   if (!Rc) return;
   if (S.ride !== 'camel'){ endRace(false); return; }
   Rc.t += dt;
@@ -2347,7 +2353,7 @@ function resetFun2(){
   horse.root.position.set(HORSE_HOME[0], H(HORSE_HOME[0], HORSE_HOME[1]), HORSE_HOME[1]); horse.root.rotation.y = -0.6; horseCol.x = HORSE_HOME[0]; horseCol.z = HORSE_HOME[1]; horseCol.r = 1.0;
 }
 function farHide(){   // keep the heavy animals off the screen when the kid is far away (saves the iPad)
-  const P = S.pos, dT = Math.hypot(P.x - TRACK.x, P.z - TRACK.z); racers.forEach(r => r.c.root.visible = dT < 110 || !!S.race);
+  const P = S.pos, dT = Math.hypot(P.x - TRACK.x, P.z - TRACK.z); racers.forEach(r => r.c.root.visible = !r.hidden && (dT < 110 || !!S.race));
   gazelles.forEach(g => g.root.visible = Math.hypot(P.x - g.root.position.x, P.z - g.root.position.z) < 130);
   dolphins.forEach(d => d.root.visible = Math.hypot(P.x - d.root.position.x, P.z - d.root.position.z) < 160);
   turtles.forEach(u => u.root.visible = Math.hypot(P.x - u.root.position.x, P.z - u.root.position.z) < 120);
