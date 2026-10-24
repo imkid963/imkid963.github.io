@@ -2305,7 +2305,7 @@ function updateGazelles(dt, t){
 }
 // dolphins: play near the harbour, jump, and swim along with the boat
 const dolphins = [];
-function buildDolphins(){ for (let i = 0; i < 3; i++){ const m = propClone('dolphin', 2.3, 'len', DOLPHIN_ROT); if (!m) return; const root = new T.Group(); root.add(m); scene.add(root); dolphins.push({root, i, a: i*2.1, jumpT: 2 + i*3, y: 0}); } }
+function buildDolphins(){ for (let i = 0; i < 3; i++){ const m = propClone('dolphin', 2.3, 'len', DOLPHIN_ROT); if (!m) return; const root = new T.Group(); root.add(m); scene.add(root); root.position.set(SEA_X + 70 + Math.cos(i*2.1 + i)*30, WATER_Y - 0.25, 10 + Math.sin(i*2.1 + i)*22); dolphins.push({root, i, a: i*2.1, jumpT: 2 + i*3, y: 0}); } }
 function updateDolphins(dt, t){
   const nearBoat = S.ride === 'boat' && Math.hypot(S.pos.x - (SEA_X + 60), S.pos.z - 30) < 400;
   dolphins.forEach(d => { const P = d.root.position; let x, z, h;
@@ -2317,7 +2317,7 @@ function updateDolphins(dt, t){
 }
 // sea turtles: paddle slowly near the island, swim with you when you swim close
 const turtles = [];
-function buildTurtles(){ for (let i = 0; i < 3; i++){ const m = propClone('turtle', 1.2, 'len', TURTLE_ROT); if (!m) return; const root = new T.Group(); root.add(m); scene.add(root); turtles.push({root, i, a: i*2.1}); } }
+function buildTurtles(){ for (let i = 0; i < 3; i++){ const m = propClone('turtle', 1.2, 'len', TURTLE_ROT); if (!m) return; const root = new T.Group(); root.add(m); scene.add(root); root.position.set(ISLAND[0] + Math.cos(i*2.1)*(32 + i*4), WATER_Y - 0.9, ISLAND[1] + Math.sin(i*2.1)*(32 + i*4)); turtles.push({root, i, a: i*2.1}); } }
 function updateTurtles(dt, t){
   turtles.forEach(u => { const P = u.root.position, near = S.player.swim && Math.hypot(P.x - S.pos.x, P.z - S.pos.z) < 8; let x, z;
     if (near){ x = S.pos.x + Math.cos(u.i*2.1)*2.2; z = S.pos.z + Math.sin(u.i*2.1)*2.2; }
