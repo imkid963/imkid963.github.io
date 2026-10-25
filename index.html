@@ -237,7 +237,8 @@ const $ = id => document.getElementById(id);
 /* ================= renderer ================= */
 const canvas = $('c');
 const renderer = new T.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
-const maxPR = Math.min(window.devicePixelRatio || 1, 2);
+const TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+const maxPR = Math.min(window.devicePixelRatio || 1, TOUCH ? 1.6 : 2);   // phones/iPads start a little lighter (much smoother, hardly any less sharp)
 let pr = maxPR;
 renderer.setPixelRatio(pr);
 renderer.shadowMap.enabled = true;
@@ -350,7 +351,7 @@ function H(x, z){
 scene.fog = new T.Fog(0xeadcc0, 160, 1000);
 scene.add(new T.HemisphereLight(0xdcecff, 0xd9a868, 0.85));
 const sun = new T.DirectionalLight(0xfff0d6, 1.35);
-sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 4;
+sun.castShadow = true; sun.shadow.mapSize.set(TOUCH ? 1024 : 2048, TOUCH ? 1024 : 2048); sun.shadow.radius = 4;
 const sc = sun.shadow.camera; sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 140;
 sun.shadow.bias = -0.0008; scene.add(sun, sun.target);
 
@@ -2792,7 +2793,11 @@ function updateDolphins(dt, t){
   dolphins.forEach(d => { const P = d.root.position; let x, z, h;
     if (nearBoat){ const side = d.i - 1, fx = Math.sin(boat.yaw), fz = Math.cos(boat.yaw); x = S.pos.x + fx*(4 + d.i*2.5) + fz*side*4.5; z = S.pos.z + fz*(4 + d.i*2.5) - fx*side*4.5; P.x = lerp(P.x, x, Math.min(1, dt*2)); P.z = lerp(P.z, z, Math.min(1, dt*2)); h = boat.yaw; }
     else { d.a += dt*0.25; const cx = SEA_X + 70, cz = 10; x = cx + Math.cos(d.a + d.i)*30; z = cz + Math.sin(d.a + d.i)*22; h = Math.atan2(x - P.x, z - P.z); P.x = x; P.z = z; }
-    d.jumpT -= dt; let y = WATER_Y - 0.25 + Math.sin(t*2 + d.i)*0.1, tilt = 0;
+    // swim like real dolphins: dive down, glide, come up to breathe (a little roll at the top), now and then a big jump
+    d.jumpT -= dt; const sw = t*0.9 + d.i*2.1, depth = 0.5 + 0.5*Math.sin(sw);
+    let y = WATER_Y - 0.15 - depth*2.4, tilt = -Math.cos(sw)*0.45;
+    if (d.jumpT < 0 && d.jumpT > -dt*1.5 && depth > 0.12) d.jumpT = 0.0001;   // only leap when it has come up near the surface
+    if (depth < 0.08 && !d.breathed){ d.breathed = true; if (Math.hypot(P.x - S.pos.x, P.z - S.pos.z) < 45) burst(P.x, WATER_Y + 0.15, P.z, 0xe8f4f8, 3); } else if (depth > 0.3) d.breathed = false;
     if (d.jumpT < 0){ const k = -d.jumpT/1.1; if (k >= 1){ d.jumpT = 3 + Math.random()*5; if (Math.hypot(P.x - S.pos.x, P.z - S.pos.z) < 45) SFX.splash(); } else { y = WATER_Y + Math.sin(k*PI)*2.6; tilt = (k - 0.5)*1.6; if (k < 0.08 || k > 0.92) burst(P.x, WATER_Y + 0.2, P.z, 0xe8f4f8, 3); } }
     P.y = y; d.root.rotation.set(tilt, h, 0, 'YXZ'); });
 }
@@ -2822,7 +2827,7 @@ function farHide(){   // keep the heavy animals off the screen when the kid is f
 function updateFun2(dt, t){ if ((miniTick & 15) === 0) farHide(); updateRace(dt); updateKite(dt, t); updatePearls(dt, t); updateGazelles(dt, t); updateDolphins(dt, t); updateTurtles(dt, t); if (S.ride !== 'horse') walkLegs(horse.legs, 0, 0); }
 
 /* ================= loop ================= */
-let lastT = performance.now(), acc = 0, frames = 0, slow = 0, miniTick = 0;
+let lastT = performance.now(), acc = 0, frames = 0, slow = 0, fast = 0, miniTick = 0;
 /* ================= play together: everyone who opens the game lands in the same world =================
    The first device to open takes a fixed meeting name on the free PeerJS service and relays; everyone else connects to it.
    Each device sends its own kid's state 10 times a second; if the relay leaves, another device takes over. */
@@ -2946,7 +2951,14 @@ function loop(now){
   acc += dt; frames++;
   if (acc > 2){
     const fps = frames/acc; acc = 0; frames = 0;
-    if (fps < 38){ slow++; if (pr > 1.5){ pr = Math.max(1.5, pr - 0.25); renderer.setPixelRatio(pr); resize(); } else if (slow > 3 && renderer.shadowMap.enabled){ renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); } }
+    // keep it smooth: step down (sharpness → shadows → how far you see) while it is slow, step sharpness back up when there is room
+    if (fps < 40){ slow++; fast = 0;
+      if (pr > 1.25){ pr = Math.max(1.25, pr - 0.2); renderer.setPixelRatio(pr); resize(); }
+      else if (slow > 2 && renderer.shadowMap.enabled){ renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); }
+      else if (slow > 4 && pr > 1){ pr = 1; renderer.setPixelRatio(pr); resize(); }
+      else if (slow > 5 && camera.far > 700){ camera.far = 700; camera.updateProjectionMatrix(); scene.fog.near = 110; scene.fog.far = 640; } }
+    else if (fps > 56 && SET.q !== 'low'){ if (++fast >= 3 && pr < maxPR){ fast = 0; pr = Math.min(maxPR, pr + 0.15); renderer.setPixelRatio(pr); resize(); } }
+    else fast = 0;
   }
 }
 resize(); resetWorld(); placeSelect(); applySettings();
