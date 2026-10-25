@@ -245,7 +245,7 @@ const TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in windo
 const maxPR = Math.min(window.devicePixelRatio || 1, TOUCH ? 1.6 : 2);   // phones/iPads start a little lighter (much smoother, hardly any less sharp)
 let pr = maxPR;
 renderer.setPixelRatio(pr);
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = true; renderer.setClearColor(0xa9d0e6);   // if anything ever misses the sky, the gap is still daytime blue
 renderer.shadowMap.type = T.PCFSoftShadowMap;
 renderer.outputEncoding = T.sRGBEncoding; renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.12;
 const scene = new T.Scene();
@@ -379,7 +379,7 @@ function H(x, z){
   sunG.add(new T.Mesh(new T.CircleGeometry(10, 32), new T.MeshBasicMaterial({color: 0xfff6dc, fog: false})));
   const glow = new T.Mesh(new T.CircleGeometry(24, 32), new T.MeshBasicMaterial({color: 0xfff1cf, transparent: true, opacity: 0.35, fog: false, depthWrite: false}));
   glow.position.z = -0.5; sunG.add(glow);
-  sunG.position.set(420, 420, -500); sunG.scale.setScalar(2.4); sunG.lookAt(0, 0, 0); scene.add(sunG);
+  sunG.position.set(420, 420, -500); sunG.scale.setScalar(2.4); sunG.lookAt(0, 0, 0); scene.add(sunG); window.__sun = sunG; sunG.userData.off = new T.Vector3(420, 420, -500);
   const cm = new T.MeshLambertMaterial({color: 0xffffff, emissive: 0x9aa7b0, fog: false});
   const clouds = new T.Group(); const r = rng(33);
   for (let i = 0; i < 16; i++){
@@ -2697,7 +2697,7 @@ function updateWorld(dt, t){
   const c = S.mode === 'play' ? S.pos : (S.mode === 'ending' ? RELEASE : new T.Vector3());
   sun.position.set(c.x + 18, c.y + 34, c.z + 10); sun.target.position.copy(c);
   sea.mat.uniforms.time.value = t;
-  window.__dome.position.copy(camera.position); window.__clouds.rotation.y += dt*0.004;
+  window.__dome.position.copy(camera.position); window.__sun.position.copy(camera.position).add(window.__sun.userData.off); window.__clouds.rotation.y += dt*0.004;
   FIRES.forEach(F => { F.k = clamp(F.k + (F.on ? dt*2.5 : -dt*3), 0, 1); F.fl.visible = F.k > 0.01;
     if (F.fl.visible){
       F.flames.forEach((f, i) => { const s = (0.85 + 0.25*Math.sin(t*13 + f.ph) + 0.1*Math.sin(t*23 + i))*F.k; f.m.scale.set(F.k*(0.9 + 0.1*Math.sin(t*17 + f.ph)), s, F.k); f.m.position.y = f.h*s/2; f.m.rotation.y = t*(1 + i*0.3); });
@@ -3260,7 +3260,7 @@ function loop(now){
       if (pr > 1.25){ pr = Math.max(1.25, pr - 0.2); renderer.setPixelRatio(pr); resize(); }
       else if (slow > 2 && renderer.shadowMap.enabled){ renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); }
       else if (slow > 4 && pr > 1){ pr = 1; renderer.setPixelRatio(pr); resize(); }
-      else if (slow > 5 && camera.far > 700){ camera.far = 700; camera.updateProjectionMatrix(); scene.fog.near = 110; scene.fog.far = 640; } }
+      else if (slow > 5 && camera.far > 700){ camera.far = 700; camera.updateProjectionMatrix(); scene.fog.near = 110; scene.fog.far = 640; window.__dome.scale.setScalar(0.42); window.__sun.userData.off.multiplyScalar(0.62); window.__sun.scale.setScalar(1.5); } }   // the sky shrinks with the view distance so it stays daytime
     else if (fps > 56 && SET.q !== 'low'){ if (++fast >= 3 && pr < maxPR){ fast = 0; pr = Math.min(maxPR, pr + 0.15); renderer.setPixelRatio(pr); resize(); } }
     else fast = 0;
   }
