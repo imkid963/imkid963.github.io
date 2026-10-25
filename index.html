@@ -1997,9 +1997,12 @@ function collide(nx, nz, rad, onHit){
         if (!S.ride && S.onGround && c.top - S.pos.y < 0.75){ S.vy = Math.max(S.vy, Math.sqrt(2*GRAV*Math.max(0.15, c.top + 0.15 - S.pos.y))); S.onGround = false; continue; }
       }
       if (c.hop && c.top !== null && !S.ride && !S.onGround && S.vy > -3 && S.pos.y >= c.top - 1.4){ S.vy = Math.max(S.vy, Math.sqrt(2*GRAV*Math.max(0.25, c.top + 0.35 - S.pos.y))); continue; }
-      const k = R/(d || 1); nx = c.x + dx*k; nz = c.z + dz*k;
+      const k = R/(d || 1), ux = dx/(d || 1), uz = dz/(d || 1); nx = c.x + dx*k; nz = c.z + dz*k;
+      // glide round it instead of stopping dead: keep the sideways part of the move
+      const mx = nx - S.pos.x, mz = nz - S.pos.z, ml = Math.hypot(mx, mz);
+      if (ml > 1e-4 && !c.net){ let tx = -uz, tz = ux; if (tx*mx + tz*mz < 0){ tx = -tx; tz = -tz; } if (Math.abs(tx*mx + tz*mz) < ml*0.15 && (c.x - S.pos.x)*tx + (c.z - S.pos.z)*tz > 0){ tx = -tx; tz = -tz; } nx += tx*ml*0.6; nz += tz*ml*0.6; }
       if (c.nest && S.bumpCD <= 0){ c.nest.wig = 1; SFX.bump(); S.bumpCD = 1; }
-      if (onHit) onHit();
+      if (onHit) onHit(ux, uz);
     }
   }
   const lim = S.ride === 'boat' || S.player.swim ? 1150 : WORLD_R + 40, dc = Math.hypot(nx, nz); if (dc > lim){ nx *= lim/dc; nz *= lim/dc; if (onHit) onHit(); }
@@ -2032,13 +2035,20 @@ function updatePlay(dt, t){
     S.carSpeed = clamp(S.carSpeed, -8, input.sprint ? 36 : 22);
     if (Math.abs(jy) > 0.1) S.moved = true;
     car.yaw -= jx*1.8*dt*clamp(Math.abs(S.carSpeed)/7, 0, 1)*(S.carSpeed < 0 ? -1 : 1);
-    const [nx, nz] = collide(S.pos.x + Math.sin(car.yaw)*S.carSpeed*dt, S.pos.z + Math.cos(car.yaw)*S.carSpeed*dt, 1.7, () => { S.carSpeed *= 0.6; });
+    const [nx, nz] = collide(S.pos.x + Math.sin(car.yaw)*S.carSpeed*dt, S.pos.z + Math.cos(car.yaw)*S.carSpeed*dt, 1.7, (ux, uz) => {
+      const dir = S.carSpeed >= 0 ? 1 : -1, head = ux === undefined ? 1 : Math.max(0, -(Math.sin(car.yaw)*ux + Math.cos(car.yaw)*uz)*dir);
+      if (head > 0.8 && Math.abs(S.carSpeed) > 9 && (S.crashCD || 0) <= 0){ S.carSpeed = -S.carSpeed*0.25; S.crashCD = 0.6; SFX.thud(); SFX.bump(); S.shake = 0.35; }
+      else S.carSpeed *= 1 - 0.9*head*Math.min(1, dt*6);
+      if (ux !== undefined && head < 0.8) car.yaw += angDiff(car.yaw, Math.atan2(Math.sin(car.yaw) + ux*0.6*head, Math.cos(car.yaw) + uz*0.6*head))*Math.min(1, dt*4);   // the nose turns away along the obstacle
+    });
+    S.crashCD = Math.max(0, (S.crashCD || 0) - dt);
     if (!SEA(nx) || H(nx, nz) > WATER_Y - 0.2){ S.pos.x = nx; S.pos.z = nz; } else S.carSpeed *= -0.3;
     carVertical(dt); S.heading = car.yaw;
     const fx = Math.sin(car.yaw)*1.6, fz = Math.cos(car.yaw)*1.6, rx = Math.cos(car.yaw)*0.9, rz = -Math.sin(car.yaw)*0.9;
     const pitch = Math.atan2(H(nx + fx, nz + fz) - H(nx - fx, nz - fz), 3.2), roll = Math.atan2(H(nx + rx, nz + rz) - H(nx - rx, nz - rz), 1.8);
     car.root.position.copy(S.pos); car.root.rotation.y = car.yaw;
-    if (!S.carAir){ car.body.rotation.x = lerp(car.body.rotation.x, -pitch, Math.min(1, dt*8)); car.body.rotation.z = lerp(car.body.rotation.z, roll, Math.min(1, dt*8)); }
+    const lean = -jx*clamp(Math.abs(S.carSpeed)/22, 0, 1)*0.07*(S.carSpeed < 0 ? -1 : 1);   // body leans out of the turn
+    if (!S.carAir){ car.body.rotation.x = lerp(car.body.rotation.x, -pitch, Math.min(1, dt*8)); car.body.rotation.z = lerp(car.body.rotation.z, roll + lean, Math.min(1, dt*6)); }
     else car.body.rotation.x = lerp(car.body.rotation.x, 0.12, Math.min(1, dt*1.5));   // nose dips a little while flying
     if (!S.carAir && Math.abs(S.carSpeed) > 7) sandSpray(dt);
     car.body.position.y = Math.abs(S.carSpeed) > 3 ? Math.sin(t*20)*0.02 : 0;
@@ -2170,6 +2180,7 @@ function updatePlay(dt, t){
   let cyy = Math.max(S.pos.y, H(S.pos.x, S.pos.z)) + camH + (S.camPitch || 0)*camD; cyy = Math.max(cyy, H(cx, cz) + 1.6, WATER_Y + 1.5);
   for (let q = 0.35; q < 1; q += 0.3){ const hx = S.pos.x + (cx - S.pos.x)*q, hz = S.pos.z + (cz - S.pos.z)*q; cyy = Math.max(cyy, H(hx, hz) + 2.2); }
   camPos.lerp(new T.Vector3(cx, cyy, cz), Math.min(1, dt*5));
+  if (S.shake > 0){ S.shake = Math.max(0, S.shake - dt); camPos.x += (Math.random() - 0.5)*S.shake*0.6; camPos.y += (Math.random() - 0.5)*S.shake*0.4; }
   const look = S.ride ? 2.2 : 1.5;
   camLook.lerp(new T.Vector3(S.pos.x - Math.sin(S.camYaw)*3, S.pos.y + look, S.pos.z - Math.cos(S.camYaw)*3), Math.min(1, dt*8));
 }
