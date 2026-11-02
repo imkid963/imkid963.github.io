@@ -285,10 +285,12 @@ const GG = (function(){
   const cache = new Map();
   // ground under (x, z), searched from just above the reference height (so trees and roofs above you are ignored)
   g.H = (x, z, y) => {
-    if (DW.Hc(x, z) < WATER_Y - 0.6) return DW.Hy(x, z);   // open sea: the real sea bed, so the kids swim
     const ry = (y !== undefined ? y : S.pos.y) + 1.4, key = Math.round(x*5) + ',' + Math.round(z*5) + ',' + Math.round(ry*2);
     let v = cache.get(key); if (v !== undefined) return v;
-    v = g.downHit(x, ry, z); if (v === null) v = g.downHit(x, ry + 9, z); if (v === null) v = DW.Hy(x, z);   // a step or a slope up (or we started under Google's ground): look a bit higher   // nothing under you yet (still loading): the game's own height
+    v = g.downHit(x, ry, z); if (v === null) v = g.downHit(x, ry + 9, z);
+    if (v === null) v = DW.Hy(x, z);   // nothing loaded under you yet: the game's own height
+    else if (v < WATER_Y + 0.5 && DW.Hc(x, z) < WATER_Y - 0.6) v = DW.Hy(x, z);   // Google shows water here: use the sea bed so the kids swim
+    // (Google's ground decides land vs water, so the kids never sink where Google has a promenade)   // a step or a slope up (or we started under Google's ground): look a bit higher   // nothing under you yet (still loading): the game's own height
     cache.set(key, v); return v;
   };
   // walls: a level ray at knee height (kerbs and steps are lower, so you walk/drive over them; walls and trunks stop you)
@@ -3651,7 +3653,7 @@ requestAnimationFrame(loop);
   const fail = () => { try { localStorage.setItem('kids_world', 'old'); } catch (e) {} if (L) L.textContent = txt; GAME(null); };   // no Dibba data (offline?): the first world
   const s = document.createElement('script'); s.src = 'js/world.js';
   s.onload = () => fetch('data/dibba_scene.json').then(r => { if (!r.ok) throw new Error('data'); return r.json(); })
-    .then(D => fetch('ion.txt', {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').catch(() => '').then(k => { k = (k || '').trim(); if (k.length > 100 && k.length < 2000) window.__ionTok = k; return D; }))
+    .then(D => fetch('ion.txt?v=' + Date.now()).then(r => r.ok ? r.text() : '').catch(() => '').then(k => { k = (k || '').trim(); if (k.length > 100 && k.length < 2000) window.__ionTok = k; return D; }))
     .then(D => { if (L) L.textContent = txt; setTimeout(() => GAME({D, world: window.DibbaWorld}), 30); }).catch(fail);
   s.onerror = fail; document.head.appendChild(s);
 })();
