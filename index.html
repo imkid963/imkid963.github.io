@@ -267,7 +267,7 @@ const GG = (function(){
   const D = window.DibbaTiles, MXg = 111320*Math.cos(25.61*PI/180), LAT = 25.61 + 869.81/110540, LON = 56.26 + 1526.11/MXg;   // game (0, 0) = the start on the corniche
   const tiles = new D.TilesRenderer();
   tiles.registerPlugin(new D.CesiumIonAuthPlugin({apiToken: tok, assetId: '2275207', autoRefreshToken: true}));
-  const dl = new D.DRACOLoader(); dl.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+  const dl = new D.DRACOLoader(); dl.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/'); dl.setWorkerLimit(Math.min(8, Math.max(2, (navigator.hardwareConcurrency || 4) - 1)));   // decode several pieces at once (faster loading)
   const gl = new D.GLTFLoader(tiles.manager); gl.setDRACOLoader(dl); tiles.manager.addHandler(/\.gltf$/, gl);
   tiles.errorTarget = TOUCH ? 10 : 6;
   tiles.setLatLonToYUp(LAT*PI/180, LON*PI/180);   // tiles frame: x = north, z = east, y = up
@@ -276,6 +276,8 @@ const GG = (function(){
   const fixMat = s => s.traverse(o => { if (o.material){ o.material.toneMapped = false; if (o.material.map){ o.material.map.anisotropy = ANI; o.material.map.needsUpdate = true; } } });   // keep Google's own colours
   tiles.addEventListener('load-model', e => e && e.scene && fixMat(e.scene));
   ['parseQueue', 'downloadQueue', 'processNodeQueue'].forEach(q => { if (tiles[q]) tiles[q].schedulingCallback = cb => setTimeout(cb, 0); });
+  if (tiles.parseQueue) tiles.parseQueue.maxJobs = TOUCH ? 6 : 16;
+  if (tiles.lruCache && TOUCH){ tiles.lruCache.minSize = 300; tiles.lruCache.maxSize = 450; }   // phones/iPads: keep less in memory so Safari never runs out
   tiles.setCamera(camera); tiles.setResolutionFromRenderer(camera, renderer);
   g.tiles = tiles; g.root = root; window.__GG = g; window.__cam = camera;
   const rc = new T.Raycaster(); rc.firstHitOnly = true;
@@ -317,7 +319,7 @@ const GG = (function(){
   let seaPt = null, tries = 0, nextT = 0;
   const findSea = () => { for (let r = 60; r < 900; r += 30) for (let a = 0; a < 24; a++){ const x = Math.cos(a*PI/12)*r, z = Math.sin(a*PI/12)*r; if (DW.Hc(x, z) < WATER_Y - 4) return [x, z]; } return null; };
   g.update = () => {
-    tiles.errorTarget = TOUCH ? 8 : 4;   // Google's sign-in sets 40 (blurry); keep it sharp near the kids
+    tiles.errorTarget = TOUCH ? 10 : 6;   // Google's sign-in sets 40 (blurry); keep it sharp near the kids
     camera.updateMatrixWorld(); tiles.setResolutionFromRenderer(camera, renderer); tiles.update(); cache.clear();
     if ((g.n++ % 20) === 0) for (const o of g.hidden) o.visible = false;
     const now = performance.now();
