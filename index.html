@@ -261,7 +261,7 @@ const camera = DIB ? new T.PerspectiveCamera(55, 1, 0.3, 20000) : new T.Perspect
    The ground, buildings, trees and sea all come from Google's photorealistic 3D map (via Cesium's free plan).
    The hand-built Dibba still loads underneath (for the minimap, the sea depth, the start points), but is never drawn. */
 const GG = (function(){
-  let tok = null; try { tok = localStorage.getItem('ionToken'); } catch (e) {}
+  let tok = window.__ionTok || null; try { tok = tok || localStorage.getItem('ionToken'); } catch (e) {}   // the game's own key (ion.txt, locked to this site), else one pasted on this device
   const g = {on: DIB && !!tok && !!window.DibbaTiles, ready: false, hidden: [], n: 0};
   if (!g.on) return g;
   const D = window.DibbaTiles, MXg = 111320*Math.cos(25.61*PI/180), LAT = 25.61 + 869.81/110540, LON = 56.26 + 1526.11/MXg;   // game (0, 0) = the start on the corniche
@@ -3651,6 +3651,7 @@ requestAnimationFrame(loop);
   const fail = () => { try { localStorage.setItem('kids_world', 'old'); } catch (e) {} if (L) L.textContent = txt; GAME(null); };   // no Dibba data (offline?): the first world
   const s = document.createElement('script'); s.src = 'js/world.js';
   s.onload = () => fetch('data/dibba_scene.json').then(r => { if (!r.ok) throw new Error('data'); return r.json(); })
+    .then(D => fetch('ion.txt', {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').catch(() => '').then(k => { k = (k || '').trim(); if (k.length > 100 && k.length < 2000) window.__ionTok = k; return D; }))
     .then(D => { if (L) L.textContent = txt; setTimeout(() => GAME({D, world: window.DibbaWorld}), 30); }).catch(fail);
   s.onerror = fail; document.head.appendChild(s);
 })();
