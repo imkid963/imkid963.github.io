@@ -2832,7 +2832,7 @@ function updatePlay(dt, t){
     const R = ROOM, ix = clamp(S.pos.x + Math.sin(S.camYaw)*4.6, R.x - R.w/2 + 0.45, R.x + R.w/2 - 0.45), iz = clamp(S.pos.z + Math.cos(S.camYaw)*4.6, R.z - R.d/2 + 0.45, R.z + R.d/2 - 0.45);
     camPos.lerp(new T.Vector3(ix, R.y + 2.9, iz), Math.min(1, dt*6)); camLook.lerp(new T.Vector3(S.pos.x, S.pos.y + 1.1, S.pos.z), Math.min(1, dt*8)); return;
   }
-  if (GG.on){ camD *= 2.1; camH += 11; }   // Google's map is sharp from a little higher up (like a drone behind the kids)
+  if (GG.on){ camD *= 1.8; camH += 6.5; }   // Google's map is sharp from a little higher up (like a drone behind the kids)
   let cx = S.pos.x + Math.sin(S.camYaw)*camD, cz = S.pos.z + Math.cos(S.camYaw)*camD, camK = 1;
   if (DIB){ const f = camWall(S.pos.x, S.pos.z, cx, cz); if (f < 1){ camK = Math.max(0.28, f*0.92 - 0.3/camD); cx = S.pos.x + (cx - S.pos.x)*camK; cz = S.pos.z + (cz - S.pos.z)*camK; } }
   let cyy = Math.max(S.pos.y, H(S.pos.x, S.pos.z)) + camH + (S.camPitch || 0)*camD; cyy = Math.max(cyy, H(cx, cz) + 1.6, WATER_Y + 1.5);
