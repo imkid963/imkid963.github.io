@@ -1471,12 +1471,14 @@ function fixArms(g, only){
 }
 const GLB = {saeedan: 'saif7.glb.wasm', khad: 'khad7.glb.wasm', saif: 'saeedan3.glb.wasm', ahmad: 'ahmad7.glb.wasm'};
 // the new kids (Meshy 2026-11): same skeleton, same 10 motions, clothes no longer pulled by the arms. Real heights by age: سيف 14, خدّوية 7, سعيدان 3, أحمداني 2
-const NEWM = {saeedan: 1.60, khad: 1.22, saif: 0.95, ahmad: 0.87};
+const NEWM = {saeedan: 1.60, khad: 1.22, saif: 0.95, ahmad: 0.82};
 const NEW_IDLE = ['Idle_02', 'Wave_One_Hand', 'Idle_02', 'Talk_with_Hands_Open', 'Idle_02', 'Cheer_with_Both_Hands_Up', 'Idle_02', 'Phone_Conversation'];
 function loadNewKid(key, k, fin, fallback){
   new T.GLTFLoader().load(GLB[key], gl => {
     const o = gl.scene; o.updateMatrixWorld(true);
-    const bb = new T.Box3().setFromObject(o); o.scale.setScalar(NEWM[key]/Math.max(0.1, bb.max.y - bb.min.y));
+    let ht = null; o.traverse(n => { if (n.isBone && /HeadTop_End$/.test(n.name)) ht = n; });   // size by the top of the head bone (a box can include hidden parts or a hat)
+    if (ht){ o.updateMatrixWorld(true); const hy = ht.getWorldPosition(new T.Vector3()).y - o.getWorldPosition(new T.Vector3()).y; o.scale.setScalar(NEWM[key]/Math.max(0.1, hy)); }
+    else { const bb = new T.Box3().setFromObject(o); o.scale.setScalar(NEWM[key]/Math.max(0.1, bb.max.y - bb.min.y)); }
     o.traverse(n => { if (n.isMesh){ const tex = n.material.map; if (tex){ tex.encoding = T.sRGBEncoding; tex.anisotropy = 8; } const nm = n.material.normalMap; if (nm) nm.anisotropy = 4;
       n.material = new T.MeshStandardMaterial({map: tex, normalMap: nm || null, normalScale: nm ? n.material.normalScale.clone() : undefined, roughness: 0.62, metalness: 0}); n.castShadow = true; n.frustumCulled = false; } });
     o.updateMatrixWorld(true);
@@ -3824,7 +3826,7 @@ requestAnimationFrame(loop);
   if (L) L.textContent = 'لحظة… نجهّز دبا';
   document.querySelectorAll('.pick').forEach(b => b.style.visibility = 'hidden');
   const fail = () => { try { localStorage.setItem('kids_world', 'old'); } catch (e) {} if (L) L.textContent = txt; GAME(null); };   // no Dibba data (offline?): the first world
-  const s = document.createElement('script'); s.src = 'js/world.js';
+  const s = document.createElement('script'); s.src = 'js/world.js?v=ctop1';
   s.onload = () => fetch('data/dibba_scene.json').then(r => { if (!r.ok) throw new Error('data'); return r.json(); })
     .then(D => { if (L) L.textContent = txt; setTimeout(() => GAME({D, world: window.DibbaWorld}), 30); }).catch(fail);
   s.onerror = fail; document.head.appendChild(s);
