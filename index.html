@@ -1451,7 +1451,7 @@ function animateModel(k, dt, t){
   else { g.a.walk.setEffectiveTimeScale(clamp(sp/2.6, 0.6, 1.6)); g.a.run.setEffectiveTimeScale(clamp(sp/5.5, 0.8, 1.3)); g.a.sprint.setEffectiveTimeScale(clamp(sp/10, 0.85, 1.25)); }
   if (g.a.swimF) g.a.swimF.setEffectiveTimeScale(clamp(sp/4, 0.8, 1.4));
   g.mixer.update(dt);
-  if (g.hands && g.hands.length && !(st === 'idle' && g.idleI !== 0) && st !== 'sit') { if (!/^swim/.test(st)) for (const [b, q, wrist] of g.hands) if (!(wrist && g.native && st !== 'idle')) b.quaternion.copy(q); }   // relaxed hands unless a gesture is playing
+  if (g.hands && g.hands.length && !(st === 'idle' && g.idleI !== 0) && st !== 'sit') { if (g.native){ if (!/^swim/.test(st)){ if (st === 'idle') for (const [b, q, wrist] of g.hands) if (wrist) b.quaternion.copy(q); curlFingers(g, 1.1); } } else for (const [b, q] of g.hands) b.quaternion.copy(q); }   // relaxed hands unless a gesture is playing
   if (g.thumb){ for (const [b, q] of g.thumb.rest) b.quaternion.copy(q); g.thumb.t1.quaternion.copy(g.thumb.fold); g.thumb.t1.scale.setScalar(0.2); }   // سيف's thumb folded into his fist, always (no thumbs-up)
   if (g.book){   // the book shows on the select screen and while he reads it (his power); otherwise it is in his bag
     const want = false;   // سيف's book stays in his bag (his arms hang free now)
@@ -1469,7 +1469,7 @@ function fixArms(g, only){
   const fix = (bone, R) => { bone.parent.getWorldQuaternion(FQ); FQ.premultiply(FQo); FQ2.copy(FQ).invert().multiply(R).multiply(FQ); bone.quaternion.premultiply(FQ2); bone.updateMatrixWorld(true); };
   g.armFix.forEach((f, i) => { if (only >= 0 && i !== only) return; fix(f.A, f.R1); fix(f.F, f.R2); });
 }
-const GLB = {saeedan: 'saif5.glb.wasm', khad: 'khad6.glb.wasm', saif: 'saeedan3.glb.wasm', ahmad: 'ahmad6.glb.wasm'};
+const GLB = {saeedan: 'saif6.glb.wasm', khad: 'khad6.glb.wasm', saif: 'saeedan3.glb.wasm', ahmad: 'ahmad6.glb.wasm'};
 // the new kids (Meshy 2026-11): same skeleton, same 10 motions, clothes no longer pulled by the arms. Real heights by age: سيف 14, خدّوية 7, سعيدان 3, أحمداني 2
 const NEWM = {saeedan: 1.60, khad: 1.22, saif: 0.95, ahmad: 0.87};
 const NEW_IDLE = ['Idle_02', 'Wave_One_Hand', 'Idle_02', 'Talk_with_Hands_Open', 'Idle_02', 'Cheer_with_Both_Hands_Up', 'Idle_02', 'Phone_Conversation'];
@@ -1519,7 +1519,7 @@ function loadNewKid(key, k, fin, fallback){
     a.jump.timeScale = 1.25;
     const oInv = o.matrixWorld.clone().invert(), mp = n => n.getWorldPosition(new T.Vector3()).applyMatrix4(oInv), armRest = {};
     ['Left', 'Right'].forEach(sd => { const A = SB[sd + 'Arm'], F = SB[sd + 'ForeArm'], Hd = SB[sd + 'Hand']; if (A && F && Hd) armRest[sd] = {A, F, up: mp(F).sub(mp(A)).normalize(), lo: mp(Hd).sub(mp(F)).normalize()}; });
-    const g = {thumb: null, book: null, armRest, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, state: 'idle', fresh: true, hands, native,
+    const g = {thumb: null, book: null, armRest, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, state: 'idle', fresh: true, hands, native, SB,
       idleLen: 5 + Math.random()*7};
     Object.values(a).flat().forEach(ac => { if (ac && ac.getClip) ac.time = Math.random()*ac.getClip().duration; });   // never in step with the others
     g.idleT = Math.random()*4;
@@ -1527,7 +1527,21 @@ function loadNewKid(key, k, fin, fallback){
     k.body.add(o); k.g = g; try { setupHeadFrame(k); applyOutfit(k); } catch (e) { console.warn('outfit', e); } fin();
   }, undefined, () => fallback(k));
 }
-const NATIVE = new Set(['khad6.glb.wasm', 'ahmad6.glb.wasm']);
+const NATIVE = new Set(['saif6.glb.wasm', 'khad6.glb.wasm', 'ahmad6.glb.wasm']);
+// close the fingers into a loose fist on the kid's own hand: the curl axis is found from the hand itself (knuckles + thumb side), so it works on every rig
+const _cv = [new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3()], _cq = new T.Quaternion(), _cq2 = new T.Quaternion();
+function curlFingers(g, ang){
+  const B = g.SB, o = g.o; o.updateMatrixWorld(true);
+  const P = (n, v) => B[n].getWorldPosition(v);
+  for (const sd of ['Left', 'Right']){ const h = sd + 'Hand'; if (!B[h + 'Index1'] || !B[h + 'Pinky1'] || !B[h + 'Middle2'] || !B[h + 'Thumb2']) continue;
+    const a = P(h + 'Pinky1', _cv[0]).sub(P(h + 'Index1', _cv[1])).normalize(), m1 = P(h + 'Middle1', _cv[1]);
+    const f = P(h + 'Middle2', _cv[2]).sub(m1).normalize(), p = _cv[3].crossVectors(f, a).normalize();
+    if (p.dot(P(h + 'Thumb2', _cv[0]).sub(m1)) < 0) p.negate();
+    const k = _cv[1].crossVectors(f, p).normalize();
+    for (const fn of ['Index', 'Middle', 'Ring', 'Pinky']) for (let j = 1; j <= 3; j++){ const b = B[h + fn + j]; if (!b) continue;
+      b.getWorldQuaternion(_cq2); const la = _cv[2].copy(k).applyQuaternion(_cq2.invert());
+      b.quaternion.multiply(_cq.setFromAxisAngle(la, ang)); b.updateMatrixWorld(true); } }
+}
 const GLB_H = {saeedan: 1.5, khad: 1.48, saif: 0.95};   // سعيدان (3 سنين) ~0.95 م
 function loadModels(kids, done){
   let left = Object.keys(GLB).length;
