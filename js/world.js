@@ -788,12 +788,17 @@ window.DibbaWorld = function(T, D, cfg){
       for (let i = 0; i < t.length; i += 6){
         const v = [[t[i] - OX, t[i + 1] - OZ], [t[i + 2] - OX, t[i + 3] - OZ], [t[i + 4] - OX, t[i + 5] - OZ]];
         const cr = (v[1][0] - v[0][0])*(v[2][1] - v[0][1]) - (v[1][1] - v[0][1])*(v[2][0] - v[0][0]); const o = cr > 0 ? [0, 2, 1] : [0, 1, 2];
-        for (const j of o){ const [x, z] = v[j]; P.push(x, Hf(x, z) + top, z); N.push(0, 1, 0); U.push(x*UVS[k], z*UVS[k]); }
+        const tv = []; for (const j of o){ const [x, z] = v[j], yv = Hf(x, z) + top; P.push(x, yv, z); N.push(0, 1, 0); U.push(x*UVS[k], z*UVS[k]); tv.push(x, yv, z); }
         let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; v.forEach(c => { x0 = Math.min(x0, c[0]); x1 = Math.max(x1, c[0]); z0 = Math.min(z0, c[1]); z1 = Math.max(z1, c[1]); });
-        for (let a = Math.floor(x0/CG); a <= Math.floor(x1/CG); a++) for (let b = Math.floor(z0/CG); b <= Math.floor(z1/CG); b++){ const kk = a + ',' + b, yy = Hf(a*CG + 1, b*CG + 1) + top; if (!(CT.get(kk) >= yy)) CT.set(kk, yy); } }
+        for (let a = Math.floor(x0/CG); a <= Math.floor(x1/CG); a++) for (let b = Math.floor(z0/CG); b <= Math.floor(z1/CG); b++){ const kk = a + ',' + b; let L = CT.get(kk); if (!L) CT.set(kk, L = []); L.push(tv); } }
       const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(U, 2));
       const ms = new T.Mesh(g, GM[k]); ms.receiveShadow = true; G.add(ms); }
-    CTOP = (x, z) => { const v = CT.get(Math.floor(x/CG) + ',' + Math.floor(z/CG)); return v === undefined ? -1e9 : v; };
+    // the walkable height is exactly the paving's own surface (the triangle under you), so feet never sink into it
+    CTOP = (x, z) => { const L = CT.get(Math.floor(x/CG) + ',' + Math.floor(z/CG)); if (!L) return -1e9; let best = -1e9;
+      for (const t of L){ const ax = t[0], az = t[2], bx = t[3], bz = t[5], cx = t[6], cz = t[8], d = (bz - cz)*(ax - cx) + (cx - bx)*(az - cz); if (Math.abs(d) < 1e-9) continue;
+        const l1 = ((bz - cz)*(x - cx) + (cx - bx)*(z - cz))/d, l2 = ((cz - az)*(x - cx) + (ax - cx)*(z - cz))/d, l3 = 1 - l1 - l2;
+        if (l1 < -1e-4 || l2 < -1e-4 || l3 < -1e-4) continue; const y = l1*t[1] + l2*t[4] + l3*t[7]; if (y > best) best = y; }
+      return best; };
     const Ht = (x, z) => Math.max(H(x, z), CTOP(x, z));
     // kerbs: a stone band round each paved/planted piece (black-yellow by the traffic, black-white in the parking)
     const kerbBY = tex(128, 16, (x, w, h) => { x.fillStyle = '#e5b52b'; x.fillRect(0, 0, w, h); x.fillStyle = '#262626'; x.fillRect(w/2, 0, w/2, h); noise(x, w, h, 10); });
