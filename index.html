@@ -1451,7 +1451,7 @@ function animateModel(k, dt, t){
   else { g.a.walk.setEffectiveTimeScale(clamp(sp/2.6, 0.6, 1.6)); g.a.run.setEffectiveTimeScale(clamp(sp/5.5, 0.8, 1.3)); g.a.sprint.setEffectiveTimeScale(clamp(sp/10, 0.85, 1.25)); }
   if (g.a.swimF) g.a.swimF.setEffectiveTimeScale(clamp(sp/4, 0.8, 1.4));
   g.mixer.update(dt);
-  if (g.hands && g.hands.length && !(st === 'idle' && g.idleI !== 0) && st !== 'sit') { if (g.native){ if (!/^swim/.test(st)){ if (st === 'idle') for (const [b, q, wrist] of g.hands) if (wrist) b.quaternion.copy(q); curlFingers(g, 1.1); } } else for (const [b, q] of g.hands) b.quaternion.copy(q); }   // relaxed hands unless a gesture is playing
+  if (g.hands && g.hands.length && !(st === 'idle' && g.idleI !== 0) && st !== 'sit') { if (g.native){ if (st === 'idle'){ palmsIn(g); curlFingers(g, 0.7); } else if (!/^swim/.test(st)) curlFingers(g, 1.1); } else for (const [b, q] of g.hands) b.quaternion.copy(q); }   // relaxed hands unless a gesture is playing
   if (g.thumb){ for (const [b, q] of g.thumb.rest) b.quaternion.copy(q); g.thumb.t1.quaternion.copy(g.thumb.fold); g.thumb.t1.scale.setScalar(0.2); }   // سيف's thumb folded into his fist, always (no thumbs-up)
   if (g.book){   // the book shows on the select screen and while he reads it (his power); otherwise it is in his bag
     const want = false;   // سيف's book stays in his bag (his arms hang free now)
@@ -1469,7 +1469,7 @@ function fixArms(g, only){
   const fix = (bone, R) => { bone.parent.getWorldQuaternion(FQ); FQ.premultiply(FQo); FQ2.copy(FQ).invert().multiply(R).multiply(FQ); bone.quaternion.premultiply(FQ2); bone.updateMatrixWorld(true); };
   g.armFix.forEach((f, i) => { if (only >= 0 && i !== only) return; fix(f.A, f.R1); fix(f.F, f.R2); });
 }
-const GLB = {saeedan: 'saif6.glb.wasm', khad: 'khad6.glb.wasm', saif: 'saeedan3.glb.wasm', ahmad: 'ahmad6.glb.wasm'};
+const GLB = {saeedan: 'saif7.glb.wasm', khad: 'khad7.glb.wasm', saif: 'saeedan3.glb.wasm', ahmad: 'ahmad7.glb.wasm'};
 // the new kids (Meshy 2026-11): same skeleton, same 10 motions, clothes no longer pulled by the arms. Real heights by age: سيف 14, خدّوية 7, سعيدان 3, أحمداني 2
 const NEWM = {saeedan: 1.60, khad: 1.22, saif: 0.95, ahmad: 0.87};
 const NEW_IDLE = ['Idle_02', 'Wave_One_Hand', 'Idle_02', 'Talk_with_Hands_Open', 'Idle_02', 'Cheer_with_Both_Hands_Up', 'Idle_02', 'Phone_Conversation'];
@@ -1481,7 +1481,8 @@ function loadNewKid(key, k, fin, fallback){
       n.material = new T.MeshStandardMaterial({map: tex, normalMap: nm || null, normalScale: nm ? n.material.normalScale.clone() : undefined, roughness: 0.62, metalness: 0}); n.castShadow = true; n.frustumCulled = false; } });
     o.updateMatrixWorld(true);
     const mixer = new T.AnimationMixer(o), raw = n => gl.animations.find(c => c.name === n);
-    if (!raw('Walking') || !raw('Idle_02')){ fallback(k); return; }
+    const IDLE_N = (gl.animations.find(c => /^Idle_\d+$/.test(c.name)) || {}).name;
+    if (!raw('Walking') || !IDLE_N){ fallback(k); return; }
     const SB = {}; o.traverse(n => { if (n.isBone) SB[n.name.replace(/^mixamorig:?/, '')] = n; });
     const rest = new Map(); o.traverse(n => { if (n.isBone) rest.set(n, n.quaternion.clone()); });
     // relaxed hands for walking/running/standing: wrist straight, palm toward the body, fingers loosely curled (no open palms facing up)
@@ -1508,8 +1509,8 @@ function loadNewKid(key, k, fin, fallback){
       aim(A, F, new T.Vector3(sx*0.17, -1, 0.02)); aim(F, H, new T.Vector3(sx*0.06, -1, 0.12)); standArm[A.name] = A.quaternion.clone(); standArm[F.name] = F.quaternion.clone(); });
     rest.forEach((q, b) => b.quaternion.copy(q)); o.updateMatrixWorld(true);
     const ARMS = /(Left|Right)(Shoulder|Arm|ForeArm|Hand)/;
-    const stand = clip('Idle_02').clone(); stand.name = 'Stand';
-    stand.tracks = stand.tracks.filter(t => !ARMS.test(t.name)).concat(Object.entries(standArm).map(([nm, q]) => new T.QuaternionKeyframeTrack(nm + '.quaternion', [0], q.toArray())));
+    const stand = clip(IDLE_N, native).clone(); stand.name = 'Stand';   // the kid's own calm Meshy stand, untouched
+    if (!native) stand.tracks = stand.tracks.filter(t => !ARMS.test(t.name)).concat(Object.entries(standArm).map(([nm, q]) => new T.QuaternionKeyframeTrack(nm + '.quaternion', [0], q.toArray())));
     const mk = (c, once) => { const ac = mixer.clipAction(c); if (once){ ac.setLoop(T.LoopOnce); ac.clampWhenFinished = true; } ac.play(); ac.setEffectiveWeight(0); return ac; };
     // standing still: mostly the calm stand; now and then one gesture, then back to the stand
     const GEST = ['Wave_One_Hand', 'Talk_with_Hands_Open', 'Cheer_with_Both_Hands_Up', 'Phone_Conversation'].filter(n => raw(n));
@@ -1527,9 +1528,25 @@ function loadNewKid(key, k, fin, fallback){
     k.body.add(o); k.g = g; try { setupHeadFrame(k); applyOutfit(k); } catch (e) { console.warn('outfit', e); } fin();
   }, undefined, () => fallback(k));
 }
-const NATIVE = new Set(['saif6.glb.wasm', 'khad6.glb.wasm', 'ahmad6.glb.wasm']);
+const NATIVE = new Set(['saif7.glb.wasm', 'khad7.glb.wasm', 'ahmad7.glb.wasm']);
 // close the fingers into a loose fist on the kid's own hand: the curl axis is found from the hand itself (knuckles + thumb side), so it works on every rig
 const _cv = [new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3()], _cq = new T.Quaternion(), _cq2 = new T.Quaternion();
+// standing: turn each palm to face the leg (not forward), found from the hand itself so it suits every kid
+const _pv = [new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3(), new T.Vector3()], _pq = [new T.Quaternion(), new T.Quaternion(), new T.Quaternion()];
+function palmsIn(g){
+  const B = g.SB, o = g.o; if (!B.Hips) return; o.updateMatrixWorld(true);
+  const P = (n, v) => B[n].getWorldPosition(v), hip = P('Hips', _pv[5]);
+  for (const sd of ['Left', 'Right']){ const h = sd + 'Hand', H = B[h]; if (!H || !B[sd + 'ForeArm'] || !B[h + 'Index1'] || !B[h + 'Pinky1'] || !B[h + 'Middle2'] || !B[h + 'Thumb2']) continue;
+    const hp = P(h, _pv[4]).clone(), f = hp.clone().sub(P(sd + 'ForeArm', _pv[0])).normalize();
+    const a = P(h + 'Pinky1', _pv[0]).sub(P(h + 'Index1', _pv[1])).normalize(), m1 = P(h + 'Middle1', _pv[1]).clone();
+    const fm = P(h + 'Middle2', _pv[2]).sub(m1).normalize(), p = new T.Vector3().crossVectors(fm, a).normalize();
+    if (p.dot(P(h + 'Thumb2', _pv[3]).sub(m1)) < 0) p.negate();
+    const d = new T.Vector3(hip.x - hp.x, 0, hip.z - hp.z); if (d.lengthSq() < 1e-8) continue; d.normalize();
+    const pp = p.sub(f.clone().multiplyScalar(p.dot(f))).normalize(), dp = d.sub(f.clone().multiplyScalar(d.dot(f))).normalize();
+    let ang = Math.acos(Math.max(-1, Math.min(1, pp.dot(dp)))); if (new T.Vector3().crossVectors(pp, dp).dot(f) < 0) ang = -ang;
+    const R = _pq[0].setFromAxisAngle(f, ang), bw = H.getWorldQuaternion(_pq[1]), pw = H.parent.getWorldQuaternion(_pq[2]);
+    H.quaternion.copy(pw.invert().multiply(R.multiply(bw))); H.updateMatrixWorld(true); }
+}
 function curlFingers(g, ang){
   const B = g.SB, o = g.o; o.updateMatrixWorld(true);
   const P = (n, v) => B[n].getWorldPosition(v);
