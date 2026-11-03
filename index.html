@@ -1435,8 +1435,11 @@ function animateModel(k, dt, t){
   if (st === 'jump' && g.state !== 'jump'){ g.a.jump.reset(); g.a.jump.play(); }
   if (st === 'idle'){
     g.idleT += dt;
-    if (g.idleT > (g.idleLen || (g.idleLen = 7 + Math.random()*5))){ g.idleI = (g.idleI + 1 + (Math.random() < 0.4 ? 1 : 0)) % g.a.idle.length; g.idleT = 0; g.idleLen = 7 + Math.random()*5; }
-  } else g.idleT = 0;
+    if (g.fresh){   // calm stand most of the time; a gesture now and then (played once), then back to the stand
+      if (g.idleI === 0 && g.idleT > g.idleLen){ g.idleT = 0; g.idleLen = 6 + Math.random()*8; if (Math.random() < 0.45){ g.idleI = 1 + Math.floor(Math.random()*(g.a.idle.length - 1)); g.a.idle[g.idleI].time = 0; } }
+      else if (g.idleI !== 0 && g.idleT > g.a.idle[g.idleI].getClip().duration){ g.idleI = 0; g.idleT = 0; }
+    } else if (g.idleT > (g.idleLen || (g.idleLen = 7 + Math.random()*5))){ g.idleI = (g.idleI + 1 + (Math.random() < 0.4 ? 1 : 0)) % g.a.idle.length; g.idleT = 0; g.idleLen = 7 + Math.random()*5; }
+  } else { g.idleT = 0; if (g.fresh) g.idleI = 0; }
   g.state = st;
   const target = {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}; if (g.a.swimF) target.swimF = 0; if (g.a.swimI) target.swimI = 0;
   if (st !== 'idle') target[st] = 1;
@@ -1448,6 +1451,7 @@ function animateModel(k, dt, t){
   else { g.a.walk.setEffectiveTimeScale(clamp(sp/2.6, 0.6, 1.6)); g.a.run.setEffectiveTimeScale(clamp(sp/5.5, 0.8, 1.3)); g.a.sprint.setEffectiveTimeScale(clamp(sp/10, 0.85, 1.25)); }
   if (g.a.swimF) g.a.swimF.setEffectiveTimeScale(clamp(sp/4, 0.8, 1.4));
   g.mixer.update(dt);
+  if (g.hands && g.hands.length && !(st === 'idle' && g.idleI !== 0) && st !== 'sit') for (const [b, q] of g.hands) b.quaternion.copy(q);   // relaxed hands unless a gesture is playing
   if (g.thumb){ for (const [b, q] of g.thumb.rest) b.quaternion.copy(q); g.thumb.t1.quaternion.copy(g.thumb.fold); g.thumb.t1.scale.setScalar(0.2); }   // سيف's thumb folded into his fist, always (no thumbs-up)
   if (g.book){   // the book shows on the select screen and while he reads it (his power); otherwise it is in his bag
     const want = false;   // سيف's book stays in his bag (his arms hang free now)
@@ -1475,24 +1479,50 @@ function loadNewKid(key, k, fin, fallback){
     const bb = new T.Box3().setFromObject(o); o.scale.setScalar(NEWM[key]/Math.max(0.1, bb.max.y - bb.min.y));
     o.traverse(n => { if (n.isMesh){ const tex = n.material.map; if (tex){ tex.encoding = T.sRGBEncoding; tex.anisotropy = 8; } const nm = n.material.normalMap; if (nm) nm.anisotropy = 4;
       n.material = new T.MeshStandardMaterial({map: tex, normalMap: nm || null, normalScale: nm ? n.material.normalScale.clone() : undefined, roughness: 0.62, metalness: 0}); n.castShadow = true; n.frustumCulled = false; } });
-    const mixer = new T.AnimationMixer(o), clip = n => gl.animations.find(c => c.name === n);
-    if (!clip('Walking') || !clip('Idle_02')){ fallback(k); return; }
-    const mk = (n, once) => { const ac = mixer.clipAction(clip(n)); if (once){ ac.setLoop(T.LoopOnce); ac.clampWhenFinished = true; } ac.play(); ac.setEffectiveWeight(0); return ac; };
-    const idleNames = NEW_IDLE.filter(n => clip(n)), idleA = {};   // each idle slot gets its own action (a shared one was being switched off by its twin, so they stood frozen)
-    const mkIdle = (n, i) => { const ac = mixer.clipAction(i ? clip(n).clone() : clip(n)); ac.play(); ac.setEffectiveWeight(0); return ac; };
-    const a = {walk: mk('Walking'), run: mk('Running'), sprint: mixer.clipAction(clip('Running').clone()), jump: mk('Jump_Run', true), sit: mk(clip('Sitting_Clap') ? 'Sitting_Clap' : 'Sit_Cross_Legged_on_Floor'), idle: idleNames.map((n, i) => mkIdle(n, idleNames.indexOf(n) !== i))};
-    a.sprint.play(); a.sprint.setEffectiveWeight(0);
-    if (clip('Swim_Forward')) a.swimF = mk('Swim_Forward'); if (clip('Swim_Idle')) a.swimI = mk('Swim_Idle');
+    o.updateMatrixWorld(true);
+    const mixer = new T.AnimationMixer(o), raw = n => gl.animations.find(c => c.name === n);
+    if (!raw('Walking') || !raw('Idle_02')){ fallback(k); return; }
+    const SB = {}; o.traverse(n => { if (n.isBone) SB[n.name.replace(/^mixamorig:?/, '')] = n; });
+    const rest = new Map(); o.traverse(n => { if (n.isBone) rest.set(n, n.quaternion.clone()); });
+    // relaxed hands for walking/running/standing: wrist straight, palm toward the body, fingers loosely curled (no open palms facing up)
+    const handFix = key !== 'saif';   // the three new Meshy kids; سعيدان's older model keeps his own hands
+    const HAND = /(Left|Right)Hand/;
+    const noHands = c => { const c2 = c.clone(); c2.tracks = c2.tracks.filter(t => !HAND.test(t.name)); return c2; };
+    const clip = (n, keepHands) => { const c = raw(n); return c && handFix && !keepHands ? noHands(c) : c; };
+    const hands = []; if (handFix) Object.entries(SB).forEach(([nm, b]) => {
+      let q = null;
+      if (/^LeftHand$/.test(nm)) q = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), -1.4);
+      else if (/^RightHand$/.test(nm)) q = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), 1.4);
+      else if (/Hand(Index|Middle|Ring|Pinky)[123]$/.test(nm)) q = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 0, 1), 0.9);
+      else if (/HandThumb[23]$/.test(nm)) q = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 0, 1), 0.35);
+      if (q) hands.push([b, rest.get(b).clone().multiply(q)]); });
+    // standing pose: arms hanging at the sides (the model was made with arms held away from the body)
+    const oq = () => o.getWorldQuaternion(new T.Quaternion()), wp = n => n.getWorldPosition(new T.Vector3());
+    const aim = (bone, child, dir) => { o.updateMatrixWorld(true); const want = dir.clone().normalize().applyQuaternion(oq());
+      const q = new T.Quaternion().setFromUnitVectors(wp(child).sub(wp(bone)).normalize(), want);
+      const pw = bone.parent.getWorldQuaternion(new T.Quaternion()), bw = bone.getWorldQuaternion(new T.Quaternion()); bone.quaternion.copy(pw.invert().multiply(q.multiply(bw))); bone.updateMatrixWorld(true); };
+    const oQi = oq().invert(), standArm = {};
+    ['Left', 'Right'].forEach(sd => { const A = SB[sd + 'Arm'], F = SB[sd + 'ForeArm'], H = SB[sd + 'Hand']; if (!A || !F || !H || !SB.Hips) return;
+      const sx = Math.sign(wp(A).applyQuaternion(oQi).x - wp(SB.Hips).applyQuaternion(oQi).x) || (sd === 'Left' ? 1 : -1);
+      aim(A, F, new T.Vector3(sx*0.17, -1, 0.02)); aim(F, H, new T.Vector3(sx*0.06, -1, 0.12)); standArm[A.name] = A.quaternion.clone(); standArm[F.name] = F.quaternion.clone(); });
+    rest.forEach((q, b) => b.quaternion.copy(q)); o.updateMatrixWorld(true);
+    const ARMS = /(Left|Right)(Shoulder|Arm|ForeArm|Hand)/;
+    const stand = clip('Idle_02').clone(); stand.name = 'Stand';
+    stand.tracks = stand.tracks.filter(t => !ARMS.test(t.name)).concat(Object.entries(standArm).map(([nm, q]) => new T.QuaternionKeyframeTrack(nm + '.quaternion', [0], q.toArray())));
+    const mk = (c, once) => { const ac = mixer.clipAction(c); if (once){ ac.setLoop(T.LoopOnce); ac.clampWhenFinished = true; } ac.play(); ac.setEffectiveWeight(0); return ac; };
+    // standing still: mostly the calm stand; now and then one gesture, then back to the stand
+    const GEST = ['Wave_One_Hand', 'Talk_with_Hands_Open', 'Cheer_with_Both_Hands_Up', 'Phone_Conversation'].filter(n => raw(n));
+    const idle = [mk(stand)].concat(GEST.map(n => mk(clip(n, true))));
+    const a = {walk: mk(clip('Walking')), run: mk(clip('Running')), sprint: mk(clip('Running').clone()), jump: mk(clip('Jump_Run'), true), sit: mk(clip(raw('Sitting_Clap') ? 'Sitting_Clap' : 'Sit_Cross_Legged_on_Floor', true)), idle};
+    if (raw('Swim_Forward')) a.swimF = mk(clip('Swim_Forward')); if (raw('Swim_Idle')) a.swimI = mk(clip('Swim_Idle'));
     a.jump.timeScale = 1.25;
-    const Bn = {}; o.traverse(n => { if (n.isBone) Bn[n.name.replace(/^mixamorig:?/, '')] = n; });
     const oInv = o.matrixWorld.clone().invert(), mp = n => n.getWorldPosition(new T.Vector3()).applyMatrix4(oInv), armRest = {};
-    ['Left', 'Right'].forEach(sd => { const A = Bn[sd + 'Arm'], F = Bn[sd + 'ForeArm'], Hd = Bn[sd + 'Hand']; if (A && F && Hd) armRest[sd] = {A, F, up: mp(F).sub(mp(A)).normalize(), lo: mp(Hd).sub(mp(F)).normalize()}; });
-    const g = {thumb: null, book: null, armRest, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, state: 'idle', fresh: true};
-    // each kid starts on a different stand-still move, at a different moment, so they never move in step
-    const seed = {saeedan: 0, khad: 3, saif: 5, ahmad: 1}[key] || 0;
-    g.idleI = seed % a.idle.length; g.idleT = Math.random()*8;
-    Object.values(a).flat().forEach(ac => { if (ac && ac.getClip) ac.time = Math.random()*ac.getClip().duration; });
-    g.wi[g.idleI] = 1; a.idle[g.idleI].setEffectiveWeight(1);
+    ['Left', 'Right'].forEach(sd => { const A = SB[sd + 'Arm'], F = SB[sd + 'ForeArm'], Hd = SB[sd + 'Hand']; if (A && F && Hd) armRest[sd] = {A, F, up: mp(F).sub(mp(A)).normalize(), lo: mp(Hd).sub(mp(F)).normalize()}; });
+    const g = {thumb: null, book: null, armRest, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, state: 'idle', fresh: true, hands,
+      idleLen: 5 + Math.random()*7};
+    Object.values(a).flat().forEach(ac => { if (ac && ac.getClip) ac.time = Math.random()*ac.getClip().duration; });   // never in step with the others
+    g.idleT = Math.random()*4;
+    g.wi[0] = 1; a.idle[0].setEffectiveWeight(1);
     k.body.add(o); k.g = g; try { setupHeadFrame(k); applyOutfit(k); } catch (e) { console.warn('outfit', e); } fin();
   }, undefined, () => fallback(k));
 }
