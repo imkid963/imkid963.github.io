@@ -1465,7 +1465,7 @@ function fixArms(g, only){
   const fix = (bone, R) => { bone.parent.getWorldQuaternion(FQ); FQ.premultiply(FQo); FQ2.copy(FQ).invert().multiply(R).multiply(FQ); bone.quaternion.premultiply(FQ2); bone.updateMatrixWorld(true); };
   g.armFix.forEach((f, i) => { if (only >= 0 && i !== only) return; fix(f.A, f.R1); fix(f.F, f.R2); });
 }
-const GLB = {saeedan: 'saif3.glb.wasm', khad: 'khad3.glb.wasm', saif: 'saeedan3.glb.wasm', ahmad: 'ahmad3.glb.wasm'};
+const GLB = {saeedan: 'saif4.glb.wasm', khad: 'khad4.glb.wasm', saif: 'saeedan3.glb.wasm', ahmad: 'ahmad4.glb.wasm'};
 // the new kids (Meshy 2026-11): same skeleton, same 10 motions, clothes no longer pulled by the arms. Real heights by age: سيف 14, خدّوية 7, سعيدان 3, أحمداني 2
 const NEWM = {saeedan: 1.60, khad: 1.22, saif: 0.95, ahmad: 0.87};
 const NEW_IDLE = ['Idle_02', 'Wave_One_Hand', 'Idle_02', 'Talk_with_Hands_Open', 'Idle_02', 'Cheer_with_Both_Hands_Up', 'Idle_02', 'Phone_Conversation'];
