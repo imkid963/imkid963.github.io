@@ -132,18 +132,18 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 .pick{transform:translate(-50%,-100%);padding:6px 14px;font-size:clamp(14px,3.4vw,20px);border-radius:20px}
 .pick:active{transform:translate(-50%,calc(-100% + 3px))}
 #lobby{left:0;right:0;top:0;bottom:0;width:auto;transform:none;padding:0;background:none;box-shadow:none;border-radius:0;pointer-events:none}
-#lobby .ltitle{display:none}
-#lobby .worlds,#lobby #modeRow{position:absolute;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;width:clamp(104px,26vw,140px);pointer-events:auto}
-#lobby .worlds{right:calc(env(safe-area-inset-right,0px) + 12px)}
-#lobby #modeRow{left:calc(env(safe-area-inset-left,0px) + 12px)}
-#lobby .mode,#lobby .wsel{padding:8px 6px;font-size:16px;border-radius:18px;border-width:3px;background:var(--glass);box-shadow:0 4px 0 var(--sand-deep),0 8px 16px var(--shadow)}
-#lobby .mode.on,#lobby .wsel.on{background:#fff1cf}
-#lobby .mode small,#lobby .wsel small{font-size:11px}
-#lobby .lrow{margin:0;pointer-events:none}
-#lobby .lbtn{pointer-events:auto;position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);padding:12px;font-size:19px;box-shadow:0 4px 0 var(--sand-deep),0 8px 16px var(--shadow)}
-#lobby #playBtn{left:50%;transform:translateX(-50%);width:min(380px,calc(100% - 2*clamp(104px,26vw,140px) - 48px));font-size:22px}
-#lobby #wardBtn{left:calc(env(safe-area-inset-left,0px) + 12px);width:clamp(104px,26vw,140px);background:var(--glass)}
-@media (orientation:portrait){#lobby .worlds,#lobby #modeRow{top:auto;transform:none;bottom:calc(env(safe-area-inset-bottom,0px) + 84px)}}
+#lobby .wgroup{position:absolute;top:calc(env(safe-area-inset-top,0px) + 72px);display:flex;flex-direction:column;gap:8px;width:clamp(108px,27vw,150px);pointer-events:auto}
+#gDibba{right:calc(env(safe-area-inset-right,0px) + 12px)}
+#gOld{left:calc(env(safe-area-inset-left,0px) + 12px)}
+#lobby .wsel{padding:8px 6px;font-size:19px;font-weight:800;border-radius:18px;border:3px solid transparent;background:var(--glass);box-shadow:0 4px 0 var(--sand-deep),0 8px 16px var(--shadow)}
+#lobby .mode{padding:6px 6px;font-size:15px;font-weight:800;border-radius:16px;border:3px solid transparent;background:#fff8ec;box-shadow:0 3px 0 var(--sand-deep)}
+#lobby .wsel.on{background:var(--gold);color:#4a2a10}
+#lobby .mode.on{border-color:var(--gold);background:#fff1cf}
+#lobby .mode.soon{opacity:.55}
+#lobby .mode small{font-size:11px;font-weight:500}
+#lobby #wardBtn{margin-top:6px;padding:10px;font-size:17px;background:var(--glass);box-shadow:0 4px 0 var(--sand-deep),0 8px 16px var(--shadow)}
+@media (orientation:portrait){#lobby .wgroup{top:calc(env(safe-area-inset-top,0px) + 118px)}}
+#lobby #playBtn{pointer-events:auto;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:min(420px,calc(100% - 48px));padding:13px;font-size:23px;box-shadow:0 4px 0 var(--sand-deep),0 8px 16px var(--shadow)}
 #loading{position:absolute;left:0;right:0;bottom:22%;text-align:center;font-family:var(--display);font-weight:800;font-size:clamp(18px,4.4vw,26px);color:#fff;text-shadow:0 2px 0 var(--sand-deep),0 4px 12px var(--shadow);animation:pulse 1.2s ease-in-out infinite alternate}
 @keyframes pulse{from{opacity:.55}to{opacity:1}}
 #end{position:fixed;inset:0;display:grid;place-items:center;background:rgba(239,220,182,.35);padding-inline:16px}
@@ -193,17 +193,18 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
   <div id="loading">لحظة… الشخصيات توصل</div>
   <button class="round small" id="gear2" aria-label="الإعدادات"><svg viewBox="0 0 24 24" fill="none" stroke="#5a3519" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg></button>
   <div id="lobby" hidden>
-    <div class="ltitle">وين تبا تلعب؟</div>
-    <div class="modes worlds">
-      <button class="wsel" data-w="old">العالم الحالي<small>الصحرا والمخيّم</small></button>
-      <button class="wsel" data-w="dibba">دبا<small>شوارعها وبيوتها وبحرها</small></button>
+    <div class="wgroup" id="gDibba">
+      <button class="wsel" data-w="dibba">دبا</button>
+      <button class="mode" data-w="dibba" data-m="free">استكشاف حر</button>
+      <button class="mode soon" data-w="dibba" data-m="adv" disabled>مغامرات<small>قريباً</small></button>
     </div>
-    <div class="ltitle" style="margin-top:12px">شو تبا تلعب؟</div>
-    <div class="modes" id="modeRow">
-      <button class="mode on" data-m="adv">مغامرة<small>ساعد الحيوانات</small></button>
-      <button class="mode" data-m="free">استكشاف حر<small>بدون مهمات</small></button>
+    <div class="wgroup" id="gOld">
+      <button class="wsel" data-w="old">الصحراء</button>
+      <button class="mode" data-w="old" data-m="free">استكشاف حر</button>
+      <button class="mode" data-w="old" data-m="adv">مغامرات</button>
+      <button class="lbtn" id="wardBtn">الملابس</button>
     </div>
-    <div class="lrow"><button class="lbtn" id="wardBtn">الملابس</button><button class="lbtn play" id="playBtn">العب</button></div>
+    <button class="lbtn play" id="playBtn">العب</button>
   </div>
   <div id="ward" hidden>
     <div class="ltitle" id="wname">الملابس</div>
@@ -1464,9 +1465,9 @@ function fixArms(g, only){
   const fix = (bone, R) => { bone.parent.getWorldQuaternion(FQ); FQ.premultiply(FQo); FQ2.copy(FQ).invert().multiply(R).multiply(FQ); bone.quaternion.premultiply(FQ2); bone.updateMatrixWorld(true); };
   g.armFix.forEach((f, i) => { if (only >= 0 && i !== only) return; fix(f.A, f.R1); fix(f.F, f.R2); });
 }
-const GLB = {saeedan: 'saif3.glb.wasm', khad: 'khad3.glb.wasm', saif: 'saif.glb.wasm', ahmad: 'ahmad3.glb.wasm'};
+const GLB = {saeedan: 'saif3.glb.wasm', khad: 'khad3.glb.wasm', saif: 'saeedan3.glb.wasm', ahmad: 'ahmad3.glb.wasm'};
 // the new kids (Meshy 2026-11): same skeleton, same 10 motions, clothes no longer pulled by the arms. Real heights by age: سيف 14, خدّوية 7, سعيدان 3, أحمداني 2
-const NEWM = {saeedan: 1.60, khad: 1.22, ahmad: 0.87};
+const NEWM = {saeedan: 1.60, khad: 1.22, saif: 0.95, ahmad: 0.87};
 const NEW_IDLE = ['Idle_02', 'Wave_One_Hand', 'Idle_02', 'Talk_with_Hands_Open', 'Idle_02', 'Cheer_with_Both_Hands_Up', 'Idle_02', 'Phone_Conversation'];
 function loadNewKid(key, k, fin, fallback){
   new T.GLTFLoader().load(GLB[key], gl => {
@@ -1477,9 +1478,11 @@ function loadNewKid(key, k, fin, fallback){
     const mixer = new T.AnimationMixer(o), clip = n => gl.animations.find(c => c.name === n);
     if (!clip('Walking') || !clip('Idle_02')){ fallback(k); return; }
     const mk = (n, once) => { const ac = mixer.clipAction(clip(n)); if (once){ ac.setLoop(T.LoopOnce); ac.clampWhenFinished = true; } ac.play(); ac.setEffectiveWeight(0); return ac; };
-    const idleNames = NEW_IDLE.filter(n => clip(n)), idleA = {}; idleNames.forEach(n => { if (!idleA[n]) idleA[n] = mk(n); });
-    const a = {walk: mk('Walking'), run: mk('Running'), sprint: mixer.clipAction(clip('Running').clone()), jump: mk('Jump_Run', true), sit: mk(clip('Sitting_Clap') ? 'Sitting_Clap' : 'Sit_Cross_Legged_on_Floor'), idle: idleNames.map(n => idleA[n])};
+    const idleNames = NEW_IDLE.filter(n => clip(n)), idleA = {};   // each idle slot gets its own action (a shared one was being switched off by its twin, so they stood frozen)
+    const mkIdle = (n, i) => { const ac = mixer.clipAction(i ? clip(n).clone() : clip(n)); ac.play(); ac.setEffectiveWeight(0); return ac; };
+    const a = {walk: mk('Walking'), run: mk('Running'), sprint: mixer.clipAction(clip('Running').clone()), jump: mk('Jump_Run', true), sit: mk(clip('Sitting_Clap') ? 'Sitting_Clap' : 'Sit_Cross_Legged_on_Floor'), idle: idleNames.map((n, i) => mkIdle(n, idleNames.indexOf(n) !== i))};
     a.sprint.play(); a.sprint.setEffectiveWeight(0);
+    if (clip('Swim_Forward')) a.swimF = mk('Swim_Forward'); if (clip('Swim_Idle')) a.swimI = mk('Swim_Idle');
     a.jump.timeScale = 1.25;
     const Bn = {}; o.traverse(n => { if (n.isBone) Bn[n.name.replace(/^mixamorig:?/, '')] = n; });
     const oInv = o.matrixWorld.clone().invert(), mp = n => n.getWorldPosition(new T.Vector3()).applyMatrix4(oInv), armRest = {};
@@ -2593,12 +2596,19 @@ $('wgrid').addEventListener('click', e => {
 });
 $('wardBtn').onclick = () => { ensureAudio(); wardOpen = true; $('lobby').hidden = true; $('ward').hidden = false; document.querySelectorAll('.pick').forEach(b => b.style.visibility = 'hidden'); renderWard(); };
 $('wardDone').onclick = () => { wardOpen = false; $('ward').hidden = true; $('lobby').hidden = false; document.querySelectorAll('.pick').forEach(b => b.style.visibility = ''); };
-document.querySelectorAll('.mode').forEach(b => b.onclick = () => { ensureAudio(); SFX.star(); gameMode = b.dataset.m; document.querySelectorAll('.mode').forEach(x => x.classList.toggle('on', x === b)); });
-// which world: the first world or Dibba (choosing reloads the page with ?world=…; remembered on this device)
-document.querySelectorAll('.wsel').forEach(b => { b.classList.toggle('on', b.dataset.w === (DIB ? 'dibba' : 'old'));
-  b.onclick = () => { ensureAudio(); SFX.star(); const w = b.dataset.w; if (w === (DIB ? 'dibba' : 'old')) return; try { localStorage.setItem('kids_world', w); } catch (e) {}
-    try { const u = new URL(location.href); u.searchParams.set('world', w); location.replace(u.toString()); } catch (e) { location.reload(); } }; });
-if (DIB){ document.querySelectorAll('.mode').forEach(b => { b.hidden = b.dataset.m !== 'free'; b.classList.toggle('on', b.dataset.m === 'free'); }); $('modeRow').classList.add('one'); }   // missions come to Dibba later
+// الأزرار: «دبا» يمين و«الصحراء» يسار، وتحت كل وحدة نوع اللعب. الضغط على عالم ثاني يحمّله ويتذكّر النوع
+const CUR_W = DIB ? 'dibba' : 'old';
+try { const m = localStorage.getItem('kids_mode'); if (m === 'adv' || m === 'free') gameMode = m; } catch (e) {}
+if (DIB) gameMode = 'free';   // مهمات دبا بعدين
+function markLobby(){ document.querySelectorAll('#lobby .wsel').forEach(b => b.classList.toggle('on', b.dataset.w === CUR_W));
+  document.querySelectorAll('#lobby .mode').forEach(b => b.classList.toggle('on', b.dataset.w === CUR_W && b.dataset.m === gameMode)); }
+function goWorld(w, m){ try { localStorage.setItem('kids_world', w); if (m) localStorage.setItem('kids_mode', m); } catch (e) {}
+  try { const u = new URL(location.href); u.searchParams.set('world', w); location.replace(u.toString()); } catch (e) { location.reload(); } }
+document.querySelectorAll('#lobby .mode').forEach(b => b.onclick = () => { if (b.disabled) return; ensureAudio(); SFX.star();
+  if (b.dataset.w !== CUR_W){ goWorld(b.dataset.w, b.dataset.m); return; }
+  gameMode = b.dataset.m; try { localStorage.setItem('kids_mode', gameMode); } catch (e) {} markLobby(); });
+document.querySelectorAll('#lobby .wsel').forEach(b => b.onclick = () => { ensureAudio(); SFX.star(); if (b.dataset.w !== CUR_W) goWorld(b.dataset.w); });
+markLobby();
 $('playBtn').onclick = () => { if (!$('loading').hidden) return; ensureAudio(); SFX.find(); choosing = null; kids[selKid].root.rotation.y = 0; startGame(selKid); };
 // settings (saved on this device)
 const SET = (function(){ const d = {snd: 'on', mus: 'on', q: 'high', cam: '1'}; try { return Object.assign(d, JSON.parse(localStorage.getItem('saeedan_set')) || {}); } catch (e) { return d; } })();
@@ -3135,7 +3145,7 @@ function updateSelect(dt, t){
   if (choosing){ choosing.t += dt; if (choosing.t > 0.9){ kids[choosing.k].root.rotation.y = SA; choosing = null; } }
   if (wardOpen){ const x = SELECT_X[selKid], kr = kids[selKid].root; kr.rotation.y = SA + Math.sin(t*0.7)*0.7;
     camPos.lerp(SLV(x, SEL_Y + 1.45, innerWidth < innerHeight ? 3.6 : 2.6), Math.min(1, dt*4)); camLook.lerp(SLV(x, SEL_Y + (innerWidth < innerHeight ? 0.75 : 1.0), 0), Math.min(1, dt*4)); }
-  else { camPos.lerp(SLV(0, SEL_Y + 1.9, innerWidth < innerHeight ? 12.5 : 5.8), Math.min(1, dt*3)); camLook.lerp(SLV(0, SEL_Y + (innerWidth < innerHeight ? -0.9 : 0.6), 0), Math.min(1, dt*3)); }   // العيال بالنص، والأزرار على الأطراف
+  else { camPos.lerp(SLV(0, SEL_Y + 1.9, innerWidth < innerHeight ? 11 : 5.8), Math.min(1, dt*3)); camLook.lerp(SLV(0, SEL_Y + (innerWidth < innerHeight ? 0.9 : 0.6), 0), Math.min(1, dt*3)); }   // العيال بالنص، والأزرار على الأطراف
   const v = new T.Vector3();
   document.querySelectorAll('.pick').forEach(b => { const kid = kids[b.dataset.k]; v.set(kid.root.position.x, kid.root.position.y + (KID_H[b.dataset.k] || 1.5) + 0.12, kid.root.position.z).project(camera); b.style.left = ((v.x + 1)/2*innerWidth) + 'px'; b.style.top = ((1 - v.y)/2*innerHeight - 4) + 'px'; });
 }
