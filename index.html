@@ -1451,7 +1451,7 @@ function animateModel(k, dt, t){
   else { g.a.walk.setEffectiveTimeScale(clamp(sp/2.6, 0.6, 1.6)); g.a.run.setEffectiveTimeScale(clamp(sp/5.5, 0.8, 1.3)); g.a.sprint.setEffectiveTimeScale(clamp(sp/10, 0.85, 1.25)); }
   if (g.a.swimF) g.a.swimF.setEffectiveTimeScale(clamp(sp/4, 0.8, 1.4));
   g.mixer.update(dt);
-  if (g.hands && g.hands.length && !(st === 'idle' && g.idleI !== 0) && st !== 'sit') for (const [b, q] of g.hands) b.quaternion.copy(q);   // relaxed hands unless a gesture is playing
+  if (g.hands && g.hands.length && !(st === 'idle' && g.idleI !== 0) && st !== 'sit') { if (!/^swim/.test(st)) for (const [b, q, wrist] of g.hands) if (!(wrist && g.native && st !== 'idle')) b.quaternion.copy(q); }   // relaxed hands unless a gesture is playing
   if (g.thumb){ for (const [b, q] of g.thumb.rest) b.quaternion.copy(q); g.thumb.t1.quaternion.copy(g.thumb.fold); g.thumb.t1.scale.setScalar(0.2); }   // سيف's thumb folded into his fist, always (no thumbs-up)
   if (g.book){   // the book shows on the select screen and while he reads it (his power); otherwise it is in his bag
     const want = false;   // سيف's book stays in his bag (his arms hang free now)
@@ -1469,7 +1469,7 @@ function fixArms(g, only){
   const fix = (bone, R) => { bone.parent.getWorldQuaternion(FQ); FQ.premultiply(FQo); FQ2.copy(FQ).invert().multiply(R).multiply(FQ); bone.quaternion.premultiply(FQ2); bone.updateMatrixWorld(true); };
   g.armFix.forEach((f, i) => { if (only >= 0 && i !== only) return; fix(f.A, f.R1); fix(f.F, f.R2); });
 }
-const GLB = {saeedan: 'saif5.glb.wasm', khad: 'khad5.glb.wasm', saif: 'saeedan3.glb.wasm', ahmad: 'ahmad5.glb.wasm'};
+const GLB = {saeedan: 'saif5.glb.wasm', khad: 'khad6.glb.wasm', saif: 'saeedan3.glb.wasm', ahmad: 'ahmad6.glb.wasm'};
 // the new kids (Meshy 2026-11): same skeleton, same 10 motions, clothes no longer pulled by the arms. Real heights by age: سيف 14, خدّوية 7, سعيدان 3, أحمداني 2
 const NEWM = {saeedan: 1.60, khad: 1.22, saif: 0.95, ahmad: 0.87};
 const NEW_IDLE = ['Idle_02', 'Wave_One_Hand', 'Idle_02', 'Talk_with_Hands_Open', 'Idle_02', 'Cheer_with_Both_Hands_Up', 'Idle_02', 'Phone_Conversation'];
@@ -1488,14 +1488,15 @@ function loadNewKid(key, k, fin, fallback){
     const handFix = key !== 'saif';   // the three new Meshy kids; سعيدان's older model keeps his own hands
     const HAND = /(Left|Right)Hand/;
     const noHands = c => { const c2 = c.clone(); c2.tracks = c2.tracks.filter(t => !HAND.test(t.name)); return c2; };
-    const clip = (n, keepHands) => { const c = raw(n); return c && handFix && !keepHands ? noHands(c) : c; };
+    const native = NATIVE.has(GLB[key]);   // Meshy put the motions on this kid's own body: keep its arms and wrists, only close the fingers
+    const clip = (n, keepHands) => { const c = raw(n); return c && handFix && !keepHands && !native ? noHands(c) : c; };
     const hands = []; if (handFix) Object.entries(SB).forEach(([nm, b]) => {
       let q = null;
       if (/^LeftHand$/.test(nm)) q = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), -1.4);
       else if (/^RightHand$/.test(nm)) q = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), 1.4);
       else if (/Hand(Index|Middle|Ring|Pinky)[123]$/.test(nm)) q = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 0, 1), 0.9);
       else if (/HandThumb[23]$/.test(nm)) q = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 0, 1), 0.35);
-      if (q) hands.push([b, rest.get(b).clone().multiply(q)]); });
+      if (q) hands.push([b, rest.get(b).clone().multiply(q), /Hand$/.test(nm)]); });
     // standing pose: arms hanging at the sides (the model was made with arms held away from the body)
     const oq = () => o.getWorldQuaternion(new T.Quaternion()), wp = n => n.getWorldPosition(new T.Vector3());
     const aim = (bone, child, dir) => { o.updateMatrixWorld(true); const want = dir.clone().normalize().applyQuaternion(oq());
@@ -1513,12 +1514,12 @@ function loadNewKid(key, k, fin, fallback){
     // standing still: mostly the calm stand; now and then one gesture, then back to the stand
     const GEST = ['Wave_One_Hand', 'Talk_with_Hands_Open', 'Cheer_with_Both_Hands_Up', 'Phone_Conversation'].filter(n => raw(n));
     const idle = [mk(stand)].concat(GEST.map(n => mk(clip(n, true))));
-    const a = {walk: mk(clip('Walking')), run: mk(clip('Running')), sprint: mk(clip('Running').clone()), jump: mk(clip('Jump_Run'), true), sit: mk(clip(raw('Sitting_Clap') ? 'Sitting_Clap' : 'Sit_Cross_Legged_on_Floor', true)), idle};
+    const a = {walk: mk(clip('Walking')), run: mk(clip('Running')), sprint: mk(native && raw('RunFast') ? clip('RunFast') : clip('Running').clone()), jump: mk(clip('Jump_Run'), true), sit: mk(clip(raw('Sitting_Clap') ? 'Sitting_Clap' : 'Sit_Cross_Legged_on_Floor', true)), idle};
     if (raw('Swim_Forward')) a.swimF = mk(clip('Swim_Forward')); if (raw('Swim_Idle')) a.swimI = mk(clip('Swim_Idle'));
     a.jump.timeScale = 1.25;
     const oInv = o.matrixWorld.clone().invert(), mp = n => n.getWorldPosition(new T.Vector3()).applyMatrix4(oInv), armRest = {};
     ['Left', 'Right'].forEach(sd => { const A = SB[sd + 'Arm'], F = SB[sd + 'ForeArm'], Hd = SB[sd + 'Hand']; if (A && F && Hd) armRest[sd] = {A, F, up: mp(F).sub(mp(A)).normalize(), lo: mp(Hd).sub(mp(F)).normalize()}; });
-    const g = {thumb: null, book: null, armRest, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, state: 'idle', fresh: true, hands,
+    const g = {thumb: null, book: null, armRest, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, state: 'idle', fresh: true, hands, native,
       idleLen: 5 + Math.random()*7};
     Object.values(a).flat().forEach(ac => { if (ac && ac.getClip) ac.time = Math.random()*ac.getClip().duration; });   // never in step with the others
     g.idleT = Math.random()*4;
@@ -1526,6 +1527,7 @@ function loadNewKid(key, k, fin, fallback){
     k.body.add(o); k.g = g; try { setupHeadFrame(k); applyOutfit(k); } catch (e) { console.warn('outfit', e); } fin();
   }, undefined, () => fallback(k));
 }
+const NATIVE = new Set(['khad6.glb.wasm', 'ahmad6.glb.wasm']);
 const GLB_H = {saeedan: 1.5, khad: 1.48, saif: 0.95};   // سعيدان (3 سنين) ~0.95 م
 function loadModels(kids, done){
   let left = Object.keys(GLB).length;
