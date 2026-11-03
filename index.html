@@ -1435,7 +1435,7 @@ function animateModel(k, dt, t){
   if (st === 'jump' && g.state !== 'jump'){ g.a.jump.reset(); g.a.jump.play(); }
   if (st === 'idle'){
     g.idleT += dt;
-    if (g.idleT > 9){ g.idleI = (g.idleI + 1) % g.a.idle.length; g.idleT = 0; }
+    if (g.idleT > (g.idleLen || (g.idleLen = 7 + Math.random()*5))){ g.idleI = (g.idleI + 1 + (Math.random() < 0.4 ? 1 : 0)) % g.a.idle.length; g.idleT = 0; g.idleLen = 7 + Math.random()*5; }
   } else g.idleT = 0;
   g.state = st;
   const target = {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}; if (g.a.swimF) target.swimF = 0; if (g.a.swimI) target.swimI = 0;
@@ -1488,7 +1488,11 @@ function loadNewKid(key, k, fin, fallback){
     const oInv = o.matrixWorld.clone().invert(), mp = n => n.getWorldPosition(new T.Vector3()).applyMatrix4(oInv), armRest = {};
     ['Left', 'Right'].forEach(sd => { const A = Bn[sd + 'Arm'], F = Bn[sd + 'ForeArm'], Hd = Bn[sd + 'Hand']; if (A && F && Hd) armRest[sd] = {A, F, up: mp(F).sub(mp(A)).normalize(), lo: mp(Hd).sub(mp(F)).normalize()}; });
     const g = {thumb: null, book: null, armRest, o, mixer, a, w: {walk: 0, run: 0, sprint: 0, jump: 0, sit: 0}, wi: a.idle.map(() => 0), idleI: 0, idleT: 0, state: 'idle', fresh: true};
-    g.wi[0] = 1; a.idle[0].setEffectiveWeight(1);
+    // each kid starts on a different stand-still move, at a different moment, so they never move in step
+    const seed = {saeedan: 0, khad: 3, saif: 5, ahmad: 1}[key] || 0;
+    g.idleI = seed % a.idle.length; g.idleT = Math.random()*8;
+    Object.values(a).flat().forEach(ac => { if (ac && ac.getClip) ac.time = Math.random()*ac.getClip().duration; });
+    g.wi[g.idleI] = 1; a.idle[g.idleI].setEffectiveWeight(1);
     k.body.add(o); k.g = g; try { setupHeadFrame(k); applyOutfit(k); } catch (e) { console.warn('outfit', e); } fin();
   }, undefined, () => fallback(k));
 }
