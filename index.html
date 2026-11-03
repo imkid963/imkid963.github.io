@@ -128,6 +128,22 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 .pick{position:absolute;transform:translate(-50%,0);pointer-events:auto;padding:10px 20px;border-radius:26px;background:var(--glass);
   font-family:var(--display);font-weight:800;font-size:clamp(18px,4.4vw,26px);box-shadow:0 4px 0 var(--sand-deep),0 8px 16px var(--shadow);white-space:nowrap}
 .pick:active{transform:translate(-50%,3px)}
+/* شاشة الاختيار: اللوحة صغيرة تحت، والأسامي فوق روس العيال، فما شي يغطي الشخصيات */
+.pick{transform:translate(-50%,-100%);padding:6px 14px;font-size:clamp(14px,3.4vw,20px);border-radius:20px}
+.pick:active{transform:translate(-50%,calc(-100% + 3px))}
+#lobby{left:0;right:0;top:0;bottom:0;width:auto;transform:none;padding:0;background:none;box-shadow:none;border-radius:0;pointer-events:none}
+#lobby .ltitle{display:none}
+#lobby .worlds,#lobby #modeRow{position:absolute;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;width:clamp(104px,26vw,140px);pointer-events:auto}
+#lobby .worlds{right:calc(env(safe-area-inset-right,0px) + 12px)}
+#lobby #modeRow{left:calc(env(safe-area-inset-left,0px) + 12px)}
+#lobby .mode,#lobby .wsel{padding:8px 6px;font-size:16px;border-radius:18px;border-width:3px;background:var(--glass);box-shadow:0 4px 0 var(--sand-deep),0 8px 16px var(--shadow)}
+#lobby .mode.on,#lobby .wsel.on{background:#fff1cf}
+#lobby .mode small,#lobby .wsel small{font-size:11px}
+#lobby .lrow{margin:0;pointer-events:none}
+#lobby .lbtn{pointer-events:auto;position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);padding:12px;font-size:19px;box-shadow:0 4px 0 var(--sand-deep),0 8px 16px var(--shadow)}
+#lobby #playBtn{left:50%;transform:translateX(-50%);width:min(380px,calc(100% - 2*clamp(104px,26vw,140px) - 48px));font-size:22px}
+#lobby #wardBtn{left:calc(env(safe-area-inset-left,0px) + 12px);width:clamp(104px,26vw,140px);background:var(--glass)}
+@media (orientation:portrait){#lobby .worlds,#lobby #modeRow{top:auto;transform:none;bottom:calc(env(safe-area-inset-bottom,0px) + 84px)}}
 #loading{position:absolute;left:0;right:0;bottom:22%;text-align:center;font-family:var(--display);font-weight:800;font-size:clamp(18px,4.4vw,26px);color:#fff;text-shadow:0 2px 0 var(--sand-deep),0 4px 12px var(--shadow);animation:pulse 1.2s ease-in-out infinite alternate}
 @keyframes pulse{from{opacity:.55}to{opacity:1}}
 #end{position:fixed;inset:0;display:grid;place-items:center;background:rgba(239,220,182,.35);padding-inline:16px}
@@ -3108,6 +3124,7 @@ function updateEnding(dt, t){
 
 /* ================= select screen ================= */
 const SEL_Y = DIB ? H(0, 0) : 0;
+const KID_H = {saeedan: 1.6, khad: 1.22, saif: 0.95, ahmad: 0.87};
 function updateSelect(dt, t){
   ORDER.forEach((k, i) => {
     const kid = kids[k]; kid.speed = 0; kid.air = false;
@@ -3118,9 +3135,9 @@ function updateSelect(dt, t){
   if (choosing){ choosing.t += dt; if (choosing.t > 0.9){ kids[choosing.k].root.rotation.y = SA; choosing = null; } }
   if (wardOpen){ const x = SELECT_X[selKid], kr = kids[selKid].root; kr.rotation.y = SA + Math.sin(t*0.7)*0.7;
     camPos.lerp(SLV(x, SEL_Y + 1.45, innerWidth < innerHeight ? 3.6 : 2.6), Math.min(1, dt*4)); camLook.lerp(SLV(x, SEL_Y + (innerWidth < innerHeight ? 0.75 : 1.0), 0), Math.min(1, dt*4)); }
-  else { camPos.lerp(SLV(0, SEL_Y + 1.5, innerWidth < innerHeight ? 8.6 : 5.8), Math.min(1, dt*3)); camLook.lerp(SLV(0, SEL_Y + (innerWidth < innerHeight ? 0.55 : 0.95), 0), Math.min(1, dt*3)); }
+  else { camPos.lerp(SLV(0, SEL_Y + 1.9, innerWidth < innerHeight ? 12.5 : 5.8), Math.min(1, dt*3)); camLook.lerp(SLV(0, SEL_Y + (innerWidth < innerHeight ? -0.9 : 0.6), 0), Math.min(1, dt*3)); }   // العيال بالنص، والأزرار على الأطراف
   const v = new T.Vector3();
-  document.querySelectorAll('.pick').forEach(b => { const kid = kids[b.dataset.k]; v.set(kid.root.position.x + Math.sin(SA)*0.3, kid.root.position.y - 0.08, kid.root.position.z + Math.cos(SA)*0.3).project(camera); b.style.left = ((v.x + 1)/2*innerWidth) + 'px'; b.style.top = ((1 - v.y)/2*innerHeight + 8) + 'px'; });
+  document.querySelectorAll('.pick').forEach(b => { const kid = kids[b.dataset.k]; v.set(kid.root.position.x, kid.root.position.y + (KID_H[b.dataset.k] || 1.5) + 0.12, kid.root.position.z).project(camera); b.style.left = ((v.x + 1)/2*innerWidth) + 'px'; b.style.top = ((1 - v.y)/2*innerHeight - 4) + 'px'; });
 }
 
 /* ================= shared per frame ================= */
